@@ -1,3 +1,4 @@
+import { createMachine } from 'xstate';
 import { interpret } from 'xstate/lib/interpreter';
 import { MachineModelDesc } from './types';
 import type { MachineMap } from './types/map';
@@ -18,6 +19,11 @@ export function mergeMachineMap(
     console.warn(
       `Mounting a model <${modelName}> with existed service. The service would be overrided.`,
     );
+  }
+
+  // create machine for JSON object
+  if (!('withConfig' in modelDesc.machine)) {
+    modelDesc.machine = createMachine(modelDesc.machine);
   }
 
   // generate service from machine schema
