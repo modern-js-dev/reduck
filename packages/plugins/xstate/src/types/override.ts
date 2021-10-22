@@ -29,6 +29,7 @@ declare module '@modern-js-reduck/store' {
           any,
           MDO['machine'] extends { event: any } ? MDO['machine']['event'] : any
         >;
+    // machine?: StateMachine<any, any, any> | MachineConfig<any, any, any>;
     machineOptions?: Partial<
       MachineOptions<
         MDO['machine'] extends { context: any }
