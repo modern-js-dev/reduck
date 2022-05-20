@@ -1,0 +1,19 @@
+import type { NormalizedConfig } from '@modern-js/core';
+import type { ServerConfig } from '@modern-js/server-core';
+export declare const getServerConfigPath: (distDirectory: string, serverConfigFile?: string) => string;
+export declare const requireConfig: (serverConfigPath: string) => any;
+/**
+ * 对配置进行合并，开发环境下,cliConfig 与 serverConfig 进行深合并
+ * 生产环境下，resolvedConfig 与 serverConfig 进行深合并
+ * resolvedConfigPath: 构建序列化后的 modern.config.js 文件路径
+ */
+
+export declare const loadConfig: ({
+  cliConfig,
+  serverConfig,
+  resolvedConfigPath
+}: {
+  cliConfig: NormalizedConfig;
+  serverConfig: ServerConfig;
+  resolvedConfigPath: string;
+}) => any;

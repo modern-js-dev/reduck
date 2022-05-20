@@ -1,0 +1,86 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.canUsePnpm = canUsePnpm;
+exports.canUseYarn = canUseYarn;
+exports.runInstall = runInstall;
+
+var _path = _interopRequireDefault(require("path"));
+
+var _utils = require("@modern-js/utils");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+async function canUseYarn() {
+  try {
+    await (0, _utils.execa)('yarn', ['--version'], {
+      env: process.env
+    });
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+async function canUsePnpm() {
+  try {
+    await (0, _utils.execa)('pnpm', ['--version'], {
+      env: process.env
+    });
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+async function runInstall(targetDir, registryUrl) {
+  const options = {
+    cwd: targetDir,
+    env: process.env
+  }; // delete devDependencies
+
+  try {
+    const pkgPath = _path.default.join(targetDir, 'package.json');
+
+    const pkgJSON = JSON.parse(_utils.fs.readFileSync(pkgPath, {
+      encoding: 'utf-8'
+    }));
+    delete pkgJSON.devDependencies;
+
+    _utils.fs.writeFileSync(pkgPath, JSON.stringify(pkgJSON, null, 2), {
+      encoding: 'utf-8'
+    });
+  } catch (e) {
+    /**
+     * no handle
+     */
+  }
+
+  if (await canUsePnpm()) {
+    const params = ['install', '--prod', '--reporter=silent', '--prefer-offline', '--ignore-scripts'];
+
+    if (registryUrl) {
+      params.push(`--registry=${registryUrl}`);
+    }
+
+    await (0, _utils.execa)('pnpm', params, options);
+  } else if (await canUseYarn()) {
+    const params = ['install', '--production', '--silent', '--ignore-scripts'];
+
+    if (registryUrl) {
+      params.push(`--registry=${registryUrl}`);
+    }
+
+    await (0, _utils.execa)('yarn', params, options);
+  } else {
+    const params = ['install', '--production', '--loglevel=error', '--prefer-offline', '--ignore-scripts'];
+
+    if (registryUrl) {
+      params.push(`--registry=${registryUrl}`);
+    }
+
+    await (0, _utils.execa)('npm', params, options);
+  }
+}

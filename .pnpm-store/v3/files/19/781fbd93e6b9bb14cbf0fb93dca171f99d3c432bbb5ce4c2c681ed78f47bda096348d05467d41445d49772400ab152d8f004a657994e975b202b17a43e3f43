@@ -1,0 +1,119 @@
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+import * as path from 'path';
+import * as babel from '@babel/core';
+import { logger, fs } from '@modern-js/utils';
+import * as utils from "./utils";
+import { defaultDistFileExtMap } from "./constants";
+const defaultDistDir = 'dist';
+export const isRes = r => Boolean(r);
+export const getDistFilePath = option => {
+  const {
+    filepath,
+    rootDir,
+    distDir,
+    extMap
+  } = option;
+  const ext = path.extname(filepath);
+  return path.join(distDir, path.relative(rootDir, filepath).replace(ext, extMap[ext]));
+};
+export const resolveSourceMap = option => {
+  const {
+    babelRes,
+    sourceFilePath,
+    distFilePath,
+    enableVirtualDist = false
+  } = option;
+  const mapLoc = `${distFilePath}.map`;
+  babelRes.code = utils.addSourceMappingUrl(babelRes.code, mapLoc);
+
+  if (babelRes.map) {
+    babelRes.map.file = path.basename(distFilePath);
+    babelRes.map.sources = [path.relative(path.dirname(distFilePath), sourceFilePath)];
+  }
+
+  const sourceMapVirtualDist = {
+    sourcemap: JSON.stringify(babelRes.map),
+    sourceMapPath: mapLoc
+  };
+
+  if (enableVirtualDist) {
+    return sourceMapVirtualDist;
+  }
+
+  fs.ensureDirSync(path.dirname(mapLoc));
+  fs.writeFileSync(mapLoc, JSON.stringify(babelRes.map));
+  return sourceMapVirtualDist;
+};
+export const compiler = option => {
+  const {
+    filepath,
+    rootDir,
+    enableVirtualDist = false,
+    distDir = path.join(path.dirname(rootDir), defaultDistDir),
+    verbose = false,
+    babelConfig = {},
+    distFileExtMap = defaultDistFileExtMap,
+    quiet = false
+  } = option;
+  const babelRes = babel.transformFileSync(filepath, babelConfig);
+  let virtualDist = null;
+
+  if (!isRes(babelRes)) {
+    throw new Error(`${filepath} happen error`);
+  }
+
+  const distFilePath = getDistFilePath({
+    filepath,
+    rootDir,
+    distDir,
+    extMap: distFileExtMap
+  });
+
+  if (enableVirtualDist) {
+    virtualDist = {
+      distPath: distFilePath,
+      sourceMapPath: '',
+      code: '',
+      sourcemap: ''
+    };
+  }
+
+  if (babelRes !== null && babelRes !== void 0 && babelRes.map && babelConfig.sourceMaps && babelConfig.sourceMaps !== 'inline') {
+    if (virtualDist) {
+      virtualDist = _objectSpread(_objectSpread({}, virtualDist), resolveSourceMap({
+        babelRes,
+        sourceFilePath: filepath,
+        distFilePath,
+        enableVirtualDist
+      }));
+    } else {
+      resolveSourceMap({
+        babelRes,
+        sourceFilePath: filepath,
+        distFilePath,
+        enableVirtualDist
+      });
+    }
+  }
+
+  if (virtualDist) {
+    virtualDist = _objectSpread(_objectSpread({}, virtualDist), {}, {
+      distPath: distFilePath,
+      code: babelRes.code
+    });
+  } else {
+    fs.ensureDirSync(path.dirname(distFilePath));
+    fs.writeFileSync(distFilePath, babelRes.code);
+  }
+
+  if (verbose && !quiet) {
+    logger.info(`${filepath} => ${distFilePath}`);
+  }
+
+  return virtualDist;
+};

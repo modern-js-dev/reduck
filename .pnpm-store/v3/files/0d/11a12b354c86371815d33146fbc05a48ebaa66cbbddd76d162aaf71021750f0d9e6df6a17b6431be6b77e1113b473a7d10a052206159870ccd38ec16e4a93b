@@ -1,0 +1,42 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.getBabelOptions = exports.getUseBuiltIns = void 0;
+const utils_1 = require("@modern-js/utils");
+const getUseBuiltIns = (config) => {
+    const { polyfill } = config.output || {};
+    if (polyfill === 'ua' || polyfill === 'off') {
+        return false;
+    }
+    return polyfill;
+};
+exports.getUseBuiltIns = getUseBuiltIns;
+const getBabelOptions = (metaName, appDirectory, config, chain) => {
+    var _a, _b, _c, _d;
+    return ({
+        babelrc: false,
+        configFile: false,
+        compact: (0, utils_1.isProd)(),
+        presets: [
+            [
+                require.resolve('@modern-js/babel-preset-app'),
+                {
+                    metaName,
+                    appDirectory,
+                    target: 'client',
+                    lodash: (0, utils_1.applyOptionsChain)({ id: ['lodash', 'ramda'] }, (_a = config.tools) === null || _a === void 0 ? void 0 : _a.lodash),
+                    useLegacyDecorators: !((_b = config.output) === null || _b === void 0 ? void 0 : _b.enableLatestDecorators),
+                    useBuiltIns: (0, exports.getUseBuiltIns)(config),
+                    chain,
+                    styledComponents: (0, utils_1.applyOptionsChain)({
+                        pure: true,
+                        displayName: true,
+                        ssr: (0, utils_1.isUseSSRBundle)(config),
+                        transpileTemplateLiterals: true,
+                    }, (_c = config.tools) === null || _c === void 0 ? void 0 : _c.styledComponents),
+                    userBabelConfig: (_d = config.tools) === null || _d === void 0 ? void 0 : _d.babel,
+                },
+            ],
+        ],
+    });
+};
+exports.getBabelOptions = getBabelOptions;

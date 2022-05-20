@@ -1,0 +1,2 @@
+import { TestConfigOperator } from '../testConfigOperator';
+export declare const applyPatches: (testConfig: TestConfigOperator) => Promise<void>;

@@ -1,0 +1,3 @@
+import { bundle, Options } from './bundle';
+export { bundle };
+export declare function bundleRequire(filepath: string, options?: Options): Promise<any>;

@@ -1,0 +1,11 @@
+import { Schema } from '@modern-js/easy-form-core';
+import { ActionFunction, ActionType } from '../common';
+export declare const ModuleActionTypes: ActionType[];
+export declare const ModuleActionFunctions: ActionFunction[];
+export declare const ModuleActionTypesMap: Record<string, string[]>;
+export declare const ModuleSpecialSchemaMap: Record<string, Schema>;
+export declare const ModuleNewActionSchema: Schema;
+export declare const ModuleActionFunctionsDevDependencies: Partial<Record<ActionFunction, string>>;
+export declare const ModuleActionFunctionsPeerDependencies: Partial<Record<ActionFunction, string>>;
+export declare const ModuleActionFunctionsDependencies: Partial<Record<ActionFunction, string>>;
+export declare const ModuleNewActionGenerators: Partial<Record<ActionType, Record<string, string>>>;

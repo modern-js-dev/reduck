@@ -1,0 +1,2 @@
+// TODO: 第一个参数是否也需要为一个string[]
+export const defaultBuildWatchCmds = ['dev', 'build'];

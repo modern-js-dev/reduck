@@ -1,0 +1,100 @@
+import _objectSpread from "@babel/runtime/helpers/esm/objectSpread2";
+import path from 'path';
+import { getEntryOptions, createRuntimeExportsUtils, PLUGIN_SCHEMAS } from '@modern-js/utils';
+var PLUGIN_IDENTIFIER = 'router';
+var ROUTES_IDENTIFIER = 'routes';
+export default (function () {
+  return {
+    name: '@modern-js/plugin-router',
+    required: ['@modern-js/runtime'],
+    setup: function setup(api) {
+      var runtimeConfigMap = new Map();
+      var pluginsExportsUtils;
+      var runtimeModulePath = path.resolve(__dirname, '../../../../');
+      return {
+        config: function config() {
+          var appContext = api.useAppContext();
+          pluginsExportsUtils = createRuntimeExportsUtils(appContext.internalDirectory, 'plugins');
+          return {
+            source: {
+              alias: {
+                '@modern-js/runtime/plugins': pluginsExportsUtils.getPath()
+              }
+            }
+          };
+        },
+        validateSchema: function validateSchema() {
+          return PLUGIN_SCHEMAS['@modern-js/plugin-router'];
+        },
+        modifyEntryImports: function modifyEntryImports(_ref) {
+          var entrypoint = _ref.entrypoint,
+              imports = _ref.imports;
+          var entryName = entrypoint.entryName,
+              fileSystemRoutes = entrypoint.fileSystemRoutes;
+          var userConfig = api.useResolvedConfigContext();
+
+          var _api$useAppContext = api.useAppContext(),
+              packageName = _api$useAppContext.packageName;
+
+          var runtimeConfig = getEntryOptions(entryName, userConfig.runtime, userConfig.runtimeByEntries, packageName);
+          runtimeConfigMap.set(entryName, runtimeConfig);
+
+          if (runtimeConfig !== null && runtimeConfig !== void 0 && runtimeConfig.router) {
+            imports.push({
+              value: '@modern-js/runtime/plugins',
+              specifiers: [{
+                imported: PLUGIN_IDENTIFIER
+              }]
+            });
+          } else if (fileSystemRoutes) {
+            throw new Error("should enable runtime.router for entry ".concat(entryName));
+          }
+
+          return {
+            entrypoint: entrypoint,
+            imports: imports
+          };
+        },
+        modifyEntryRuntimePlugins: function modifyEntryRuntimePlugins(_ref2) {
+          var entrypoint = _ref2.entrypoint,
+              plugins = _ref2.plugins;
+          var entryName = entrypoint.entryName,
+              fileSystemRoutes = entrypoint.fileSystemRoutes;
+
+          var _api$useAppContext2 = api.useAppContext(),
+              serverRoutes = _api$useAppContext2.serverRoutes;
+
+          var runtimeConfig = runtimeConfigMap.get(entryName);
+
+          if (runtimeConfig.router) {
+            // Todo: plugin-router best to only handle manage client route.
+            // here support base server route usage, part for compatibility
+            var serverBase = serverRoutes.filter(function (route) {
+              return route.entryName === entryName;
+            }).map(function (route) {
+              return route.urlPath;
+            }).sort(function (a, b) {
+              return a.length - b.length > 0 ? -1 : 1;
+            });
+            plugins.push({
+              name: PLUGIN_IDENTIFIER,
+              options: JSON.stringify(_objectSpread(_objectSpread({
+                serverBase: serverBase
+              }, runtimeConfig.router), {}, {
+                routesConfig: fileSystemRoutes ? "{ ".concat(ROUTES_IDENTIFIER, ", globalApp: App }") : undefined
+              })).replace(/"routesConfig"\s*:\s*"((\S|\s)+)"/g, '"routesConfig": $1,')
+            });
+          }
+
+          return {
+            entrypoint: entrypoint,
+            plugins: plugins
+          };
+        },
+        addRuntimeExports: function addRuntimeExports() {
+          pluginsExportsUtils.addExport("export { default as router } from '".concat(runtimeModulePath, "'"));
+        }
+      };
+    }
+  };
+});

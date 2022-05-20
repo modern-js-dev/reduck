@@ -1,0 +1,92 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+var _exportNames = {
+  getBabelConfig: true,
+  getBabelChain: true
+};
+exports.getBabelConfig = exports.getBabelChain = void 0;
+
+var _babelPresetBase = require("@modern-js/babel-preset-base");
+
+var _babelChain = require("@modern-js/babel-chain");
+
+var _plugins = require("./plugins");
+
+var _types = require("./types");
+
+Object.keys(_types).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;
+  if (key in exports && exports[key] === _types[key]) return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function () {
+      return _types[key];
+    }
+  });
+});
+
+var _babelUtils = require("./babel-utils");
+
+Object.keys(_babelUtils).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;
+  if (key in exports && exports[key] === _babelUtils[key]) return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function () {
+      return _babelUtils[key];
+    }
+  });
+});
+
+const getBabelConfig = (libPresetOption, syntaxOption) => getBabelChain(libPresetOption, syntaxOption).toJSON();
+
+exports.getBabelConfig = getBabelConfig;
+
+const getBabelChain = (libPresetOption, syntaxOption) => {
+  const {
+    appDirectory,
+    jsxTransformRuntime,
+    enableReactPreset,
+    enableTypescriptPreset,
+    lodashOptions,
+    styledComponentsOptions
+  } = libPresetOption;
+  const {
+    syntax,
+    type
+  } = syntaxOption;
+  const chain = (0, _babelChain.createBabelChain)();
+  const baseChain = (0, _babelPresetBase.getBaseBabelChain)({
+    appDirectory,
+    type,
+    syntax,
+    presets: {
+      envOptions: true,
+      reactOptions: enableReactPreset,
+      typescriptOptions: enableTypescriptPreset ? {
+        allowDeclareFields: true,
+        allExtensions: true
+      } : false
+    },
+    plugins: {
+      transformRuntime: {
+        corejs: false,
+        // 关闭 corejs
+        // for es5 code need helper functions
+        helpers: syntaxOption.syntax === 'es5'
+      },
+      lodashOptions,
+      styledComponentsOptions
+    },
+    jsxTransformRuntime
+  });
+  const plugins = (0, _plugins.getPlugins)(libPresetOption);
+  return chain.merge(baseChain).merge(plugins);
+};
+
+exports.getBabelChain = getBabelChain;

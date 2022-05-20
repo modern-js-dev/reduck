@@ -1,0 +1,42 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _jestEnvironmentNode = _interopRequireDefault(require("jest-environment-node"));
+
+var _app = require("./app");
+
+var _constant = require("./constant");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+class _default extends _jestEnvironmentNode.default {
+  constructor(...args) {
+    super(...args);
+
+    _defineProperty(this, "app", void 0);
+  }
+
+  async setup() {
+    const bff_info = this.global[_constant.bff_info_key];
+    const {
+      plugins
+    } = bff_info; // eslint-disable-next-line no-multi-assign
+
+    this.global.app = this.app = await (0, _app.createApp)(bff_info.appDir, bff_info.modernUserConfig, plugins, bff_info.routes);
+  }
+
+  async teardown() {
+    var _this$app, _this$app$server;
+
+    await ((_this$app = this.app) === null || _this$app === void 0 ? void 0 : (_this$app$server = _this$app.server) === null || _this$app$server === void 0 ? void 0 : _this$app$server.close());
+  }
+
+}
+
+exports.default = _default;

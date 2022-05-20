@@ -1,0 +1,5 @@
+import type { PluginAPI } from '@modern-js/core';
+export interface IClearCommandOption {
+  removeDirs?: string[];
+}
+export declare const clear: (projectNames: string[], option: IClearCommandOption, api: PluginAPI) => Promise<void>;

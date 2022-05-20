@@ -1,0 +1,10 @@
+import { BaseSSRServerContext, Logger, Metrics } from '@modern-js/types';
+export declare const createMetrics: (context: BaseSSRServerContext, metrics: Metrics) => {
+  emitTimer: (name: string, cost: number, tags?: Record<string, unknown>) => void;
+  emitCounter: (name: string, counter: number, tags?: Record<string, unknown>) => void;
+};
+export declare const createLogger: (serverContext: BaseSSRServerContext, logger: Logger) => {
+  error: (message: string, e: Error | string) => void;
+  info: (message: string, ...args: any[]) => void;
+  debug: (message: string, ...args: any[]) => void;
+};

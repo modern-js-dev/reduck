@@ -1,0 +1,9 @@
+import type HtmlWebpackPlugin from 'html-webpack-plugin';
+import { Compiler } from 'webpack';
+export declare class AppIconPlugin {
+    htmlWebpackPlugin: typeof HtmlWebpackPlugin;
+    iconPath: string;
+    name: string;
+    constructor(htmlWebpackPlugin: typeof HtmlWebpackPlugin, iconPath: string);
+    apply(compiler: Compiler): void;
+}

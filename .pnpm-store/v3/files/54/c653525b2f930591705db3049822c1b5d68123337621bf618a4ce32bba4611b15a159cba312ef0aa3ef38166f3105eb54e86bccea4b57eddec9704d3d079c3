@@ -1,0 +1,28 @@
+import { bff_info_key } from "./constant";
+import mockAPI from "./mockAPI";
+import { getAllAPIInfos } from "./utils";
+var uped = false;
+
+var setup = function setup() {
+  var _bff_info$modernUserC, _bff_info$modernUserC2;
+
+  if (uped) {
+    return;
+  }
+
+  uped = true;
+  var bff_info = global[bff_info_key];
+  var prefix = bff_info === null || bff_info === void 0 ? void 0 : (_bff_info$modernUserC = bff_info.modernUserConfig) === null || _bff_info$modernUserC === void 0 ? void 0 : (_bff_info$modernUserC2 = _bff_info$modernUserC.bff) === null || _bff_info$modernUserC2 === void 0 ? void 0 : _bff_info$modernUserC2.prefix;
+  var apiInfos = getAllAPIInfos(bff_info.appDir, prefix);
+  var apiInfosByFile = apiInfos.reduce(function (res, apiInfo) {
+    if (!res[apiInfo.apiFile]) {
+      res[apiInfo.apiFile] = [];
+    }
+
+    res[apiInfo.apiFile].push(apiInfo);
+    return res;
+  }, {});
+  mockAPI(apiInfosByFile, global.app);
+};
+
+setup();

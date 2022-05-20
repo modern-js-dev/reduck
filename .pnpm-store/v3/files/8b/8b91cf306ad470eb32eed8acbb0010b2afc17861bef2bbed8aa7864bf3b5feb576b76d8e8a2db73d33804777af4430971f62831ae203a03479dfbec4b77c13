@@ -1,0 +1,1 @@
+export declare const genHttpsOptions: (userOptions: any) => Promise<any>;

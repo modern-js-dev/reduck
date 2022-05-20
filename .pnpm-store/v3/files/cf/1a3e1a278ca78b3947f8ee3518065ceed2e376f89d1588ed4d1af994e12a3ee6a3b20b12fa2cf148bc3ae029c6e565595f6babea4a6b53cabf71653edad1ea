@@ -1,0 +1,91 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.resolveBabelConfig = exports.getFinalAlias = void 0;
+
+var _babelPresetModule = require("@modern-js/babel-preset-module");
+
+var _utils = require("@modern-js/utils");
+
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+const getFinalAlias = (modernConfig, option) => {
+  const aliasConfig = (0, _utils.getAlias)(modernConfig.source.alias, option); // 排除内部别名，因为不需要处理
+
+  const finalPaths = {};
+  const internalAliasPrefix = '@modern-js/runtime';
+
+  if (aliasConfig.paths && typeof aliasConfig.paths === 'object') {
+    const pathsKey = Object.keys(aliasConfig.paths);
+
+    for (const key of pathsKey) {
+      if (!key.includes(internalAliasPrefix)) {
+        finalPaths[key] = aliasConfig.paths[key];
+      }
+    }
+  }
+
+  aliasConfig.paths = finalPaths;
+  return aliasConfig;
+};
+
+exports.getFinalAlias = getFinalAlias;
+
+const resolveBabelConfig = (appDirectory, modernConfig, option) => {
+  const {
+    source: {
+      envVars,
+      globalVars,
+      jsxTransformRuntime = 'automatic'
+    },
+    output: {
+      importStyle
+    },
+    tools: {
+      lodash: userLodashOption,
+      styledComponents
+    }
+  } = modernConfig; // alias config
+
+  const aliasConfig = getFinalAlias(modernConfig, _objectSpread({
+    appDirectory
+  }, option)); // lodash config
+
+  const lodashOptions = (0, _utils.applyOptionsChain)({
+    id: ['lodash', 'ramda']
+  }, // TODO: 需要处理类型问题
+  userLodashOption); // babel config
+
+  const internalBabelConfig = (0, _babelPresetModule.getBabelConfig)({
+    appDirectory,
+    enableReactPreset: true,
+    enableTypescriptPreset: true,
+    alias: aliasConfig,
+    envVars,
+    globalVars,
+    lodashOptions,
+    jsxTransformRuntime,
+    importStyle,
+    styledComponentsOptions: (0, _utils.applyOptionsChain)({
+      pure: true,
+      displayName: true,
+      ssr: (0, _utils.isUseSSRBundle)(modernConfig),
+      transpileTemplateLiterals: true
+    }, styledComponents)
+  }, {
+    type: option.type,
+    syntax: option.syntax
+  }); // Preventing warning when files are too large
+
+  internalBabelConfig.compact = false;
+  const userBabelConfig = modernConfig.tools.babel;
+  return (0, _utils.applyOptionsChain)(internalBabelConfig, userBabelConfig);
+};
+
+exports.resolveBabelConfig = resolveBabelConfig;

@@ -1,0 +1,4 @@
+import { NextFunction, BffProxyOptions } from '@modern-js/types';
+import { ModernServerContext } from './context';
+export type { BffProxyOptions };
+export declare const createProxyHandler: (proxyOptions?: BffProxyOptions | undefined) => ((ctx: ModernServerContext, next: NextFunction) => Promise<void>)[] | null;

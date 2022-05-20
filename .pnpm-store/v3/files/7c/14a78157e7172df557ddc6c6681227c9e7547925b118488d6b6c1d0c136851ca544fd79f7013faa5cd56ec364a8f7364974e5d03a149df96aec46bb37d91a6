@@ -1,0 +1,45 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.createCSSRule = exports.enableCssExtract = void 0;
+const css_config_1 = require("@modern-js/css-config");
+const shared_1 = require("../config/shared");
+const enableCssExtract = (config) => {
+    return config.output.disableCssExtract !== true;
+};
+exports.enableCssExtract = enableCssExtract;
+const createCSSRule = (chain, { appDirectory, config }, { name, test, exclude, genTSD, }, options) => {
+    const postcssOptions = (0, css_config_1.getPostcssConfig)(appDirectory, config);
+    const loaders = chain.module.rule(shared_1.CHAIN_ID.RULE.LOADERS);
+    const isExtractCSS = (0, exports.enableCssExtract)(config);
+    loaders
+        .oneOf(name)
+        .test(test)
+        .when(isExtractCSS, c => {
+        c.use(shared_1.CHAIN_ID.USE.MINI_CSS_EXTRACT)
+            .loader(require('mini-css-extract-plugin').loader)
+            .options(chain.output.get('publicPath') === './'
+            ? { publicPath: '../../' }
+            : {})
+            .end();
+    })
+        .when(!isExtractCSS, c => {
+        c.use(shared_1.CHAIN_ID.USE.STYLE).loader(require.resolve('style-loader')).end();
+    })
+        .when(Boolean(genTSD), c => {
+        c.use(shared_1.CHAIN_ID.USE.CSS_MODULES_TS)
+            .loader(require.resolve('../../compiled/css-modules-typescript-loader'))
+            .end();
+    })
+        .use(shared_1.CHAIN_ID.USE.CSS)
+        .loader(require.resolve('css-loader'))
+        .options(options)
+        .end()
+        .use(shared_1.CHAIN_ID.USE.POSTCSS)
+        .loader(require.resolve('../../compiled/postcss-loader'))
+        .options(postcssOptions);
+    loaders.oneOf(name).merge({ sideEffects: true });
+    if (exclude) {
+        loaders.oneOf(name).exclude.add(exclude);
+    }
+};
+exports.createCSSRule = createCSSRule;

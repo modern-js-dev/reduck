@@ -1,0 +1,17 @@
+import React from 'react';
+import type { UserConfig } from '@modern-js/core';
+interface CreateAppProps {
+  entry?: string;
+  children?: React.ReactElement;
+}
+
+declare class ModernRuntime {
+  private options;
+  constructor(options: UserConfig);
+  init(options: UserConfig): void;
+  createApp(props?: CreateAppProps): React.ComponentType<any>;
+}
+
+declare const _default: ModernRuntime;
+
+export default _default;

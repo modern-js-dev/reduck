@@ -1,0 +1,11 @@
+import { Option } from './types';
+export declare const CSS_EXTENSIONS: string[];
+export declare const CSS_EXTENSIONS_RULE: {
+  cssRule: RegExp;
+  cssModuleRule: RegExp;
+  lessRule: RegExp;
+  lessModuleRule: RegExp;
+  sassRule: RegExp;
+  sassModuleRule: RegExp;
+};
+export declare const defaultCompilerOptions: Option;

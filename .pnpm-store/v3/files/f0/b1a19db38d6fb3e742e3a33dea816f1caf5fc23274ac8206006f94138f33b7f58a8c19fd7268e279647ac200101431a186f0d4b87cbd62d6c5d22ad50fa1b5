@@ -1,0 +1,38 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getGeneratorDir = getGeneratorDir;
+
+var _path = _interopRequireDefault(require("path"));
+
+var _utils = require("@modern-js/utils");
+
+var _fsExists = require("./fsExists");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+const MaxTimes = 5;
+
+async function getGeneratorDir(generator) {
+  let result = generator;
+  const isDirectory = (await _utils.fs.stat(generator)).isDirectory();
+
+  if (!isDirectory) {
+    result = _path.default.dirname(generator);
+  }
+
+  let times = 0;
+
+  while (times < MaxTimes && !(await (0, _fsExists.fsExists)(_path.default.join(result, 'package.json')))) {
+    result = _path.default.join(result, '../');
+    times++;
+  }
+
+  if (times >= MaxTimes) {
+    throw Error('generator is not valid');
+  }
+
+  return result;
+}

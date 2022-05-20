@@ -1,0 +1,2 @@
+export declare const isNodeJS: () => boolean;
+export declare const isBrowser: () => boolean;

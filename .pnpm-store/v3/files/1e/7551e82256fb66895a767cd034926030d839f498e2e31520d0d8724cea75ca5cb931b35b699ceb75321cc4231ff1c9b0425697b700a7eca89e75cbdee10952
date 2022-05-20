@@ -1,0 +1,74 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.resolveFiles = resolveFiles;
+
+var _utils = require("@modern-js/utils");
+
+var _css = require("./resolves/css");
+
+var _less = require("./resolves/less");
+
+var _sass = require("./resolves/sass");
+
+var _cssRule = require("./utils/cssRule");
+
+var _utils2 = require("./resolves/utils");
+
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+async function resolveFiles(params) {
+  const {
+    files,
+    enableVirtualDist
+  } = params;
+  const results = [];
+
+  for (const file of files) {
+    let result;
+
+    if ((0, _cssRule.isLessRule)(file)) {
+      result = await (0, _less.lessResolve)(_objectSpread({
+        file
+      }, params));
+    } else if ((0, _cssRule.isSassRule)(file)) {
+      result = await (0, _sass.sassResolve)(_objectSpread({
+        file
+      }, params));
+    } else if ((0, _cssRule.isCssRule)(file)) {
+      result = await (0, _css.cssResolve)(_objectSpread({
+        file
+      }, params));
+    } else {
+      // 如果是不识别的文件，则不做任何处理
+      result = {
+        code: 0,
+        filename: file,
+        content: _utils.fs.readFileSync(file, 'utf-8'),
+        error: null
+      };
+    }
+
+    results.push(result);
+
+    if (!enableVirtualDist && result.code === 0) {
+      (0, _utils2.generateOutputFile)(result.filename, result.content, params);
+    }
+  }
+
+  if (enableVirtualDist) {
+    return {
+      code: results.some(result => result.code === 1) ? 1 : 0,
+      dists: results.filter(result => result.code === 0),
+      errors: results.filter(result => result.code === 1)
+    };
+  }
+
+  return undefined;
+}

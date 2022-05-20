@@ -1,0 +1,129 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+var _exportNames = {};
+exports.default = void 0;
+
+var _reactDom = _interopRequireDefault(require("react-dom"));
+
+var _component = require("@loadable/component");
+
+var _type = require("./serverRender/type");
+
+var _utils = require("./utils");
+
+var _jsxRuntime = require("react/jsx-runtime");
+
+var _react = require("./react");
+
+Object.keys(_react).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;
+  if (key in exports && exports[key] === _react[key]) return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function () {
+      return _react[key];
+    }
+  });
+});
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+const ssr = () => ({
+  name: '@modern-js/plugin-ssr',
+  setup: () => {
+    return {
+      client: async ({
+        App,
+        context,
+        rootElement
+      }) => {
+        var _window, _window$_SSR_DATA;
+
+        const renderLevel = (_window = window) === null || _window === void 0 ? void 0 : (_window$_SSR_DATA = _window._SSR_DATA) === null || _window$_SSR_DATA === void 0 ? void 0 : _window$_SSR_DATA.renderLevel;
+
+        if (renderLevel === _type.RenderLevel.CLIENT_RENDER) {
+          var _prefetch, _ref;
+
+          await (App === null || App === void 0 ? void 0 : (_prefetch = (_ref = App).prefetch) === null || _prefetch === void 0 ? void 0 : _prefetch.call(_ref, context));
+
+          _reactDom.default.render( /*#__PURE__*/(0, _jsxRuntime.jsx)(App, {
+            context: context
+          }), rootElement);
+        } else if (renderLevel === _type.RenderLevel.SERVER_RENDER) {
+          (0, _component.loadableReady)(() => {
+            const hydrateContext = _objectSpread(_objectSpread({}, context), {}, {
+              _hydration: true
+            });
+
+            _reactDom.default.hydrate( /*#__PURE__*/(0, _jsxRuntime.jsx)(App, {
+              context: hydrateContext
+            }), rootElement, () => {
+              // won't cause component re-render because context's reference identity doesn't change
+              delete hydrateContext._hydration;
+            });
+          });
+        } else {
+          // unknown renderlevel or renderlevel is server prefetch.
+          _reactDom.default.render( /*#__PURE__*/(0, _jsxRuntime.jsx)(App, {
+            context: context
+          }), rootElement);
+        }
+      },
+
+      init({
+        context
+      }, next) {
+        var _window2, _window2$_SSR_DATA, _window2$_SSR_DATA$co;
+
+        const request = (_window2 = window) === null || _window2 === void 0 ? void 0 : (_window2$_SSR_DATA = _window2._SSR_DATA) === null || _window2$_SSR_DATA === void 0 ? void 0 : (_window2$_SSR_DATA$co = _window2$_SSR_DATA.context) === null || _window2$_SSR_DATA$co === void 0 ? void 0 : _window2$_SSR_DATA$co.request;
+
+        if (!request) {
+          return next({
+            context
+          });
+        }
+
+        context.ssrContext.request = (0, _utils.formatClient)(request);
+        return next({
+          context
+        });
+      },
+
+      pickContext: ({
+        context,
+        pickedContext
+      }, next) => {
+        var _window3, _window3$_SSR_DATA, _window3$_SSR_DATA$co;
+
+        const request = (_window3 = window) === null || _window3 === void 0 ? void 0 : (_window3$_SSR_DATA = _window3._SSR_DATA) === null || _window3$_SSR_DATA === void 0 ? void 0 : (_window3$_SSR_DATA$co = _window3$_SSR_DATA.context) === null || _window3$_SSR_DATA$co === void 0 ? void 0 : _window3$_SSR_DATA$co.request;
+
+        if (!request) {
+          return next({
+            context,
+            pickedContext
+          });
+        }
+
+        return next({
+          context,
+          pickedContext: _objectSpread(_objectSpread({}, pickedContext), {}, {
+            request
+          })
+        });
+      }
+    };
+  }
+});
+
+var _default = ssr;
+exports.default = _default;

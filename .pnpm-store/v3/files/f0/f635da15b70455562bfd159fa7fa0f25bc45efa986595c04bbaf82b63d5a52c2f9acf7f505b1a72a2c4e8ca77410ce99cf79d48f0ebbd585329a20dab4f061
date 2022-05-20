@@ -1,0 +1,10 @@
+import { IProjectNode } from '../projects/get-projects';
+/**
+ * Calculate the number of packages which must be built before we reach
+ * the furthest away "root" node
+ */
+
+export declare const calculateCriticalPaths: (project: IProjectNode) => number;
+export declare const recursiveGetDependency: (project: IProjectNode, skipCircleProjects?: boolean) => IProjectNode[];
+export declare const sortProjects: (projects: IProjectNode[]) => IProjectNode[][];
+export declare const findCircle: (projects: IProjectNode[]) => void;

@@ -1,0 +1,105 @@
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+import { i18n, localeKeys } from "../locale";
+import { BooleanConfig, BooleanSchemas } from "../common/boolean";
+import { EnableLessSchema, EnableSassSchema } from "../common/css";
+export const mwaConfigWhenFunc = values => values.needModifyMWAConfig === BooleanConfig.YES;
+export let RunWay;
+
+(function (RunWay) {
+  RunWay["No"] = "no";
+  RunWay["Electron"] = "electron";
+})(RunWay || (RunWay = {}));
+
+export const RunWaySchema = {
+  key: 'runWay',
+  type: ['string'],
+  label: () => i18n.t(localeKeys.runWay.self),
+  mutualExclusion: true,
+  when: (_, extra) => (extra === null || extra === void 0 ? void 0 : extra.isEmptySrc) === undefined ? true : Boolean(extra === null || extra === void 0 ? void 0 : extra.isEmptySrc),
+  state: {
+    value: RunWay.No
+  },
+  items: Object.values(RunWay).map(runWay => ({
+    key: runWay,
+    label: () => i18n.t(localeKeys.runWay[runWay])
+  }))
+};
+export let ClientRoute;
+
+(function (ClientRoute) {
+  ClientRoute["SelfControlRoute"] = "selfControlRoute";
+  ClientRoute["ConventionalRoute"] = "conventionalRoute";
+  ClientRoute["No"] = "no";
+})(ClientRoute || (ClientRoute = {}));
+
+export const ClientRouteSchema = {
+  key: 'clientRoute',
+  type: ['string'],
+  label: () => i18n.t(localeKeys.entry.clientRoute.self),
+  mutualExclusion: true,
+  when: mwaConfigWhenFunc,
+  state: {
+    value: ClientRoute.SelfControlRoute
+  },
+  items: Object.values(ClientRoute).map(clientRoute => ({
+    key: clientRoute,
+    label: () => i18n.t(localeKeys.entry.clientRoute[clientRoute])
+  }))
+};
+export const DisableStateManagementSchema = {
+  key: 'disableStateManagement',
+  type: ['string'],
+  label: () => i18n.t(localeKeys.entry.disableStateManagement),
+  mutualExclusion: true,
+  when: mwaConfigWhenFunc,
+  state: {
+    value: BooleanConfig.NO
+  },
+  items: BooleanSchemas
+};
+export const EnableMWALessSchema = _objectSpread(_objectSpread({}, EnableLessSchema), {}, {
+  when: mwaConfigWhenFunc
+});
+export const EnableMWASassSchema = _objectSpread(_objectSpread({}, EnableSassSchema), {}, {
+  when: mwaConfigWhenFunc
+});
+export const NeedModifyMWAConfigSchema = {
+  key: 'needModifyMWAConfig',
+  label: () => i18n.t(localeKeys.needModifyConfig.self),
+  type: ['string'],
+  mutualExclusion: true,
+  state: {
+    value: BooleanConfig.NO
+  },
+  items: BooleanSchemas
+};
+export let Framework;
+
+(function (Framework) {
+  Framework["Express"] = "express";
+  Framework["Koa"] = "koa";
+  Framework["Egg"] = "egg";
+  Framework["Nest"] = "nest";
+})(Framework || (Framework = {}));
+
+export const FrameworkSchema = {
+  key: 'framework',
+  type: ['string'],
+  label: () => i18n.t(localeKeys.framework.self),
+  mutualExclusion: true,
+  items: Object.values(Framework).map(framework => ({
+    key: framework,
+    label: () => i18n.t(localeKeys.framework[framework])
+  }))
+};
+export const FrameworkAppendTypeContent = {
+  [Framework.Express]: `/// <reference types='@modern-js/plugin-express/types' />`,
+  [Framework.Koa]: `/// <reference types='@modern-js/plugin-koa/types' />`,
+  [Framework.Egg]: `/// <reference types='@modern-js/plugin-egg/types' />`,
+  [Framework.Nest]: `/// <reference types='@modern-js/plugin-nest/types' />`
+};

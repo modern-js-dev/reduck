@@ -1,0 +1,18 @@
+import { I18n } from '@modern-js/plugin-i18n';
+declare const i18n: I18n;
+declare const localeKeys: {
+  packageName: {
+    exit: string;
+  };
+  packagePath: {
+    exit: string;
+  };
+} | {
+  packageName: {
+    exit: string;
+  };
+  packagePath: {
+    exit: string;
+  };
+};
+export { i18n, localeKeys };

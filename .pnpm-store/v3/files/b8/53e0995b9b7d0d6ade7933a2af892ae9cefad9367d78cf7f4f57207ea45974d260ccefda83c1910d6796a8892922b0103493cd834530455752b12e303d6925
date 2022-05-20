@@ -1,0 +1,51 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.deploy = void 0;
+
+var _utils = require("@modern-js/utils");
+
+var _dag = require("../dag");
+
+var _monorepo = require("../parse-config/monorepo");
+
+var _getProjects = require("../projects/get-projects");
+
+var _deploy = require("../features/deploy");
+
+const deploy = async (api, deployProjectNames, option, ignoreMatchs = []) => {
+  const {
+    deployPath = 'output'
+  } = option;
+  const {
+    appDirectory
+  } = api.useAppContext();
+
+  _utils.logger.info(`start deploy ${deployProjectNames.join(',')}`);
+
+  const projects = await (0, _getProjects.getProjects)({
+    packagesMatchs: {
+      enableAutoFinder: true
+    },
+    packagesIgnoreMatchs: ignoreMatchs
+  }, appDirectory);
+  const {
+    rootPath,
+    packageManager
+  } = (0, _monorepo.getMonorepoBaseData)(process.cwd());
+  const operator = (0, _dag.initDAG)(projects);
+  await (0, _deploy.deploy)(deployProjectNames, operator, {
+    rootPath,
+    packageManager,
+    deployPath
+  });
+  const runners = api.useHookRunners();
+  runners.afterMonorepoDeploy({
+    operator,
+    deployProjectNames
+  });
+};
+
+exports.deploy = deploy;

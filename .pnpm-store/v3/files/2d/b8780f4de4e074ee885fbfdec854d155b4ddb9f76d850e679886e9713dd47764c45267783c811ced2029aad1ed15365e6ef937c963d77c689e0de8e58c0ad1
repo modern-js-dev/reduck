@@ -1,0 +1,4 @@
+import { Signale, SignaleOptions } from '@modern-js/utils';
+export declare const initTimeLog: (option?: SignaleOptions) => import("@modern-js/utils/compiled/signale").Signale<import("@modern-js/utils/compiled/signale").DefaultMethods>;
+export declare const startTime: (signaleInstance: Signale, prefix?: string) => void;
+export declare const endTime: (signaleInstance: Signale, prefix?: string) => void;

@@ -1,0 +1,34 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.isInHandler = exports.createApp = void 0;
+
+var _async_hooks = require("async_hooks");
+
+var _server = require("@modern-js/server");
+
+const store = new _async_hooks.AsyncLocalStorage();
+
+const isInHandler = () => Boolean(store.getStore());
+
+exports.isInHandler = isInHandler;
+
+const createApp = async (pwd, config, plugins, routes) => {
+  config.output.path = './';
+  const server = new _server.Server({
+    apiOnly: true,
+    dev: {
+      watch: false
+    },
+    pwd,
+    config,
+    plugins,
+    routes
+  });
+  await server.init();
+  return server.getRequestHandler();
+};
+
+exports.createApp = createApp;

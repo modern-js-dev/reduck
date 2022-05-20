@@ -1,0 +1,1 @@
+export declare const emptyDir: (dir: string) => Promise<void>;

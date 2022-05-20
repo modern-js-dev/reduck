@@ -1,0 +1,77 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.transformStyleInWatchMode = exports.BuildWatchEvent = exports.BuildWatchEmitter = void 0;
+
+var path = _interopRequireWildcard(require("path"));
+
+var Event = _interopRequireWildcard(require("events"));
+
+var _utils = require("@modern-js/utils");
+
+var _build = require("./build");
+
+var _watch = require("./watch");
+
+function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
+
+function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+const BuildWatchEvent = {
+  firstCompiler: 'first-compiler',
+  compilering: 'compilering',
+  watchingCompiler: 'watching-compiler'
+};
+exports.BuildWatchEvent = BuildWatchEvent;
+
+class BuildWatchEmitter extends Event.EventEmitter {
+  constructor(...args) {
+    super(...args);
+
+    _defineProperty(this, "_initFn", void 0);
+  }
+
+  setInitFn(fn) {
+    this._initFn = fn;
+  }
+
+  async watch() {
+    if (typeof this._initFn === 'function') {
+      await this._initFn(this);
+    }
+  }
+
+}
+
+exports.BuildWatchEmitter = BuildWatchEmitter;
+
+const transformStyleInWatchMode = option => {
+  const buildWatchEmitter = new BuildWatchEmitter();
+  buildWatchEmitter.setInitFn(async () => {
+    buildWatchEmitter.emit(BuildWatchEvent.compilering);
+    const firstResult = await (0, _build.transformStyle)(option);
+    buildWatchEmitter.emit(BuildWatchEvent.firstCompiler, firstResult);
+    (0, _watch.watch)(option.stylesDir, async ({
+      changeType,
+      changedFilePath
+    }) => {
+      buildWatchEmitter.emit(BuildWatchEvent.compilering);
+
+      if (changeType === _watch.ChangeType.UNLINK) {
+        const removeFile = path.normalize(`${option.outDir}/${path.relative(option.stylesDir, changedFilePath)}`);
+
+        _utils.fs.removeSync(removeFile.replace(path.extname(removeFile), '.css'));
+      }
+
+      const result = await (0, _build.transformStyle)(option);
+      buildWatchEmitter.emit(BuildWatchEvent.watchingCompiler, result);
+    });
+  });
+  return buildWatchEmitter;
+};
+
+exports.transformStyleInWatchMode = transformStyleInWatchMode;

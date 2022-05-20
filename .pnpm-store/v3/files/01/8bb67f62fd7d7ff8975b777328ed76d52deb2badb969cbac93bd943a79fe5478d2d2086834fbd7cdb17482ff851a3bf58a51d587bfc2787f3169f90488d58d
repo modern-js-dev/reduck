@@ -1,0 +1,179 @@
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+import { URL } from 'url';
+import qs from 'querystring';
+export class ModernServerContext {
+  /**
+   * http request
+   */
+
+  /**
+   * http response
+   */
+
+  /**
+   * url params
+   */
+  get logger() {
+    return this.req.logger;
+  }
+
+  get metrics() {
+    return this.req.metrics;
+  }
+
+  constructor(req, res) {
+    _defineProperty(this, "req", void 0);
+
+    _defineProperty(this, "res", void 0);
+
+    _defineProperty(this, "params", {});
+
+    _defineProperty(this, "serverData", void 0);
+
+    this.req = req;
+    this.res = res;
+    this.serverData = {};
+    this.bind();
+  }
+
+  bind() {
+    const {
+      req,
+      res
+    } = this;
+
+    req.get = key => this.getReqHeader(key);
+
+    res.set = (key, value) => this.res.setHeader(key, value);
+  }
+
+  setParams(params) {
+    this.params = params;
+  }
+
+  setServerData(key, value) {
+    this.serverData[key] = value;
+  }
+
+  getReqHeader(key) {
+    const {
+      req
+    } = this;
+    const field = key.toLowerCase();
+
+    switch (field) {
+      case 'referer':
+      case 'referrer':
+        return req.headers.referrer || req.headers.referer || '';
+
+      default:
+        return req.headers[field] || '';
+    }
+  }
+  /* request property */
+
+
+  get headers() {
+    return this.req.headers;
+  }
+
+  get method() {
+    return this.req.method;
+  }
+
+  get url() {
+    return this.req.url || '';
+  }
+
+  set url(val) {
+    this.req.url = val;
+  }
+
+  get host() {
+    let host = this.getReqHeader('X-Forwarded-Host');
+
+    if (!host) {
+      host = this.getReqHeader('Host');
+    }
+
+    return host.split(/\s*,\s*/, 1)[0] || '';
+  }
+
+  get protocol() {
+    if (this.req.socket.encrypted) {
+      return 'https';
+    }
+
+    const proto = this.getReqHeader('X-Forwarded-Proto');
+    return proto ? proto.split(/\s*,\s*/, 1)[0] : 'http';
+  }
+
+  get origin() {
+    return `${this.protocol}://${this.host}`;
+  }
+
+  get href() {
+    return this.origin + this.url;
+  }
+
+  get parsedURL() {
+    const url = new URL(this.req.url, this.origin);
+    return url;
+  }
+
+  get path() {
+    return this.parsedURL.pathname;
+  }
+
+  set path(p) {
+    const url = new URL(this.req.url, this.origin); // this should never happened
+
+    if (!url || !p) {
+      return;
+    }
+
+    if (url.pathname === p) {
+      return;
+    }
+
+    url.pathname = p;
+    this.url = url.toString();
+  }
+
+  get querystring() {
+    if (!this.req) {
+      return '';
+    }
+
+    return this.parsedURL.search.replace(/^\?/, '') || '';
+  }
+
+  get query() {
+    const str = this.querystring;
+    return qs.parse(str);
+  }
+  /* response property */
+
+
+  get status() {
+    return this.res.statusCode;
+  }
+
+  set status(statusCode) {
+    this.res.statusCode = statusCode;
+  }
+  /**
+   * 判断链接是否已经关闭
+   */
+
+
+  resHasHandled() {
+    return this.res.writableEnded;
+  }
+
+  error(dig, e = '') {
+    this.logger.error(`Web Server Error - ${dig}, error = %s, req.url = %s, req.headers = %o`, e instanceof Error ? e.stack || e.message : e, this.path, this.headers);
+  }
+
+}

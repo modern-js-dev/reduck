@@ -1,0 +1,9 @@
+import { PackageManagerType } from '../parse-config';
+export declare const removeLockFile: (rootPath: string, packageManager: PackageManagerType) => void;
+export declare const installByPackageManager: (packageManager: PackageManagerType, {
+  rootPath,
+  removeLock
+}: {
+  rootPath: string;
+  removeLock?: boolean | undefined;
+}) => Promise<void>;

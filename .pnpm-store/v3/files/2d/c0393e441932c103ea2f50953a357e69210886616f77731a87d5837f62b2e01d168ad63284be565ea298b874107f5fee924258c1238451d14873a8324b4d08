@@ -1,0 +1,13 @@
+import { patchTransformer } from "./transformer";
+import { patchAssetsModule } from "./assetsModule";
+
+const _applyPatches = async (patches, testOperator) => {
+  for (const patch of patches) {
+    await patch(testOperator);
+  }
+};
+
+const patches = [patchTransformer, patchAssetsModule];
+export const applyPatches = async testConfig => {
+  await _applyPatches(patches, testConfig);
+};

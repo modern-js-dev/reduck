@@ -1,0 +1,7 @@
+import { ResolveParams, ICompilerResult } from './types';
+export declare function resolveFiles(params: ResolveParams & {
+  enableVirtualDist: true;
+}): Promise<ICompilerResult>;
+export declare function resolveFiles(params: ResolveParams & {
+  enableVirtualDist: false;
+}): Promise<undefined>;

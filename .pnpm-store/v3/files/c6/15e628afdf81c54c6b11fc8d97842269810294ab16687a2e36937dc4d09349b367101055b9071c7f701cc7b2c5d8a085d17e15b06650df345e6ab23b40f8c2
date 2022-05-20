@@ -1,0 +1,91 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.aliasPlugin = void 0;
+
+var _path = _interopRequireDefault(require("path"));
+
+var _tsconfigPaths = require("@modern-js/utils/tsconfig-paths");
+
+var _utils = require("@modern-js/utils");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+const {
+  resolvePath
+} = require('babel-plugin-module-resolver');
+
+const defaultPaths = {
+  '@': ['./src']
+};
+
+const aliasPlugin = alias => {
+  const {
+    absoluteBaseUrl,
+    isTsPath,
+    isTsProject = false
+  } = alias;
+  const mergedPaths = isTsPath ? alias.paths || {} : _objectSpread(_objectSpread({}, defaultPaths), alias.paths || {});
+  let tsPaths = {};
+
+  if (isTsProject) {
+    tsPaths = (0, _utils.getUserAlias)(mergedPaths);
+  }
+
+  tsPaths = Object.keys(tsPaths).reduce((o, key) => {
+    if (typeof tsPaths[key] === 'string') {
+      return _objectSpread(_objectSpread({}, o), {}, {
+        [`${key}`]: [tsPaths[key]]
+      });
+    }
+
+    return _objectSpread(_objectSpread({}, o), {}, {
+      [`${key}`]: tsPaths[key]
+    });
+  }, {});
+
+  const resolvePathFn = (sourcePath, currentFile, opts) => {
+    // fix by: https://github.com/tleunen/babel-plugin-module-resolver/pull/409/files
+    if (sourcePath === '.' || sourcePath === './') {
+      return sourcePath;
+    }
+    /**
+     *以下是匹配到tsconfig的paths的情况进行进一步匹配和转换
+     */
+
+
+    const matchPath = (0, _tsconfigPaths.createMatchPath)(absoluteBaseUrl, tsPaths, ['index']);
+    const result = matchPath(sourcePath, undefined, undefined, ['.js', '.jsx', '.ts', '.tsx']);
+
+    if (result) {
+      const relativePath = _path.default.relative(_path.default.dirname(currentFile), _path.default.dirname(result));
+
+      const fileName = _path.default.basename(result); // 如果是同级文件，则返回的是 ''
+
+
+      const filePath = _path.default.normalize(`${relativePath.length === 0 ? '.' : relativePath}/${fileName}`).replace(/\\/, '/');
+
+      return filePath.startsWith('.') ? filePath : `./${filePath}`;
+    }
+
+    return resolvePath(sourcePath, currentFile, opts);
+  };
+
+  const typescriptExts = ['.ts', '.tsx', '.js', '.jsx', '.es', '.es6', '.mjs'];
+  return ['babel-plugin-module-resolver', {
+    root: absoluteBaseUrl,
+    alias: mergedPaths,
+    resolvePath: isTsPath ? resolvePathFn : undefined,
+    extensions: isTsProject ? typescriptExts : undefined
+  }];
+};
+
+exports.aliasPlugin = aliasPlugin;

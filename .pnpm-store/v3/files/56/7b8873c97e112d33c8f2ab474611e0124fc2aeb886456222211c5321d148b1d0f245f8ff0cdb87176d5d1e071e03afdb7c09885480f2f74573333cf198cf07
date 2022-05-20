@@ -1,0 +1,74 @@
+/**
+ * modified from https://github.com/farrow-js/farrow/tree/master/packages/farrow-pipeline
+ * license at https://github.com/farrow-js/farrow/blob/master/LICENSE
+ */
+import NodeAsyncHooks from 'async_hooks';
+import * as asyncHooksInterface from "./asyncHooksInterface";
+
+var createAsyncHooks = function createAsyncHooks() {
+  var store = new Map(); // eslint-disable-next-line node/no-unsupported-features/node-builtins
+
+  var hooks = NodeAsyncHooks.createHook({
+    init: function init(asyncId, _, triggerAsyncId) {
+      if (store.has(triggerAsyncId)) {
+        var value = store.get(triggerAsyncId);
+
+        if (value) {
+          store.set(asyncId, value);
+        }
+      }
+    },
+    destroy: function destroy(asyncId) {
+      if (store.has(asyncId)) {
+        store["delete"](asyncId);
+      }
+    }
+  });
+
+  var set = function set(value) {
+    store.set(NodeAsyncHooks.executionAsyncId(), value);
+  };
+
+  var get = function get() {
+    return store.get(NodeAsyncHooks.executionAsyncId());
+  };
+
+  var clear = function clear() {
+    store.clear();
+  };
+
+  var enable = function enable() {
+    hooks.enable();
+  };
+
+  var disable = function disable() {
+    hooks.disable();
+    store.clear();
+  };
+
+  var entries = function entries() {
+    return store.entries();
+  };
+
+  return {
+    enable: enable,
+    disable: disable,
+    set: set,
+    get: get,
+    clear: clear,
+    entries: entries
+  };
+};
+
+export var enable = function enable() {
+  var hooks = createAsyncHooks();
+  disable();
+  asyncHooksInterface.impl(hooks);
+  hooks.enable();
+};
+export var disable = function disable() {
+  var _asyncHooksInterface$;
+
+  (_asyncHooksInterface$ = asyncHooksInterface.asyncHooks) === null || _asyncHooksInterface$ === void 0 ? void 0 : _asyncHooksInterface$.disable();
+  asyncHooksInterface.reset();
+};

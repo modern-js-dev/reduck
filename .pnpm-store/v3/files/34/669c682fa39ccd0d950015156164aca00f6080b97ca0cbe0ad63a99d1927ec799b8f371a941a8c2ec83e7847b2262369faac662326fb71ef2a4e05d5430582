@@ -1,0 +1,87 @@
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+import { getBabelChain } from '@modern-js/babel-preset-lib';
+import { fs, json5, getAlias, applyOptionsChain } from '@modern-js/utils';
+export * from '@babel/core';
+export const readTsConfig = (tsconfigPath, noExistReturn = null) => {
+  // 如果不存在，则返回 noExistReturn
+  if (!fs.existsSync(tsconfigPath)) {
+    return noExistReturn;
+  }
+
+  const content = fs.readFileSync(tsconfigPath, 'utf-8');
+  return json5.parse(content);
+};
+export const existTsConfigFile = tsconfigAbsolutePath => {
+  const tsconfig = readTsConfig(tsconfigAbsolutePath);
+  return Boolean(tsconfig);
+};
+export const getBabelConfig = (libPresetOption, syntaxOption) => {
+  const chain = getBabelChain(libPresetOption, syntaxOption);
+  return _objectSpread({
+    sourceType: 'unambiguous'
+  }, chain.toJSON());
+};
+export const resolveBabelConfig = (appDirectory, modernConfig, option // FIXME: babel type can't pass type checking
+) => {
+  const {
+    source: {
+      envVars,
+      globalVars,
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-expect-error
+      jsxTransformRuntime = 'automatic'
+    },
+    tools: {
+      lodash: userLodashOption
+    }
+  } = modernConfig; // alias config
+
+  const aliasConfig = getAlias(modernConfig.source.alias, _objectSpread({
+    appDirectory
+  }, option)); // lodash config
+
+  const lodashOptions = applyOptionsChain({
+    id: ['lodash', 'ramda']
+  }, // TODO: 需要处理类型问题
+  userLodashOption); // babel config
+
+  const babelChain = getBabelChain({
+    appDirectory,
+    enableReactPreset: true,
+    enableTypescriptPreset: true,
+    alias: aliasConfig,
+    envVars,
+    globalVars,
+    lodashOptions,
+    jsxTransformRuntime
+  }, {
+    type: option.type,
+    syntax: option.syntax
+  });
+  const envOptions = babelChain.preset('@babel/preset-env').options();
+  babelChain.preset('@babel/preset-env').use(require.resolve('@babel/preset-env'), [_objectSpread(_objectSpread({}, envOptions[0]), {}, {
+    loose: true
+  })]);
+  babelChain.plugin('babel-plugin-transform-typescript-metadata').use(require.resolve('babel-plugin-transform-typescript-metadata'), []);
+  babelChain.plugin('@babel/plugin-proposal-decorators').use(require.resolve('@babel/plugin-proposal-decorators'), [{
+    legacy: true
+  }]); // resolve "Definitely assigned fields cannot be initialized here, but only in the constructor."
+
+  babelChain.plugin('@babel/plugin-proposal-class-properties').use(require.resolve('@babel/plugin-proposal-class-properties'), [{
+    loose: true
+  }]);
+
+  const internalBabelConfig = _objectSpread({}, babelChain.toJSON());
+
+  const userBabelConfig = modernConfig.tools.babel;
+  applyOptionsChain(internalBabelConfig, // TODO: 感觉 userBabelConfig 的类型应该是TransformOptions
+  userBabelConfig, {
+    chain: babelChain
+  });
+  return internalBabelConfig;
+};

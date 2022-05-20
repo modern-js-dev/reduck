@@ -1,0 +1,87 @@
+import _objectSpread from "@babel/runtime/helpers/esm/objectSpread2";
+import _classCallCheck from "@babel/runtime/helpers/esm/classCallCheck";
+import _createClass from "@babel/runtime/helpers/esm/createClass";
+import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
+import { merge } from '@modern-js/utils/lodash';
+
+var TestConfigOperator = /*#__PURE__*/function () {
+  function TestConfigOperator(testConfig) {
+    _classCallCheck(this, TestConfigOperator);
+
+    _defineProperty(this, "_testConfig", void 0);
+
+    _defineProperty(this, "_jestConfig", void 0);
+
+    _defineProperty(this, "userJestConfig", void 0);
+
+    _defineProperty(this, "defaultTestConfig", {
+      transformer: 'babel-jest'
+    });
+
+    this._testConfig = testConfig;
+    this._jestConfig = {};
+    this.userJestConfig = testConfig.jest;
+    this.initial();
+  }
+
+  _createClass(TestConfigOperator, [{
+    key: "initial",
+    value: function initial() {
+      this._testConfig = merge({}, this.defaultTestConfig, this.testConfig);
+    }
+  }, {
+    key: "jestConfig",
+    get: function get() {
+      return this._jestConfig;
+    }
+  }, {
+    key: "testConfig",
+    get: function get() {
+      return this._testConfig;
+    }
+  }, {
+    key: "mergeJestConfig",
+    value: function mergeJestConfig(sourceConfig) {
+      this._jestConfig = merge({}, this._jestConfig, sourceConfig);
+    }
+  }, {
+    key: "setJestUserConfig",
+    value: function setJestUserConfig() {
+      var userJestConfig = this.userJestConfig;
+      this.setJestConfig(userJestConfig);
+    }
+  }, {
+    key: "setJestConfig",
+    value: function setJestConfig(sourceConfig, options) {
+      if (options) {
+        var force = options.force;
+
+        if (force) {
+          this._jestConfig = sourceConfig;
+          return;
+        }
+      }
+
+      this._jestConfig = _objectSpread(_objectSpread({}, this._jestConfig), sourceConfig);
+    }
+  }, {
+    key: "getFinalConfig",
+    value: function getFinalConfig() {
+      var userJestConfig = this.userJestConfig;
+
+      if (!userJestConfig) {
+        return this._jestConfig;
+      }
+
+      if (typeof userJestConfig === 'function') {
+        return userJestConfig(this._jestConfig);
+      }
+
+      return this.jestConfig;
+    }
+  }]);
+
+  return TestConfigOperator;
+}();
+
+export { TestConfigOperator };

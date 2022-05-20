@@ -1,0 +1,6 @@
+import { TestConfigOperator } from '../testConfigOperator';
+/**
+ * Merge config from testConfig.jest
+ */
+
+export declare const patchAssetsModule: (testOperator: TestConfigOperator) => void;

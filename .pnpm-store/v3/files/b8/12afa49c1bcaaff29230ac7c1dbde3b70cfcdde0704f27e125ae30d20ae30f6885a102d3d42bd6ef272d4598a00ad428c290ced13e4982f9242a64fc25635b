@@ -1,0 +1,23 @@
+export declare const ZH_LOCALE: {
+  command: {
+    build: {
+      describe: string;
+      watch: string;
+      tsconfig: string;
+      style_only: string;
+      platform: string;
+      no_tsc: string;
+      no_clear: string;
+    };
+    dev: {
+      describe: string;
+    };
+    new: {
+      describe: string;
+      debug: string;
+      config: string;
+      distTag: string;
+      registry: string;
+    };
+  };
+};

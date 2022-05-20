@@ -1,0 +1,7 @@
+import { isBrowser } from '@modern-js/utils';
+import { createRequest as browser } from "./browser";
+import { createRequest as node } from "./node";
+
+const createRequest = (...args) => isBrowser() ? browser(...args) : node(...args);
+
+export default createRequest;

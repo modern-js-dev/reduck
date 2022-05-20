@@ -1,0 +1,21 @@
+/// <reference types="node" />
+import { EventEmitter } from 'events';
+export interface ITaskRunnerConfig {
+  concurrency?: number;
+}
+export declare type TaskFunType<T = undefined> = (stopTask?: () => void) => Promise<T>;
+export declare class TaskRunner<S> extends EventEmitter {
+  static DefaultConcurrency: number;
+  static TASK_FINISH: string;
+  _tasks: TaskFunType<S>[];
+  _concurrency: number;
+  _usableConcurrency: number;
+  private _stopFlag;
+  constructor(tasks: TaskFunType<S>[], {
+    concurrency
+  }: ITaskRunnerConfig);
+  run(): Promise<void>;
+  addTask(task: TaskFunType<S>): void;
+  private _runTask;
+  private _stopTask;
+}

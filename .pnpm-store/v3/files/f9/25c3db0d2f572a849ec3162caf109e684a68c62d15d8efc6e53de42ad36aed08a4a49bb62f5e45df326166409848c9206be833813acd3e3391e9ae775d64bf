@@ -1,0 +1,105 @@
+import _objectSpread from "@babel/runtime/helpers/esm/objectSpread2";
+import _objectWithoutProperties from "@babel/runtime/helpers/esm/objectWithoutProperties";
+var _excluded = ["Component"];
+import React from 'react';
+import { Route, matchPath } from 'react-router-dom';
+import { DefaultNotFound } from "./DefaultNotFound";
+import { jsx as _jsx } from "react/jsx-runtime";
+export function renderRoutes(routesConfig) {
+  var extraProps = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+  var Layout = function Layout(_ref) {
+    var Component = _ref.Component,
+        props = _objectWithoutProperties(_ref, _excluded);
+
+    var GlobalLayout = routesConfig === null || routesConfig === void 0 ? void 0 : routesConfig.globalApp;
+
+    if (!GlobalLayout) {
+      return /*#__PURE__*/_jsx(Component, _objectSpread({}, props));
+    }
+
+    return /*#__PURE__*/_jsx(GlobalLayout, _objectSpread({
+      Component: Component
+    }, props));
+  };
+
+  var findMatchedRoute = function findMatchedRoute(pathname) {
+    var _routesConfig$routes;
+
+    return routesConfig === null || routesConfig === void 0 ? void 0 : (_routesConfig$routes = routesConfig.routes) === null || _routesConfig$routes === void 0 ? void 0 : _routesConfig$routes.find(function (route) {
+      var info = matchPath(pathname, {
+        path: route.path,
+        exact: route.exact,
+        sensitive: route.sensitive
+      });
+      return Boolean(info);
+    });
+  };
+
+  return /*#__PURE__*/_jsx(Route, {
+    path: "/",
+    render: function render(props) {
+      var matchedRoute = findMatchedRoute(props.location.pathname);
+
+      if (!matchedRoute) {
+        return /*#__PURE__*/_jsx(DefaultNotFound, {});
+      }
+
+      return /*#__PURE__*/_jsx(Route, {
+        path: matchedRoute.path,
+        exact: matchedRoute.exact,
+        sensitive: matchedRoute.sensitive,
+        render: function render(routeProps) {
+          return /*#__PURE__*/_jsx(Layout, _objectSpread(_objectSpread({
+            Component: matchedRoute.component
+          }, routeProps), extraProps));
+        }
+      });
+    }
+  });
+}
+export function getLocation(serverContext) {
+  var _ref2 = (serverContext === null || serverContext === void 0 ? void 0 : serverContext.request) || {},
+      pathname = _ref2.pathname,
+      url = _ref2.url;
+
+  var cleanUrl = url.replace('http://', '').replace('https://', '');
+  var index = (cleanUrl || '').indexOf(pathname);
+
+  if (index === -1) {
+    return pathname;
+  }
+
+  return cleanUrl.substring(index);
+}
+export var urlJoin = function urlJoin() {
+  var separator = '/';
+  var replace = new RegExp("".concat(separator, "{1,}"), 'g');
+
+  for (var _len = arguments.length, parts = new Array(_len), _key = 0; _key < _len; _key++) {
+    parts[_key] = arguments[_key];
+  }
+
+  return standardSlash(parts.join(separator).replace(replace, separator));
+};
+export function standardSlash(str) {
+  var addr = str;
+
+  if (!addr || typeof addr !== 'string') {
+    return addr;
+  }
+
+  if (addr.startsWith('.')) {
+    addr = addr.slice(1);
+  }
+
+  if (!addr.startsWith('/')) {
+    addr = "/".concat(addr);
+  }
+
+  if (addr.endsWith('/') && addr !== '/') {
+    addr = addr.slice(0, addr.length - 1);
+  }
+
+  return addr;
+}

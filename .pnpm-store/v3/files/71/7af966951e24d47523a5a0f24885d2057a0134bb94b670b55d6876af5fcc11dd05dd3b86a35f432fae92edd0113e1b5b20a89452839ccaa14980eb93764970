@@ -1,0 +1,40 @@
+import _asyncToGenerator from "@babel/runtime/helpers/esm/asyncToGenerator";
+import _regeneratorRuntime from "@babel/runtime/regenerator";
+import { applyPatches } from "./patches";
+import { TestConfigOperator } from "./testConfigOperator";
+/**
+ * Parse jest config
+ */
+
+var getJestUtils = function getJestUtils(testConfig) {
+  var testOperator = new TestConfigOperator(testConfig);
+  return testOperator;
+};
+
+var patchConfig = /*#__PURE__*/function () {
+  var _ref = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee(testOperator) {
+    return _regeneratorRuntime.wrap(function _callee$(_context) {
+      while (1) {
+        switch (_context.prev = _context.next) {
+          case 0:
+            _context.next = 2;
+            return applyPatches(testOperator);
+
+          case 2:
+            return _context.abrupt("return", testOperator.jestConfig);
+
+          case 3:
+          case "end":
+            return _context.stop();
+        }
+      }
+    }, _callee);
+  }));
+
+  return function patchConfig(_x) {
+    return _ref.apply(this, arguments);
+  };
+}();
+
+export var DEFAULT_RESOLVER_PATH = require.resolve("./resolver");
+export { getJestUtils, patchConfig };

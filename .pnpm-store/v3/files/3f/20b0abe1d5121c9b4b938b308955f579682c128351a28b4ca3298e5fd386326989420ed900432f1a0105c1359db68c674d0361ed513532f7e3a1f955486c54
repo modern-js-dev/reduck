@@ -1,0 +1,58 @@
+export declare const source: {
+    type: string;
+    additionalProperties: boolean;
+    properties: {
+        entries: {
+            type: string;
+            patternProperties: {
+                "^[a-zA-Z0-9_-]+$": {
+                    if: {
+                        type: string;
+                    };
+                    then: {
+                        required: string[];
+                        properties: {
+                            entry: {
+                                type: string[];
+                            };
+                            disableMount: {
+                                type: string;
+                            };
+                            enableFileSystemRoutes: {
+                                type: string;
+                            };
+                        };
+                        additionalProperties: boolean;
+                    };
+                    else: {
+                        type: string[];
+                    };
+                };
+            };
+        };
+        alias: {
+            typeof: string[];
+        };
+        disableDefaultEntries: {
+            type: string;
+        };
+        envVars: {
+            type: string;
+        };
+        globalVars: {
+            type: string;
+        };
+        moduleScopes: {
+            instanceof: string[];
+        };
+        entriesDir: {
+            type: string;
+        };
+        configDir: {
+            type: string;
+        };
+        include: {
+            type: string[];
+        };
+    };
+};

@@ -1,0 +1,126 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var ptr = _interopRequireWildcard(require("path-to-regexp"));
+
+var mock_appModule = _interopRequireWildcard(require("./app"));
+
+function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
+
+function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+// import { getAllAPIInfos } from './utils';
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const mock_replaceUrlWithParams = (url, paramValues, payload) => {
+  const keys = [];
+  ptr.pathToRegexp(url, keys);
+  const params = keys.reduce((cur, key, index) => {
+    if (paramValues[index]) {
+      cur[key.name] = paramValues[index];
+    }
+
+    return cur;
+  }, {});
+  const getFinalPath = ptr.compile(url, {
+    encode: encodeURIComponent
+  });
+  return getFinalPath(_objectSpread(_objectSpread({}, params), payload));
+}; // eslint-disable-next-line @typescript-eslint/naming-convention
+
+
+const mock_getParamsAndPayload = args => {
+  if (args.length === 0) {
+    return [[], {}];
+  }
+
+  const head = args[0];
+
+  if (typeof head === 'object') {
+    return [[], head];
+  } else {
+    const latest = args[args.length - 1];
+
+    if (typeof latest === 'object') {
+      return [args.slice(0, args.length - 1), latest];
+    } else {
+      return [args, {}];
+    }
+  }
+};
+
+var _default = (mock_apiInfosByFile, mock_app) => {
+  const files = Object.keys(mock_apiInfosByFile);
+  files.forEach(mockedFile => {
+    jest.mock(mockedFile, () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const supertest = require('supertest');
+
+      return mock_apiInfosByFile[mockedFile].reduce((res, info) => {
+        const module = {
+          [info.name]: (...args) => {
+            if (mock_appModule.isInHandler()) {
+              return info.handler(...args);
+            }
+
+            const [params, payload] = mock_getParamsAndPayload(args);
+            const {
+              returnHttp
+            } = module[info.name];
+            const url = mock_replaceUrlWithParams(info.routePath, params, payload.params);
+            let test = supertest(mock_app)[info.method.toLowerCase()](url);
+
+            if (payload.query) {
+              test = test.query(payload.query);
+            }
+
+            if (payload.body) {
+              test = test.send(payload.body);
+            }
+
+            if (payload.data) {
+              test = test.send(payload.data);
+            }
+
+            if (payload.headers) {
+              for (const name in payload.headers) {
+                test = test.set(name, payload.headers[name]);
+              }
+            }
+
+            if (payload.cookies) {
+              test = test.set('Cookie', [payload.cookies]);
+            }
+
+            if (returnHttp) {
+              return test;
+            }
+
+            return test.then(value => {
+              try {
+                return JSON.parse(value.text);
+              } catch (_unused) {
+                return value.text;
+              }
+            });
+          }
+        };
+        res[info.name] = module[info.name];
+        Object.assign(res[info.name], info.handler);
+        res.__esModule = true;
+        return res;
+      }, {});
+    });
+  });
+};
+
+exports.default = _default;

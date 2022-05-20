@@ -1,0 +1,28 @@
+import { ModernServerOptions } from '@modern-js/prod-server';
+import type Webpack from 'webpack';
+export declare type DevServerOptions = {
+  client: {
+    port: string;
+    overlay: boolean;
+    logging: string;
+    path: string;
+    host: string;
+    progress?: boolean;
+  };
+  devMiddleware: {
+    writeToDisk: boolean | ((filename: string) => boolean);
+  };
+  watch: boolean;
+  hot: boolean | string;
+  liveReload: boolean;
+  https?: boolean | {
+    key: string;
+    cert: string;
+  };
+  [propName: string]: any;
+};
+export declare type ExtraOptions = {
+  dev?: boolean | Partial<DevServerOptions>;
+  compiler?: Webpack.MultiCompiler | Webpack.Compiler | null;
+};
+export declare type ModernDevServerOptions = ModernServerOptions & ExtraOptions;

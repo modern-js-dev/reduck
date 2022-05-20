@@ -1,0 +1,93 @@
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+/**
+ * modified from https://github.com/farrow-js/farrow/tree/master/packages/farrow-pipeline
+ * license at https://github.com/farrow-js/farrow/blob/master/LICENSE
+ */
+import { createContext, createContainer, fromContainer, runHooks, useContainer, runWithContainer } from "./context";
+import { createCounter } from "./counter";
+export { createContext, createContainer, useContainer, runWithContainer };
+export const isPipeline = input => Boolean(input === null || input === void 0 ? void 0 : input[PipelineSymbol]);
+const PipelineSymbol = Symbol.for('MODERN_PIPELINE');
+
+const getMiddleware = input => {
+  if (typeof input === 'function') {
+    return input;
+  } else if (input && typeof input.middleware === 'function') {
+    return input.middleware;
+  }
+
+  throw new Error(`${input} is not a Middleware`);
+};
+
+export const createPipeline = options => {
+  const config = _objectSpread({}, options);
+
+  const middlewares = [];
+
+  const use = (...inputs) => {
+    middlewares.push(...inputs.map(getMiddleware));
+    return pipeline;
+  };
+
+  const createCurrentCounter = (hooks, onLast, onLastWithContext) => {
+    return createCounter((index, input, next) => {
+      if (index >= middlewares.length) {
+        if (onLast) {
+          if (onLastWithContext) {
+            return runHooks(() => onLast(input), hooks);
+          }
+
+          return onLast(input);
+        }
+
+        throw new Error(`Expect returning a value, but all middlewares just calling next()`);
+      }
+
+      return runHooks(() => middlewares[index](input, next), hooks);
+    });
+  };
+
+  const currentContainer = createContainer(config.contexts);
+  const currentHooks = fromContainer(currentContainer);
+  const currentCounter = createCurrentCounter(currentHooks);
+
+  const getCounter = options => {
+    if (!options) {
+      return currentCounter;
+    }
+
+    if (options !== null && options !== void 0 && options.container) {
+      const hooks = fromContainer(options === null || options === void 0 ? void 0 : options.container);
+      return options !== null && options !== void 0 && options.onLast ? createCurrentCounter(hooks, options.onLast, typeof options.onLastWithContext === 'boolean' ? options.onLastWithContext : true) : createCurrentCounter(hooks);
+    }
+
+    return options !== null && options !== void 0 && options.onLast ? createCurrentCounter(currentHooks, options.onLast, typeof options.onLastWithContext === 'boolean' ? options.onLastWithContext : true) : createCurrentCounter(currentHooks);
+  };
+
+  const run = (input, options) => getCounter(options).start(input);
+
+  const middleware = (input, next) => {
+    const container = useContainer();
+    return run(input, {
+      container,
+      onLast: next
+    });
+  };
+
+  const pipeline = {
+    [PipelineSymbol]: true,
+    use,
+    run,
+    middleware
+  };
+  return pipeline;
+};
+export const createAsyncPipeline = options => {
+  const pipeline = createPipeline(options);
+  return _objectSpread({}, pipeline);
+};

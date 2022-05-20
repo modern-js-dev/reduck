@@ -1,0 +1,41 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.valideBeforeTask = exports.modernConfigValid = void 0;
+
+var _utils = require("@modern-js/utils");
+
+const valideBeforeTask = ({
+  modernConfig,
+  tsconfigPath
+}) => {
+  const modernConfigValidResult = modernConfigValid(modernConfig, {
+    tsconfigPath
+  });
+
+  if (modernConfigValidResult) {
+    console.error(modernConfigValidResult); // eslint-disable-next-line no-process-exit
+
+    process.exit(0);
+  }
+};
+
+exports.valideBeforeTask = valideBeforeTask;
+
+const modernConfigValid = (modernConfig, option) => {
+  const valids = [_utils.validAlias];
+
+  for (const validFn of valids) {
+    const result = validFn(modernConfig, option);
+
+    if (result) {
+      return result;
+    }
+  }
+
+  return null;
+};
+
+exports.modernConfigValid = modernConfigValid;

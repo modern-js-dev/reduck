@@ -1,0 +1,42 @@
+import _objectSpread from "@babel/runtime/helpers/esm/objectSpread2";
+import { createBabelPresetChain } from "./preset";
+import { createBabelPluginChain } from "./plugin";
+import { createBabelPlainChain } from "./plain";
+export var createBabelChain = function createBabelChain() {
+  var presetChain = createBabelPresetChain();
+  var pluginChain = createBabelPluginChain();
+  var plainChain = createBabelPlainChain();
+
+  var merge = function merge(other) {
+    presetChain.merge(other.internal.preset);
+    pluginChain.merge(other.internal.plugin);
+    plainChain.merge(other.internal.plain);
+    return chain;
+  };
+
+  var toJSON = function toJSON() {
+    return _objectSpread(_objectSpread({}, plainChain.toJSON()), {}, {
+      presets: presetChain.toJSON(),
+      plugins: pluginChain.toJSON()
+    });
+  };
+
+  var chain = _objectSpread(_objectSpread({}, plainChain.plain), {}, {
+    plugin: pluginChain.plugin,
+    preset: presetChain.preset,
+    toJSON: toJSON,
+    merge: merge,
+
+    get internal() {
+      return {
+        preset: presetChain,
+        plugin: pluginChain,
+        plain: plainChain
+      };
+    }
+
+  });
+
+  return chain;
+};
+export var babelChain = createBabelChain();

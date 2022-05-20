@@ -1,0 +1,60 @@
+import _objectSpread from "@babel/runtime/helpers/esm/objectSpread2";
+import fs from 'fs';
+import path from 'path';
+import { createDebugger } from '@modern-js/utils';
+export var debug = createDebugger('test');
+
+/**
+ * Read `compilerOptions` in the current pwd's tsconfig.json file
+ */
+export var readCompilerOptions = function readCompilerOptions() {
+  var pwd = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : process.cwd();
+  var filename = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'tsconfig.json';
+  var tsConfig = {};
+  var extendedCompilerOptions = {};
+  var tsconfigFile = '';
+
+  try {
+    var maybeTsconfigFile = path.join(pwd, filename);
+
+    if (fs.existsSync(maybeTsconfigFile)) {
+      tsconfigFile = maybeTsconfigFile;
+    } else {
+      tsconfigFile = require.resolve(filename);
+    }
+
+    var _require$parseConfigF = require('typescript').parseConfigFileTextToJson(tsconfigFile, fs.readFileSync(tsconfigFile, 'utf8'));
+
+    tsConfig = _require$parseConfigF.config;
+  } catch (e) {
+    return {};
+  }
+
+  if (tsConfig["extends"]) {
+    extendedCompilerOptions = readCompilerOptions(path.dirname(tsconfigFile), tsConfig["extends"]);
+  }
+
+  return _objectSpread(_objectSpread({}, extendedCompilerOptions), tsConfig.compilerOptions);
+};
+export var getModuleNameMapper = function getModuleNameMapper(alias) {
+  return Object.keys(alias).reduce(function (memo, cur) {
+    var aliasValue = Array.isArray(alias[cur]) ? alias[cur] : [alias[cur]];
+    var isFile = aliasValue.some(function (s) {
+      return s.endsWith('.js');
+    }); // It's special for if using @modern-js/runtime alias other module @modern-js/runtime/model would not work.
+
+    if (cur === '@modern-js/runtime$') {
+      memo[".+".concat(cur)] = aliasValue[0];
+      return memo;
+    }
+
+    if (isFile) {
+      memo[cur] = aliasValue[0];
+    }
+
+    var key = "^".concat(cur, "/(.*)$");
+    var value = path.normalize("".concat(aliasValue, "/$1"));
+    memo[key] = value;
+    return memo;
+  }, {});
+};

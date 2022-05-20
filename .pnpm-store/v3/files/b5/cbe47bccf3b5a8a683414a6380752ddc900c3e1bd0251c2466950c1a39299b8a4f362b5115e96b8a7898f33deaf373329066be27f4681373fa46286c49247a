@@ -1,0 +1,129 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.checkProjectChangeByGit = exports.checkProjectChangeByContent = exports.PROJECT_MEMORY_PATH = exports.PROJECT_CONTENT_FILE_NAME = exports.MONOREPO_GIT_FILE_NAME = void 0;
+
+var path = _interopRequireWildcard(require("path"));
+
+var _nodeCoreLibrary = require("@rushstack/node-core-library");
+
+var _packageDepsHash = require("@rushstack/package-deps-hash");
+
+var _utils = require("@modern-js/utils");
+
+var _md = _interopRequireDefault(require("md5"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
+
+function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+
+const PROJECT_CONTENT_FILE_NAME = 'project-content.json';
+exports.PROJECT_CONTENT_FILE_NAME = PROJECT_CONTENT_FILE_NAME;
+const MONOREPO_GIT_FILE_NAME = 'monorepo-git.json';
+exports.MONOREPO_GIT_FILE_NAME = MONOREPO_GIT_FILE_NAME;
+const PROJECT_MEMORY_PATH = '.project-memory';
+exports.PROJECT_MEMORY_PATH = PROJECT_MEMORY_PATH;
+
+const getProjectGitHash = async project => {
+  const projectDir = project.extra.path;
+  const globOption = {
+    cwd: projectDir,
+    absolute: true,
+    expandDirectories: false,
+    followSymbolicLinks: false,
+    ignore: ['**/node_modules/**', '.project-memory/**', 'dist/**']
+  };
+  const globPattern = `${projectDir}/**`;
+  const files = await (0, _utils.globby)(path.posix.join(globPattern), globOption);
+  const hashMap = (0, _packageDepsHash.getGitHashForFiles)(files, projectDir);
+  const hashObject = {}; // sort is important
+
+  _nodeCoreLibrary.Sort.sortMapKeys(hashMap);
+
+  hashMap.forEach((value, key) => {
+    hashObject[key] = value;
+  });
+  return (0, _md.default)(_nodeCoreLibrary.JsonFile.stringify(hashObject));
+};
+
+const checkProjectChangeByGit = async (project, rootPath) => {
+  const monorepoGitMemory = path.join(rootPath, MONOREPO_GIT_FILE_NAME);
+  const currentProjectHash = await getProjectGitHash(project);
+
+  if (!_nodeCoreLibrary.FileSystem.exists(monorepoGitMemory)) {
+    _nodeCoreLibrary.FileSystem.writeFile(monorepoGitMemory, _nodeCoreLibrary.JsonFile.stringify({}), {
+      ensureFolderExists: true
+    });
+  }
+
+  const monorepoProjectHashJson = _nodeCoreLibrary.JsonFile.load(monorepoGitMemory);
+
+  const changed = monorepoProjectHashJson[project.name] !== currentProjectHash;
+
+  if (changed) {
+    monorepoProjectHashJson[project.name] = currentProjectHash;
+
+    _nodeCoreLibrary.FileSystem.writeFile(monorepoGitMemory, _nodeCoreLibrary.JsonFile.stringify(monorepoProjectHashJson), {
+      ensureFolderExists: true
+    });
+  }
+
+  return changed;
+};
+
+exports.checkProjectChangeByGit = checkProjectChangeByGit;
+
+const getProjectContentHashObjectForFiles = async project => {
+  const projectDir = project.extra.path;
+  const globOption = {
+    cwd: projectDir,
+    absolute: true,
+    expandDirectories: false,
+    followSymbolicLinks: false,
+    ignore: ['**/node_modules/**', '.project-memory/**', '**/dist/**']
+  };
+  const globPattern = `${projectDir}/**`;
+  const files = await (0, _utils.globby)(path.posix.join(globPattern), globOption);
+  const hashObject = {}; // sort is important
+
+  for (const file of files.sort()) {
+    hashObject[file] = (0, _md.default)(_nodeCoreLibrary.FileSystem.readFile(file));
+  }
+
+  return hashObject;
+};
+
+const checkProjectChangeByContent = async project => {
+  const projectDir = project.extra.path;
+  const projectMemoryFolder = path.resolve(projectDir, '.project-memory');
+  const projectJsonFile = path.join(projectMemoryFolder, PROJECT_CONTENT_FILE_NAME);
+  const currentHashObject = await getProjectContentHashObjectForFiles(project);
+
+  const currentHashString = _nodeCoreLibrary.JsonFile.stringify(currentHashObject);
+
+  if (!_nodeCoreLibrary.FileSystem.exists(projectJsonFile)) {
+    _nodeCoreLibrary.FileSystem.writeFile(projectJsonFile, currentHashString, {
+      ensureFolderExists: true
+    });
+
+    return true;
+  }
+
+  const localHashObject = _nodeCoreLibrary.JsonFile.load(projectJsonFile);
+
+  const changed = _nodeCoreLibrary.JsonFile.stringify(localHashObject) !== currentHashString;
+
+  if (changed) {
+    _nodeCoreLibrary.FileSystem.writeFile(projectJsonFile, currentHashString, {
+      ensureFolderExists: true
+    });
+  }
+
+  return changed;
+};
+
+exports.checkProjectChangeByContent = checkProjectChangeByContent;

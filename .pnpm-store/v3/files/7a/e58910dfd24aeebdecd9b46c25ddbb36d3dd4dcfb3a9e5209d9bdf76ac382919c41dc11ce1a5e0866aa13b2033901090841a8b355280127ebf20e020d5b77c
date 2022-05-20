@@ -1,0 +1,22 @@
+/**
+ * @file run jest by nodejs API
+ * @description
+ * Jest does not provide node API to run jest.
+ * The followed code is inspired by
+ * https://github.com/facebook/jest/blob/fdc74af37235354e077edeeee8aa2d1a4a863032/packages/jest-cli/src/cli/index.ts#L21
+ */
+import { Config } from '@jest/types';
+import type { PluginAPI } from '@modern-js/core';
+import { TestConfig } from './types';
+declare type Argv = Omit<Config.Argv, '_' | '$0'>;
+/**
+ * Node API: execute jest
+ */
+
+export declare function runJest(config: Argv, pwd?: string): Promise<void>;
+/**
+ * Node API: run test
+ */
+
+export declare function runTest(api: PluginAPI, config: TestConfig, pwd?: string): Promise<void>;
+export {};

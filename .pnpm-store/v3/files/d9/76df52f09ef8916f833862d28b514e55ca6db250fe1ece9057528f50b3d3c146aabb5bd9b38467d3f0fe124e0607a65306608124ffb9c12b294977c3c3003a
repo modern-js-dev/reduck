@@ -1,0 +1,5 @@
+import { createAsyncWorkflow } from '@modern-js/plugin';
+const afterMonorepoDeploy = createAsyncWorkflow();
+export const hooks = {
+  afterMonorepoDeploy
+};

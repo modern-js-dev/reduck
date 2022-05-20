@@ -1,0 +1,52 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.likeCssLoaderPostCssPlugins = void 0;
+
+var _path = _interopRequireDefault(require("path"));
+
+var _postcssImport = _interopRequireDefault(require("postcss-import"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+const likeCssLoaderPostCssPlugins = (filePath, plugins // TODO: 这里postcss-import 类型文件版本比较旧，待最新更新后，可替换
+) => {
+  const ext = _path.default.extname(filePath);
+
+  return [// https://github.com/postcss/postcss-import
+  (0, _postcssImport.default)({
+    resolve(id, basedir) {
+      let importSpecifier = id.replace(`${basedir}/`, '');
+
+      if (importSpecifier.includes(basedir)) {
+        importSpecifier = id.replace(`${basedir}`, '');
+      }
+
+      const fileName = `${importSpecifier}${_path.default.extname(importSpecifier) === '' ? ext : ''}`;
+      const importFromNodeModule = importSpecifier.startsWith('~');
+
+      if (importFromNodeModule) {
+        let findPath = '';
+
+        try {
+          findPath = require.resolve(importSpecifier.slice(1), {
+            paths: ['$HOME/.node_modules']
+          });
+        } catch (e) {
+          findPath = importSpecifier.slice(1);
+          throw new Error(`${importSpecifier.slice(1)}: ${e.code}`);
+        }
+
+        return findPath;
+      } else {
+        return _path.default.resolve(basedir, fileName);
+      }
+    },
+
+    plugins
+  })];
+};
+
+exports.likeCssLoaderPostCssPlugins = likeCssLoaderPostCssPlugins;

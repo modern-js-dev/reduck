@@ -1,0 +1,17 @@
+import { HMR_SOCK_PATH } from '@modern-js/utils';
+export const DEFAULT_DEV_OPTIONS = {
+  client: {
+    port: '8080',
+    overlay: false,
+    logging: 'none',
+    path: HMR_SOCK_PATH,
+    host: 'localhost'
+  },
+  https: false,
+  devMiddleware: {
+    writeToDisk: true
+  },
+  watch: true,
+  hot: true,
+  liveReload: true
+};

@@ -1,0 +1,24 @@
+import _toConsumableArray from "@babel/runtime/helpers/esm/toConsumableArray";
+
+/* eslint-disable eslint-comments/disable-enable-pair */
+import supertest from 'supertest';
+
+function request() {
+  for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+    args[_key] = arguments[_key];
+  }
+
+  var fn = args[0],
+      extraArgs = args.slice(1);
+
+  if (!fn) {
+    return supertest(global.app);
+  }
+
+  fn.returnHttp = true;
+  var res = fn.apply(void 0, _toConsumableArray(extraArgs));
+  fn.returnHttp = false;
+  return res;
+}
+
+export { request };

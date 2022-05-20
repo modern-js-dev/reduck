@@ -1,0 +1,3 @@
+import { IProjectNode } from '../../projects/get-projects';
+export declare type BuildWatchCmdsType = [string] | [string, string] | [string, (project: IProjectNode) => string[]];
+export declare const defaultBuildWatchCmds: BuildWatchCmdsType;

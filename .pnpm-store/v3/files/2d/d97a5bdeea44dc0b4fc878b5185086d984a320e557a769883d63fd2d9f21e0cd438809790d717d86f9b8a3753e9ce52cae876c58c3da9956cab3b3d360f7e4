@@ -1,0 +1,60 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.create = void 0;
+
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+const initProjectDependencyAndDependent = (project, projectsName, projectsMap) => {
+  // dependencies、devDependencies、peerDependencies
+  const dependencies = project.extra.dependencies || {};
+  const devDependencies = project.extra.devDependencies || {};
+  const optionalDependencies = project.extra.optionalDependencies || {};
+  const DependencyProjectsName = Object.keys(_objectSpread(_objectSpread(_objectSpread({}, dependencies), devDependencies), optionalDependencies)).filter(depName => projectsName.includes(depName)); // init dependent key
+
+  project.dependent = project.dependent || []; // get dependency ProjectNode
+
+  project.dependency = DependencyProjectsName.map(projectName => {
+    // 在遍历该项目的 dependency 的时候，顺便更新这些 dependency 的 dependent
+    const dependencyProject = projectsMap.get(projectName);
+    const dependent = (dependencyProject === null || dependencyProject === void 0 ? void 0 : dependencyProject.dependent) || [];
+
+    if ( // 消除重复添加的情况
+    !dependent.some(p => p.name === project.name)) {
+      dependencyProject.dependent = [...dependent, project];
+      dependencyProject.dependentEdge = dependencyProject.dependent.length;
+    }
+
+    return dependencyProject;
+  }); // NOTE: 一个节点有多少依赖，就代表有多少的入度或者叫指向该节点的边
+  // project.dagNodeEdge = project.dependency.length;
+
+  project.dependencyEdge = project.dependency.length;
+};
+
+const create = projects => {
+  const projectsName = [];
+  const projectsMap = new Map();
+
+  for (const project of projects) {
+    projectsMap.set(project.name, project);
+    projectsName.push(project.name);
+  }
+
+  for (const project of projects) {
+    initProjectDependencyAndDependent(project, projectsName, projectsMap);
+  }
+
+  return {
+    projectsMap,
+    projectList: projectsName
+  };
+};
+
+exports.create = create;

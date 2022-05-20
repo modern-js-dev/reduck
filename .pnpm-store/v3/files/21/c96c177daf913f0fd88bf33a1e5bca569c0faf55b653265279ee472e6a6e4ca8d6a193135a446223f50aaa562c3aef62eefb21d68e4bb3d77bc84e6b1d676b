@@ -1,0 +1,22 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.safeParse = void 0;
+
+const safeParse = jsonString => {
+  try {
+    return {
+      code: 0,
+      value: JSON.parse(jsonString)
+    };
+  } catch (e) {
+    return {
+      code: 1,
+      value: jsonString
+    };
+  }
+};
+
+exports.safeParse = safeParse;

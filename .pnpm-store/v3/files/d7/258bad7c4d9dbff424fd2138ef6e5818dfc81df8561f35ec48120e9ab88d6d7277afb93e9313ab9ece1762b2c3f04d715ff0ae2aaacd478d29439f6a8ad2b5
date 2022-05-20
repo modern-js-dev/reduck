@@ -1,0 +1,2 @@
+export declare const RunnerContext: import("../farrow-pipeline").Context<any>;
+export declare const useRunner: () => any;

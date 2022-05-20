@@ -1,0 +1,10 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Import = exports.lazyImport = void 0;
+// cover: https://rushstack.io/pages/api/node-core-library.import.lazy/
+const lazy = (moduleName, requireFn) => {
+    const importLazyLocal = require('../compiled/import-lazy')(requireFn);
+    return importLazyLocal(moduleName);
+};
+exports.lazyImport = lazy;
+exports.Import = { lazy };

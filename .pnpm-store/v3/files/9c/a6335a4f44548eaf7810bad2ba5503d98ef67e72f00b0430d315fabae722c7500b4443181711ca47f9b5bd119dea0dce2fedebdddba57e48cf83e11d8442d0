@@ -1,0 +1,27 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.getEntryOptions = void 0;
+const is_1 = require("./is");
+const constants_1 = require("./constants");
+const getEntryOptions = (name, baseOptions, optionsByEntries, packageName) => {
+    if (optionsByEntries) {
+        let optionsByEntry = getOptionsByEntryName(name, optionsByEntries);
+        // compatible with main entry using packageName as the key
+        if (optionsByEntry === undefined &&
+            name === constants_1.MAIN_ENTRY_NAME &&
+            packageName) {
+            optionsByEntry = getOptionsByEntryName(packageName, optionsByEntries);
+        }
+        // eslint-disable-next-line no-nested-ternary
+        return optionsByEntry !== undefined
+            ? (0, is_1.isPlainObject)(optionsByEntry) && (0, is_1.isPlainObject)(baseOptions)
+                ? { ...baseOptions, ...optionsByEntry }
+                : optionsByEntry
+            : baseOptions;
+    }
+    else {
+        return baseOptions;
+    }
+};
+exports.getEntryOptions = getEntryOptions;
+const getOptionsByEntryName = (name, optionsByEntries) => optionsByEntries.hasOwnProperty(name) ? optionsByEntries[name] : undefined;

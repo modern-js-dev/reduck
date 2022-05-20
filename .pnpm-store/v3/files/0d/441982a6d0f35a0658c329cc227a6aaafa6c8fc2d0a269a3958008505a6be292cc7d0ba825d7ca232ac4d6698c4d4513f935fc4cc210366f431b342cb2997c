@@ -1,0 +1,8 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.MODERNJS_CONFIG_KEY = void 0;
+const MODERNJS_CONFIG_KEY = '__modernjs_config__';
+exports.MODERNJS_CONFIG_KEY = MODERNJS_CONFIG_KEY;

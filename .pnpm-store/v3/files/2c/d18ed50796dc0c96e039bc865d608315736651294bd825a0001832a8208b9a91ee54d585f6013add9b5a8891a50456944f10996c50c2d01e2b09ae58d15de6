@@ -1,0 +1,72 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.alreadyRepo = alreadyRepo;
+exports.hasEnabledFunction = hasEnabledFunction;
+exports.readJson = void 0;
+
+var _path = _interopRequireDefault(require("path"));
+
+var _utils = require("@modern-js/utils");
+
+var _generatorUtils = require("@modern-js/generator-utils");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function alreadyRepo(cwd = process.cwd()) {
+  try {
+    return _generatorUtils.fs.existsSync(_path.default.resolve(cwd, 'package.json'));
+  } catch (e) {
+    return false;
+  }
+}
+
+const readJson = jsonPath => {
+  if (!_generatorUtils.fs.existsSync(jsonPath)) {
+    return {};
+  }
+
+  const jsonStr = _generatorUtils.fs.readFileSync(jsonPath, {
+    encoding: 'utf8'
+  });
+
+  try {
+    return _utils.json5.parse(jsonStr);
+  } catch (error) {
+    throw Error(`${jsonPath} is not a valid json, please check and try again.`);
+  }
+};
+
+exports.readJson = readJson;
+
+function hasEnabledFunction(action, dependencies, devDependencies, peerDependencies, cwd) {
+  const packageJsonPath = _path.default.normalize(`${cwd}/package.json`);
+
+  const packageJson = readJson(packageJsonPath);
+
+  if (!dependencies[action] && !devDependencies[action]) {
+    return false;
+  }
+
+  if (dependencies[action]) {
+    var _packageJson$dependen;
+
+    return (_packageJson$dependen = packageJson.dependencies) === null || _packageJson$dependen === void 0 ? void 0 : _packageJson$dependen[dependencies[action]];
+  }
+
+  if (peerDependencies[action]) {
+    var _packageJson$peerDepe;
+
+    return (_packageJson$peerDepe = packageJson.peerDependencies) === null || _packageJson$peerDepe === void 0 ? void 0 : _packageJson$peerDepe[peerDependencies[action]];
+  }
+
+  if (!peerDependencies[action] && devDependencies[action]) {
+    var _packageJson$devDepen;
+
+    return (_packageJson$devDepen = packageJson.devDependencies) === null || _packageJson$devDepen === void 0 ? void 0 : _packageJson$devDepen[devDependencies[action]];
+  }
+
+  return false;
+}

@@ -1,0 +1,11 @@
+import { FSWatcher, WatchOptions } from '@modern-js/utils';
+export declare const getWatchedFiles: (watcher: FSWatcher) => string[];
+export default class Watcher {
+  private dependencyTree;
+  private watcher;
+  listen(files: string[], options: WatchOptions, callback: (changed: string) => void): void;
+  createDepTree(): void;
+  updateDepTree(): void;
+  cleanDepCache(filepath: string): void;
+  close(): Promise<void>;
+}

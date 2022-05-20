@@ -1,0 +1,42 @@
+import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
+
+var _ModuleActionFunction, _ModuleActionFunction2, _ModuleActionFunction3, _ActionType$Function;
+
+import { ActionFunction, ActionFunctionText, ActionType, ActionTypeText } from "../common";
+import { i18n, localeKeys } from "../../locale";
+export var ModuleActionTypes = [ActionType.Function];
+export var ModuleActionFunctions = [ActionFunction.TailwindCSS, ActionFunction.Less, ActionFunction.Sass, // ActionFunction.I18n,
+// ActionFunction.Doc,
+ActionFunction.Storybook, ActionFunction.RuntimeApi];
+export var ModuleActionTypesMap = _defineProperty({}, ActionType.Function, ModuleActionFunctions);
+export var ModuleSpecialSchemaMap = {};
+export var ModuleNewActionSchema = {
+  key: 'Module_new_action',
+  isObject: true,
+  items: [{
+    key: 'actionType',
+    label: function label() {
+      return i18n.t(localeKeys.action.self);
+    },
+    type: ['string'],
+    mutualExclusion: true,
+    items: ModuleActionTypes.map(function (type) {
+      return {
+        key: type,
+        label: ActionTypeText[type],
+        type: ['string'],
+        mutualExclusion: true,
+        items: ModuleActionFunctions.map(function (func) {
+          return ModuleSpecialSchemaMap[func] || {
+            key: func,
+            label: ActionFunctionText[func]
+          };
+        })
+      };
+    })
+  }]
+};
+export var ModuleActionFunctionsDevDependencies = (_ModuleActionFunction = {}, _defineProperty(_ModuleActionFunction, ActionFunction.Doc, '@modern-js/plugin-docsite'), _defineProperty(_ModuleActionFunction, ActionFunction.Storybook, '@modern-js/plugin-storybook'), _defineProperty(_ModuleActionFunction, ActionFunction.RuntimeApi, '@modern-js/runtime'), _defineProperty(_ModuleActionFunction, ActionFunction.TailwindCSS, 'tailwindcss'), _ModuleActionFunction);
+export var ModuleActionFunctionsPeerDependencies = (_ModuleActionFunction2 = {}, _defineProperty(_ModuleActionFunction2, ActionFunction.RuntimeApi, '@modern-js/runtime'), _defineProperty(_ModuleActionFunction2, ActionFunction.TailwindCSS, 'tailwindcss'), _ModuleActionFunction2);
+export var ModuleActionFunctionsDependencies = (_ModuleActionFunction3 = {}, _defineProperty(_ModuleActionFunction3, ActionFunction.I18n, '@modern-js/plugin-i18n'), _defineProperty(_ModuleActionFunction3, ActionFunction.TailwindCSS, '@modern-js/plugin-tailwindcss'), _defineProperty(_ModuleActionFunction3, ActionFunction.Less, '@modern-js/plugin-less'), _defineProperty(_ModuleActionFunction3, ActionFunction.Sass, '@modern-js/plugin-sass'), _ModuleActionFunction3);
+export var ModuleNewActionGenerators = _defineProperty({}, ActionType.Function, (_ActionType$Function = {}, _defineProperty(_ActionType$Function, ActionFunction.TailwindCSS, '@modern-js/tailwindcss-generator'), _defineProperty(_ActionType$Function, ActionFunction.Less, '@modern-js/dependence-generator'), _defineProperty(_ActionType$Function, ActionFunction.Sass, '@modern-js/dependence-generator'), _defineProperty(_ActionType$Function, ActionFunction.I18n, '@modern-js/dependence-generator'), _defineProperty(_ActionType$Function, ActionFunction.Test, '@modern-js/dependence-generator'), _defineProperty(_ActionType$Function, ActionFunction.Doc, '@modern-js/dependence-generator'), _defineProperty(_ActionType$Function, ActionFunction.Storybook, '@modern-js/storybook-generator'), _defineProperty(_ActionType$Function, ActionFunction.RuntimeApi, '@modern-js/dependence-generator'), _ActionType$Function));

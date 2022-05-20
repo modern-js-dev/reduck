@@ -1,0 +1,29 @@
+import * as babel from '@babel/core';
+import { BabelOptions, IVirtualDist } from './type';
+export interface ISingleFileCompilerOption {
+  filepath: string;
+  rootDir: string;
+  enableVirtualDist?: boolean;
+  distDir?: string;
+  verbose?: boolean;
+  quiet?: boolean;
+  babelConfig?: BabelOptions;
+  distFileExtMap?: Record<string, string>;
+}
+export declare const isRes: (r: babel.BabelFileResult | null) => r is babel.BabelFileResult;
+export declare const getDistFilePath: (option: {
+  filepath: string;
+  rootDir: string;
+  distDir: string;
+  extMap: Record<string, string>;
+}) => string;
+export declare const resolveSourceMap: (option: {
+  babelRes: babel.BabelFileResult;
+  sourceFilePath: string;
+  distFilePath: string;
+  enableVirtualDist?: boolean;
+}) => {
+  sourcemap: string;
+  sourceMapPath: string;
+};
+export declare const compiler: (option: ISingleFileCompilerOption) => IVirtualDist | null;

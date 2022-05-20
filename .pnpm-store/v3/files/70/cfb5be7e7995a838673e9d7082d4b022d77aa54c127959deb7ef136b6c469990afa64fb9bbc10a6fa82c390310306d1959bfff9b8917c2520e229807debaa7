@@ -1,0 +1,20 @@
+import { RuntimeContext } from '@modern-js/runtime-core';
+import { ModernSSRReactComponent, SSRServerContext, RenderResult } from './type';
+declare type EntryOptions = {
+  ctx: SSRServerContext;
+  App: ModernSSRReactComponent;
+};
+export default class Entry {
+  entryName: string;
+  result: RenderResult;
+  metrics: SSRServerContext['metrics'];
+  logger: SSRServerContext['logger'];
+  private readonly App;
+  private readonly fragments;
+  constructor(options: EntryOptions);
+  renderToHtml(context: RuntimeContext): Promise<string>;
+  private prefetch;
+  private renderToString;
+  private getSSRDataScript;
+}
+export {};

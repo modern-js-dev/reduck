@@ -1,0 +1,173 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.modifyServerRoutes = exports.modifyFileSystemRoutes = exports.modifyEntryRuntimePlugins = exports.modifyEntryRenderFunction = exports.modifyEntryImports = exports.modifyEntryExport = exports.htmlPartials = exports.default = exports.beforeGenerateRoutes = exports.addRuntimeExports = exports.addDefineTypes = void 0;
+
+var path = _interopRequireWildcard(require("path"));
+
+var _plugin = require("@modern-js/plugin");
+
+var _utils = require("@modern-js/utils");
+
+var _lodash = require("@modern-js/utils/lodash");
+
+var _utils2 = require("./utils");
+
+function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
+
+function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+const debug = (0, _utils.createDebugger)('plugin-analyze');
+const modifyEntryImports = (0, _plugin.createAsyncWaterfall)();
+exports.modifyEntryImports = modifyEntryImports;
+const modifyEntryExport = (0, _plugin.createAsyncWaterfall)();
+exports.modifyEntryExport = modifyEntryExport;
+const addRuntimeExports = (0, _plugin.createAsyncWaterfall)();
+exports.addRuntimeExports = addRuntimeExports;
+const modifyEntryRuntimePlugins = (0, _plugin.createAsyncWaterfall)();
+exports.modifyEntryRuntimePlugins = modifyEntryRuntimePlugins;
+const modifyEntryRenderFunction = (0, _plugin.createAsyncWaterfall)();
+exports.modifyEntryRenderFunction = modifyEntryRenderFunction;
+const modifyFileSystemRoutes = (0, _plugin.createAsyncWaterfall)();
+exports.modifyFileSystemRoutes = modifyFileSystemRoutes;
+const modifyServerRoutes = (0, _plugin.createAsyncWaterfall)();
+exports.modifyServerRoutes = modifyServerRoutes;
+const htmlPartials = (0, _plugin.createAsyncWaterfall)();
+exports.htmlPartials = htmlPartials;
+const beforeGenerateRoutes = (0, _plugin.createAsyncWaterfall)();
+exports.beforeGenerateRoutes = beforeGenerateRoutes;
+const addDefineTypes = (0, _plugin.createAsyncWaterfall)();
+exports.addDefineTypes = addDefineTypes;
+
+var _default = () => ({
+  name: '@modern-js/plugin-analyze',
+  registerHook: {
+    modifyEntryImports,
+    modifyEntryExport,
+    modifyEntryRuntimePlugins,
+    modifyEntryRenderFunction,
+    modifyFileSystemRoutes,
+    modifyServerRoutes,
+    htmlPartials,
+    addRuntimeExports,
+    beforeGenerateRoutes,
+    addDefineTypes
+  },
+  setup: api => {
+    let pagesDir = [];
+    let originEntrypoints = [];
+    return {
+      async prepare() {
+        const appContext = api.useAppContext();
+        const resolvedConfig = api.useResolvedConfigContext();
+        const hookRunners = api.useHookRunners();
+
+        try {
+          _utils.fs.emptydirSync(appContext.internalDirectory);
+        } catch (_unused) {// FIXME:
+        }
+
+        const apiOnly = await (0, _utils.isApiOnly)(appContext.appDirectory);
+        await hookRunners.addRuntimeExports();
+
+        if (apiOnly) {
+          const {
+            routes
+          } = await hookRunners.modifyServerRoutes({
+            routes: []
+          });
+          debug(`server routes: %o`, routes);
+          api.setAppContext(_objectSpread(_objectSpread({}, appContext), {}, {
+            apiOnly,
+            serverRoutes: routes
+          }));
+          return;
+        }
+
+        const [{
+          getBundleEntry
+        }, {
+          getServerRoutes
+        }, {
+          generateCode
+        }, {
+          getHtmlTemplate
+        }] = await Promise.all([Promise.resolve().then(() => _interopRequireWildcard(require("./getBundleEntry"))), Promise.resolve().then(() => _interopRequireWildcard(require("./getServerRoutes"))), Promise.resolve().then(() => _interopRequireWildcard(require("./generateCode"))), Promise.resolve().then(() => _interopRequireWildcard(require("./getHtmlTemplate")))]);
+        const entrypoints = getBundleEntry(appContext, resolvedConfig);
+        const defaultChecked = entrypoints.map(point => point.entryName);
+        debug(`entrypoints: %o`, entrypoints);
+        const initialRoutes = getServerRoutes(entrypoints, {
+          appContext,
+          config: resolvedConfig
+        });
+        const {
+          routes
+        } = await hookRunners.modifyServerRoutes({
+          routes: initialRoutes
+        });
+        debug(`server routes: %o`, routes);
+        api.setAppContext(_objectSpread(_objectSpread({}, appContext), {}, {
+          entrypoints,
+          serverRoutes: routes
+        }));
+        pagesDir = entrypoints.map(point => point.entry);
+        originEntrypoints = (0, _lodash.cloneDeep)(entrypoints);
+        await generateCode(appContext, resolvedConfig, entrypoints, api);
+        const htmlTemplates = await getHtmlTemplate(entrypoints, api, {
+          appContext,
+          config: resolvedConfig
+        });
+        debug(`html templates: %o`, htmlTemplates);
+        await hookRunners.addDefineTypes();
+        debug(`add Define Types`);
+        api.setAppContext(_objectSpread(_objectSpread({}, appContext), {}, {
+          entrypoints,
+          checkedEntries: defaultChecked,
+          apiOnly,
+          serverRoutes: routes,
+          htmlTemplates
+        }));
+      },
+
+      watchFiles() {
+        return pagesDir;
+      },
+
+      async fileChange(e) {
+        const appContext = api.useAppContext();
+        const {
+          appDirectory
+        } = appContext;
+        const {
+          filename,
+          eventType
+        } = e;
+
+        const isPageFile = name => pagesDir.some(pageDir => name.includes(pageDir));
+
+        const absoluteFilePath = path.resolve(appDirectory, filename);
+        const isRouteComponent = isPageFile(absoluteFilePath) && (0, _utils2.isRouteComponentFile)(absoluteFilePath);
+
+        if (isRouteComponent && (eventType === 'add' || eventType === 'unlink')) {
+          const resolvedConfig = api.useResolvedConfigContext();
+          const {
+            generateCode
+          } = await Promise.resolve().then(() => _interopRequireWildcard(require("./generateCode")));
+          const entrypoints = (0, _lodash.cloneDeep)(originEntrypoints);
+          generateCode(appContext, resolvedConfig, entrypoints, api);
+        }
+      }
+
+    };
+  }
+});
+
+exports.default = _default;

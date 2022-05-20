@@ -1,0 +1,14 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.hooks = void 0;
+
+var _plugin = require("@modern-js/plugin");
+
+const afterMonorepoDeploy = (0, _plugin.createAsyncWorkflow)();
+const hooks = {
+  afterMonorepoDeploy
+};
+exports.hooks = hooks;

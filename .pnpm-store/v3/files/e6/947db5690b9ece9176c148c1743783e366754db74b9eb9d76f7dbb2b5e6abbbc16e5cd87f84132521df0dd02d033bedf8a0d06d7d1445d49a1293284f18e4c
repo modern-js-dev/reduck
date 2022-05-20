@@ -1,0 +1,33 @@
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+import path from 'path';
+import { resolveBabelConfig } from '@modern-js/server-utils';
+const registerDirs = ['./api', './server', './config/mock', './shared'];
+export const enableRegister = (projectRoot, config) => {
+  const TS_CONFIG_FILENAME = `tsconfig.json`;
+  const tsconfigPath = path.resolve(projectRoot, TS_CONFIG_FILENAME);
+  const babelConfig = resolveBabelConfig(projectRoot, config, {
+    tsconfigPath,
+    syntax: 'es6+',
+    type: 'commonjs'
+  });
+  return require('@babel/register')(_objectSpread(_objectSpread({}, babelConfig), {}, {
+    only: [function (filePath) {
+      // TODO: wait params
+      // FIXME: 删除hardcode，根据 AppContext 中的 metaName 设置路径
+      if (filePath.includes(`node_modules${path.sep}.modern-js`)) {
+        return true;
+      }
+
+      return registerDirs.some(registerDir => filePath.startsWith(path.join(projectRoot, registerDir)));
+    }],
+    extensions: ['.js', '.ts'],
+    babelrc: false,
+    configFile: false,
+    root: projectRoot
+  }));
+};

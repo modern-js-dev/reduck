@@ -1,0 +1,36 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.getPackageManager = void 0;
+const os_1 = __importDefault(require("os"));
+const path_1 = __importDefault(require("path"));
+const compiled_1 = require("./compiled");
+const nodeEnv_1 = require("./nodeEnv");
+const MAX_TIMES = 5;
+async function getPackageManager(cwd = process.cwd()) {
+    let appDirectory = cwd;
+    let times = 0;
+    while (os_1.default.homedir() !== appDirectory && times < MAX_TIMES) {
+        times++;
+        if (compiled_1.fs.existsSync(path_1.default.resolve(appDirectory, 'pnpm-lock.yaml'))) {
+            return 'pnpm';
+        }
+        if (compiled_1.fs.existsSync(path_1.default.resolve(appDirectory, 'yarn.lock'))) {
+            return 'yarn';
+        }
+        if (compiled_1.fs.existsSync(path_1.default.resolve(appDirectory, 'package-lock.json'))) {
+            return 'npm';
+        }
+        appDirectory = path_1.default.join(appDirectory, '..');
+    }
+    if (await (0, nodeEnv_1.canUsePnpm)()) {
+        return 'pnpm';
+    }
+    if (await (0, nodeEnv_1.canUseYarn)()) {
+        return 'yarn';
+    }
+    return 'npm';
+}
+exports.getPackageManager = getPackageManager;

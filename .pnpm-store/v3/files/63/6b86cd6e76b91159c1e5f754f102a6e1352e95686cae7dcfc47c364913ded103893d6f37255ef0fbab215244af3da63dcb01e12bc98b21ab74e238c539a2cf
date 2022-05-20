@@ -1,0 +1,8 @@
+export declare const EN_LOCALE: {
+  packageName: {
+    exit: string;
+  };
+  packagePath: {
+    exit: string;
+  };
+};

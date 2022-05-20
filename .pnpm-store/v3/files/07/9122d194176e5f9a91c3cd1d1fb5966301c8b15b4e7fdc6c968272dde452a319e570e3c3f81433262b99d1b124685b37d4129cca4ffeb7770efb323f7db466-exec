@@ -1,0 +1,32 @@
+{
+    "name": "@types/loadable__component",
+    "version": "5.13.4",
+    "description": "TypeScript definitions for @loadable/component",
+    "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/loadable__component",
+    "license": "MIT",
+    "contributors": [
+        {
+            "name": "Martynas Kadiša",
+            "url": "https://github.com/martynaskadisa",
+            "githubUsername": "martynaskadisa"
+        },
+        {
+            "name": "Daniel Playfair Cal",
+            "url": "https://github.com/hedgepigdaniel",
+            "githubUsername": "hedgepigdaniel"
+        }
+    ],
+    "main": "",
+    "types": "index.d.ts",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
+        "directory": "types/loadable__component"
+    },
+    "scripts": {},
+    "dependencies": {
+        "@types/react": "*"
+    },
+    "typesPublisherContentHash": "7c9ec935fa578e71a53afbeb1a6b7598a6f38a97d4d52651eab568965cfff361",
+    "typeScriptVersion": "3.6"
+}

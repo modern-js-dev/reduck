@@ -1,0 +1,30 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.applyOptionsChain = void 0;
+// eslint-disable-next-line import/no-useless-path-segments
+const index_1 = require("./index");
+const applyOptionsChain = (defaults, options, utils, mergeFn = Object.assign) => {
+    if (!options) {
+        return defaults;
+    }
+    if ((0, index_1.isPlainObject)(options)) {
+        return mergeFn(defaults, options);
+    }
+    else if ((0, index_1.isFunction)(options)) {
+        const ret = options(defaults, utils);
+        if (ret) {
+            if (!(0, index_1.isPlainObject)(ret)) {
+                index_1.logger.warn(`${options.name}: Function should mutate the config and return nothing, Or return a cloned or merged version of config object.`);
+            }
+            return ret;
+        }
+    }
+    else if (Array.isArray(options)) {
+        return options.reduce((memo, cur) => (0, exports.applyOptionsChain)(memo, cur, utils, mergeFn), defaults);
+    }
+    else {
+        throw new Error(`applyOptionsChain error:\ndefault options is: ${JSON.stringify(defaults)}`);
+    }
+    return defaults;
+};
+exports.applyOptionsChain = applyOptionsChain;

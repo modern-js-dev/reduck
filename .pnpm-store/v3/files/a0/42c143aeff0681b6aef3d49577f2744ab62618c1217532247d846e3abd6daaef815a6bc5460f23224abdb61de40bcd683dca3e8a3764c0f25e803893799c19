@@ -1,0 +1,9 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.getSassConfig = void 0;
+const utils_1 = require("@modern-js/utils");
+const getSassConfig = (config, options = {}) => (0, utils_1.applyOptionsChain)({
+    sourceMap: false,
+    ...options,
+}, config.tools.sass);
+exports.getSassConfig = getSassConfig;

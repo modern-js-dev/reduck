@@ -1,0 +1,71 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.createMetrics = exports.createLogger = void 0;
+
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+const createMetrics = (context, metrics) => {
+  const {
+    entryName: entry,
+    request
+  } = context;
+  const {
+    pathname = ''
+  } = request || {};
+
+  const emitTimer = (name, cost, tags = {}) => {
+    metrics.emitTimer(name, cost, _objectSpread(_objectSpread({}, tags), {}, {
+      pathname,
+      entry
+    }));
+  };
+
+  const emitCounter = (name, counter, tags = {}) => {
+    metrics.emitCounter(name, counter, _objectSpread(_objectSpread({}, tags), {}, {
+      pathname,
+      entry
+    }));
+  };
+
+  return {
+    emitTimer,
+    emitCounter
+  };
+};
+
+exports.createMetrics = createMetrics;
+
+const createLogger = (serverContext, logger) => {
+  const request = serverContext.request || {};
+  const {
+    headers = {},
+    pathname = ''
+  } = request;
+
+  const debug = (message, ...args) => {
+    logger.debug(`SSR Debug - ${message}, req.url = %s`, ...args, pathname);
+  };
+
+  const info = (message, ...args) => {
+    logger.info(`SSR Info - ${message}, req.url = %s`, ...args, pathname);
+  };
+
+  const error = (message, e) => {
+    logger.error(`SSR Error - ${message}, error = %s, req.url = %s, req.headers = %o`, e instanceof Error ? e.stack || e.message : e, pathname, headers);
+  };
+
+  return {
+    error,
+    info,
+    debug
+  };
+};
+
+exports.createLogger = createLogger;

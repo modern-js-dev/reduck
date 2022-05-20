@@ -1,0 +1,59 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.release = release;
+
+var _path = _interopRequireDefault(require("path"));
+
+var _utils = require("@modern-js/utils");
+
+var _git = require("@changesets/git");
+
+var _utils2 = require("../utils");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+async function release(options) {
+  const appDir = process.cwd();
+  const isMonorepo = (0, _utils.isModernjsMonorepo)(appDir);
+  const packageManager = await (0, _utils.getPackageManager)(process.cwd());
+  const params = ['publish'];
+  const {
+    tag,
+    ignoreScripts,
+    gitChecks
+  } = options;
+
+  if (tag) {
+    params.push('--tag');
+    params.push(tag);
+  }
+
+  if (!isMonorepo || packageManager === 'yarn' || packageManager === 'npm') {
+    await (0, _utils2.execaWithStreamLog)(process.execPath, [_utils2.CHANGESET_PATH, ...params]);
+    return;
+  }
+
+  params.push('-r');
+  params.push('--filter');
+  params.push('{./packages}');
+  params.push('--report-summary');
+
+  if (ignoreScripts) {
+    params.push('--ignore-scripts');
+  }
+
+  if (!gitChecks) {
+    params.push('--no-git-checks');
+  }
+
+  await (0, _utils2.execaWithStreamLog)(packageManager, params);
+
+  const pnpmPublishSummaryFile = _path.default.join(appDir, 'pnpm-publish-summary.json');
+
+  const publishInfo = await _utils.fs.readJSON(pnpmPublishSummaryFile, 'utf-8');
+  await Promise.all((publishInfo.publishedPackages || []).map(pkg => (0, _git.tag)(`${pkg.name}@${pkg.version}`, appDir)));
+  await _utils.fs.remove(pnpmPublishSummaryFile);
+}

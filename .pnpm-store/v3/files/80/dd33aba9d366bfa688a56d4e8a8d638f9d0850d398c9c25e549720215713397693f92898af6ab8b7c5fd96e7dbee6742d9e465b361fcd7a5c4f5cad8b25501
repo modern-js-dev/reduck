@@ -1,0 +1,12 @@
+import { Schema } from '@modern-js/easy-form-core';
+import { Solution } from './common';
+export * from './locale';
+export * from './common';
+export * from './newAction';
+export * from './mwa';
+export * from './module';
+export * from './monorepo';
+export * from './expand';
+export * from './base';
+export declare const SolutionDefaultConfig: Record<Solution, Record<string, string>>;
+export declare const SolutionSchemas: Record<Solution | 'custom', Schema[]>;

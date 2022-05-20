@@ -1,0 +1,108 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.syncGetProjectsByWorkspaceFile = exports.getProjectsByWorkspaceFile = void 0;
+
+var path = _interopRequireWildcard(require("path"));
+
+var _nodeCoreLibrary = require("@rushstack/node-core-library");
+
+var _utils = require("@modern-js/utils");
+
+var _monorepo = require("../parse-config/monorepo");
+
+var _constants = require("../constants");
+
+var _getProjectsByPackagesConfig = require("./get-projects-by-packages-config");
+
+function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
+
+function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+
+const getProjectsByWorkspaceFile = async (rootPath, config, ignoreConfigs) => {
+  var _config$workspaceFile;
+
+  let {
+    workspaceFile
+  } = config;
+
+  if (!config.enableAutoFinder && (!('workspaceFile' in config) || ((_config$workspaceFile = config.workspaceFile) === null || _config$workspaceFile === void 0 ? void 0 : _config$workspaceFile.length) === 0)) {
+    throw new Error('Missing workspaceFile Key or workspaceFile is empty string');
+  }
+
+  if (config.enableAutoFinder) {
+    workspaceFile = (0, _monorepo.getWorkspaceFile)(rootPath);
+  }
+
+  let packagesConfig = [];
+
+  if (workspaceFile === _constants.WORKSPACE_FILE.PNPM) {
+    const yamlString = await _nodeCoreLibrary.FileSystem.readFileAsync(path.resolve('/', rootPath, workspaceFile)).then(data => data.toString());
+
+    const pnpmWorkspace = _utils.yaml.load(yamlString);
+
+    packagesConfig = pnpmWorkspace.packages || [];
+  } else if (workspaceFile === _constants.WORKSPACE_FILE.YARN) {
+    var _pkgJson$workspaces;
+
+    const pkgJson = _nodeCoreLibrary.JsonFile.load(path.resolve(rootPath, workspaceFile));
+
+    packagesConfig = (pkgJson === null || pkgJson === void 0 ? void 0 : (_pkgJson$workspaces = pkgJson.workspaces) === null || _pkgJson$workspaces === void 0 ? void 0 : _pkgJson$workspaces.packages) || [];
+  } else if (workspaceFile === _constants.WORKSPACE_FILE.LERNA) {
+    var _lernaJson$packages;
+
+    const lernaJson = _nodeCoreLibrary.JsonFile.load(path.resolve(rootPath, workspaceFile));
+
+    packagesConfig = (_lernaJson$packages = lernaJson.packages) !== null && _lernaJson$packages !== void 0 ? _lernaJson$packages : [];
+  }
+
+  const projects = await (0, _getProjectsByPackagesConfig.getProjectsByPackageConfig)(rootPath, packagesConfig, ignoreConfigs);
+  return projects;
+};
+
+exports.getProjectsByWorkspaceFile = getProjectsByWorkspaceFile;
+
+const syncGetProjectsByWorkspaceFile = (rootPath, config, ignoreConfigs) => {
+  var _config$workspaceFile2;
+
+  let {
+    workspaceFile
+  } = config;
+
+  if (!config.enableAutoFinder && (!('workspaceFile' in config) || ((_config$workspaceFile2 = config.workspaceFile) === null || _config$workspaceFile2 === void 0 ? void 0 : _config$workspaceFile2.length) === 0)) {
+    throw new Error('Missing workspaceFile Key or workspaceFile is empty string');
+  }
+
+  if (config.enableAutoFinder) {
+    workspaceFile = (0, _monorepo.getWorkspaceFile)(rootPath);
+  }
+
+  let packagesConfig = [];
+
+  if (workspaceFile === _constants.WORKSPACE_FILE.PNPM) {
+    const yamlString = _utils.fs.readFileSync(path.resolve('/', rootPath, workspaceFile), 'utf-8');
+
+    const pnpmWorkspace = _utils.yaml.load(yamlString);
+
+    packagesConfig = pnpmWorkspace.packages || [];
+  } else if (workspaceFile === _constants.WORKSPACE_FILE.YARN) {
+    var _pkgJson$workspaces2;
+
+    const pkgJson = _nodeCoreLibrary.JsonFile.load(path.resolve(rootPath, workspaceFile));
+
+    packagesConfig = (pkgJson === null || pkgJson === void 0 ? void 0 : (_pkgJson$workspaces2 = pkgJson.workspaces) === null || _pkgJson$workspaces2 === void 0 ? void 0 : _pkgJson$workspaces2.packages) || [];
+  } else if (workspaceFile === _constants.WORKSPACE_FILE.LERNA) {
+    var _lernaJson$packages2;
+
+    const lernaJson = _nodeCoreLibrary.JsonFile.load(path.resolve(rootPath, workspaceFile));
+
+    packagesConfig = (_lernaJson$packages2 = lernaJson.packages) !== null && _lernaJson$packages2 !== void 0 ? _lernaJson$packages2 : [];
+  }
+
+  const projects = (0, _getProjectsByPackagesConfig.syncGetProjectsByPackageConfig)(rootPath, packagesConfig, ignoreConfigs);
+  return projects;
+};
+
+exports.syncGetProjectsByWorkspaceFile = syncGetProjectsByWorkspaceFile;

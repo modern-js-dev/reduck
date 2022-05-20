@@ -1,0 +1,122 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _react = require("react");
+
+var _invariant = _interopRequireDefault(require("invariant"));
+
+var _runtimeContext = require("../runtime-context");
+
+var _loaderManager = require("./loaderManager");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+const useLoader = (loaderFn, options = {
+  params: undefined
+}) => {
+  const context = (0, _react.useContext)(_runtimeContext.RuntimeReactContext);
+  const isSSRRender = Boolean(context.ssr);
+  const {
+    loaderManager
+  } = context;
+  const loaderRef = (0, _react.useRef)();
+  const unlistenLoaderChangeRef = (0, _react.useRef)(null);
+  const load = (0, _react.useCallback)(params => {
+    var _window, _window$_SSR_DATA, _window$_SSR_DATA$dat, _window$_SSR_DATA$dat2, _unlistenLoaderChange4, _loaderRef$current2;
+
+    if (typeof params === 'undefined') {
+      var _loaderRef$current;
+
+      return (_loaderRef$current = loaderRef.current) === null || _loaderRef$current === void 0 ? void 0 : _loaderRef$current.load();
+    }
+
+    const id = loaderManager.add(() => {
+      try {
+        const res = loaderFn(context, params);
+
+        if (res instanceof Promise) {
+          return res;
+        }
+
+        return Promise.resolve(res);
+      } catch (e) {
+        return Promise.reject(e);
+      }
+    }, _objectSpread(_objectSpread({}, options), {}, {
+      params
+    }));
+    loaderRef.current = loaderManager.get(id);
+
+    if (isSSRRender) {
+      var _unlistenLoaderChange;
+
+      (_unlistenLoaderChange = unlistenLoaderChangeRef.current) === null || _unlistenLoaderChange === void 0 ? void 0 : _unlistenLoaderChange.call(unlistenLoaderChangeRef);
+      return undefined;
+    } // skip this loader, then try to unlisten loader change
+
+
+    if (options.skip) {
+      var _unlistenLoaderChange2;
+
+      (_unlistenLoaderChange2 = unlistenLoaderChangeRef.current) === null || _unlistenLoaderChange2 === void 0 ? void 0 : _unlistenLoaderChange2.call(unlistenLoaderChangeRef);
+      return undefined;
+    } // do not load data again in CSR hydrate stage if SSR data exists
+
+
+    if (context._hydration && ((_window = window) === null || _window === void 0 ? void 0 : (_window$_SSR_DATA = _window._SSR_DATA) === null || _window$_SSR_DATA === void 0 ? void 0 : (_window$_SSR_DATA$dat = _window$_SSR_DATA.data) === null || _window$_SSR_DATA$dat === void 0 ? void 0 : (_window$_SSR_DATA$dat2 = _window$_SSR_DATA$dat.loadersData[id]) === null || _window$_SSR_DATA$dat2 === void 0 ? void 0 : _window$_SSR_DATA$dat2.error) === null) {
+      var _unlistenLoaderChange3;
+
+      (_unlistenLoaderChange3 = unlistenLoaderChangeRef.current) === null || _unlistenLoaderChange3 === void 0 ? void 0 : _unlistenLoaderChange3.call(unlistenLoaderChangeRef);
+      return undefined;
+    }
+
+    const res = loaderRef.current.load(); // unlisten old loader, and subsribe to new loader
+
+    (_unlistenLoaderChange4 = unlistenLoaderChangeRef.current) === null || _unlistenLoaderChange4 === void 0 ? void 0 : _unlistenLoaderChange4.call(unlistenLoaderChangeRef);
+    unlistenLoaderChangeRef.current = (_loaderRef$current2 = loaderRef.current) === null || _loaderRef$current2 === void 0 ? void 0 : _loaderRef$current2.onChange((_status, _result) => {
+      setResult(_result);
+
+      if (_status === _loaderManager.LoaderStatus.fulfilled) {
+        var _options$onSuccess;
+
+        options === null || options === void 0 ? void 0 : (_options$onSuccess = options.onSuccess) === null || _options$onSuccess === void 0 ? void 0 : _options$onSuccess.call(options, _result.data);
+      }
+
+      if (_status === _loaderManager.LoaderStatus.rejected) {
+        var _options$onError;
+
+        options === null || options === void 0 ? void 0 : (_options$onError = options.onError) === null || _options$onError === void 0 ? void 0 : _options$onError.call(options, _result.error);
+      }
+    });
+    return res;
+  }, [options.skip]);
+  (0, _react.useEffect)(() => () => {
+    var _unlistenLoaderChange5;
+
+    (_unlistenLoaderChange5 = unlistenLoaderChangeRef.current) === null || _unlistenLoaderChange5 === void 0 ? void 0 : _unlistenLoaderChange5.call(unlistenLoaderChangeRef);
+  }, []);
+  (0, _react.useMemo)(() => {
+    var _options$params;
+
+    const p = (_options$params = options.params) !== null && _options$params !== void 0 ? _options$params : loaderFn.id;
+    (0, _invariant.default)(typeof p !== 'undefined' && p !== null, 'Params is required in useLoader');
+    load(p);
+  }, [options.params]);
+  const [result, setResult] = (0, _react.useState)(loaderRef.current.result);
+  return _objectSpread(_objectSpread({}, result), {}, {
+    reload: load
+  });
+};
+
+var _default = useLoader;
+exports.default = _default;

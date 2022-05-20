@@ -1,0 +1,6 @@
+export declare const applyOptionsChain: <T, U>(defaults: T, options?: T | (T | ((config: T, utils?: U | undefined) => void | T))[] | ((config: T, utils?: U | undefined) => void | T) | undefined, utils?: U | undefined, mergeFn?: {
+    <T_1, U_1>(target: T_1, source: U_1): T_1 & U_1;
+    <T_2, U_2, V>(target: T_2, source1: U_2, source2: V): T_2 & U_2 & V;
+    <T_3, U_3, V_1, W>(target: T_3, source1: U_3, source2: V_1, source3: W): T_3 & U_3 & V_1 & W;
+    (target: object, ...sources: any[]): any;
+}) => T;

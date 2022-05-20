@@ -1,0 +1,3 @@
+import type { PluginAPI } from '@modern-js/core';
+declare const test: (api: PluginAPI) => Promise<void>;
+export default test;

@@ -1,0 +1,6 @@
+/// <reference path="../../../../server/prod-server/src/type.d.ts" />
+/// <reference types="node" />
+/// <reference types="node/http" />
+export declare const isInHandler: () => boolean;
+declare const createApp: (pwd: string, config: any, plugins: any[], routes: any[]) => Promise<(req: import("http").IncomingMessage, res: import("http").ServerResponse, next?: (() => void) | undefined) => void>;
+export { createApp };

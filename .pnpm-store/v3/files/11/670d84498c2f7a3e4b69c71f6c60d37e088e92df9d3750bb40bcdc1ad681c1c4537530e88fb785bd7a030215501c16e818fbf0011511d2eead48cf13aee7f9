@@ -1,0 +1,121 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.buildInWatchMode = void 0;
+
+var path = _interopRequireWildcard(require("path"));
+
+var os = _interopRequireWildcard(require("os"));
+
+var _utils = require("@modern-js/utils");
+
+function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
+
+function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+
+const lg = _utils.Import.lazy('./logger', require);
+
+const pMap = _utils.Import.lazy('p-map', require);
+
+const utils = _utils.Import.lazy('./utils', require);
+
+const constants = _utils.Import.lazy('./constants', require);
+
+const buildInWatchMode = async (api, config, _) => {
+  const {
+    appDirectory
+  } = api.useAppContext();
+  const {
+    sourceDir,
+    enableTscCompiler
+  } = config;
+  const srcRootDir = path.join(appDirectory, sourceDir);
+  const concurrency = os.cpus().length;
+  const lm = new lg.LoggerManager();
+  const codeLog = lm.createLoggerText({
+    title: constants.runBabelCompilerTitle
+  });
+  const dtsLog = lm.createLoggerText({
+    title: constants.runTscWatchTitle
+  });
+  const styleLog = lm.createLoggerText({
+    title: constants.runStyleCompilerTitle
+  });
+  const copyLog = lm.createLoggerText({
+    title: 'Copy Log:'
+  });
+  const initCodeMapper = utils.getCodeInitMapper(api, config);
+  const taskMapper = [...utils.getCodeMapper(api, {
+    logger: codeLog,
+    taskPath: require.resolve("../../tasks/build-watch-source-code"),
+    config,
+    willCompilerDirOrFile: sourceDir,
+    initMapper: initCodeMapper,
+    srcRootDir
+  }), ...(enableTscCompiler ? utils.getDtsMapper(api, config, dtsLog) : []), {
+    logger: styleLog,
+    taskPath: require.resolve("../../tasks/build-watch-style")
+  }, {
+    logger: copyLog,
+    taskPath: require.resolve("../../tasks/copy-assets"),
+    params: ['--watch']
+  }];
+  lm.on('data', () => {
+    console.info(constants.clearFlag);
+    enableTscCompiler && console.info(dtsLog.value);
+    console.info(codeLog.value);
+    console.info(styleLog.value);
+  });
+  await pMap(taskMapper, async ({
+    logger,
+    taskPath,
+    params
+  }) => {
+    const childProcess = _utils.execa.node(taskPath, params, {
+      stdio: 'pipe'
+    });
+
+    if (logger === codeLog) {
+      lm.addStdout(logger, childProcess.stdout, {
+        event: {
+          error: true,
+          data: true
+        } // colors: { data: s => s },
+
+      });
+      lm.addStderr(logger, childProcess.stderr);
+    }
+
+    if (logger === dtsLog) {
+      lm.addStdout(logger, childProcess.stdout, {
+        event: {
+          data: true,
+          error: true
+        },
+        colors: {
+          // tsc 的log信息无论是错误还是正确都是从 data event 中获取到的
+          data: s => s
+        }
+      });
+    }
+
+    if (logger === styleLog || logger === copyLog) {
+      lm.addStdout(logger, childProcess.stdout, {
+        event: {
+          error: true,
+          data: true
+        } // colors: { data: s => s },
+
+      });
+      lm.addStderr(logger, childProcess.stderr);
+    }
+
+    await childProcess;
+  }, {
+    concurrency
+  });
+};
+
+exports.buildInWatchMode = buildInWatchMode;

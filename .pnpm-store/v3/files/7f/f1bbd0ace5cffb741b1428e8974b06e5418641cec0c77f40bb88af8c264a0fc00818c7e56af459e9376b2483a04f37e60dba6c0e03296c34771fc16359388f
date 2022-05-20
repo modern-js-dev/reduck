@@ -1,0 +1,12 @@
+import type { NormalizedConfig } from '@modern-js/core';
+import type { ProcessOptions, AcceptedPlugin } from 'postcss';
+/**
+ *
+ * @param autoprefixer - Enable autoprefixer config.
+ * @returns Base PostCSS config options for app or library.
+ */
+export declare const getPostcssConfig: (appDirectory: string, config: NormalizedConfig, autoprefixer?: boolean) => ProcessOptions & {
+    postcssOptions: {
+        plugins?: AcceptedPlugin[];
+    };
+};

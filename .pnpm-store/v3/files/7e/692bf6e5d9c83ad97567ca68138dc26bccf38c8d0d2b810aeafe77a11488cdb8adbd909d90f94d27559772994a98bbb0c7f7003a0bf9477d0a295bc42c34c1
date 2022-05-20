@@ -1,0 +1,133 @@
+{
+  "name": "@modern-js/utils",
+  "description": "The meta-framework suite designed from scratch for frontend-focused modern web development.",
+  "homepage": "https://modernjs.dev",
+  "bugs": "https://github.com/modern-js-dev/modern.js/issues",
+  "repository": "modern-js-dev/modern.js",
+  "license": "MIT",
+  "keywords": [
+    "react",
+    "framework",
+    "modern",
+    "modern.js"
+  ],
+  "version": "1.7.5",
+  "jsnext:source": "./src/index.ts",
+  "types": "./dist/index.d.ts",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "jsnext:modern": "./dist/index.js",
+  "_comment": "Provide ESM and CJS exports, ESM is used by runtime package, for treeshaking",
+  "exports": {
+    ".": "./dist/index.js",
+    "./format": "./dist/format.js",
+    "./constants": "./dist/constants.js",
+    "./ssr": "./dist/ssr.js",
+    "./chalk": "./compiled/chalk/index.js",
+    "./json5": "./compiled/json5/index.js",
+    "./semver": "./compiled/semver/index.js",
+    "./lodash": "./compiled/lodash/index.js",
+    "./globby": "./compiled/globby/index.js",
+    "./fast-glob": "./compiled/fast-glob/index.js",
+    "./gzip-size": "./compiled/gzip-size/index.js",
+    "./mime-types": "./compiled/mime-types/index.js",
+    "./strip-ansi": "./compiled/strip-ansi/index.js",
+    "./browserslist": "./compiled/browserslist/index.js",
+    "./tsconfig-paths": "./compiled/tsconfig-paths/index.js"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
+  "typesVersions": {
+    "*": {
+      "format": [
+        "./dist/format.d.ts"
+      ],
+      "constants": [
+        "./dist/constants.d.ts"
+      ],
+      "ssr": [
+        "./dist/ssr.d.ts"
+      ],
+      "chalk": [
+        "./compiled/chalk/index.d.ts"
+      ],
+      "json5": [
+        "./compiled/json5/index.d.ts"
+      ],
+      "semver": [
+        "./compiled/semver/index.d.ts"
+      ],
+      "lodash": [
+        "./compiled/lodash/index.d.ts"
+      ],
+      "globby": [
+        "./compiled/globby/index.d.ts"
+      ],
+      "fast-glob": [
+        "./compiled/fast-glob/index.d.ts"
+      ],
+      "gzip-size": [
+        "./compiled/gzip-size/index.d.ts"
+      ],
+      "mime-types": [
+        "./compiled/mime-types/index.d.ts"
+      ],
+      "strip-ansi": [
+        "./compiled/strip-ansi/index.d.ts"
+      ],
+      "browserslist": [
+        "./compiled/browserslist/index.d.ts"
+      ],
+      "tsconfig-paths": [
+        "./compiled/tsconfig-paths/lib/index.d.ts"
+      ]
+    }
+  },
+  "dependencies": {
+    "caniuse-lite": "^1.0.30001332",
+    "lodash": "^4.17.21"
+  },
+  "devDependencies": {
+    "@modern-js/types": "1.5.3",
+    "@scripts/build": "0.0.0",
+    "@scripts/jest-config": "0.0.0",
+    "@types/jest": "^27",
+    "@types/node": "^14",
+    "typescript": "^4",
+    "jest": "^27",
+    "webpack": "^5.71.0"
+  },
+  "sideEffects": false,
+  "wireit": {
+    "build": {
+      "command": "tsc",
+      "files": [
+        "src/**/*",
+        "tsconfig.json",
+        "package.json"
+      ],
+      "output": [
+        "dist/**/*"
+      ]
+    },
+    "test": {
+      "command": "jest --passWithNoTests",
+      "files": [
+        "src/**/*",
+        "tsconfig.json",
+        "package.json",
+        "tests/**/*"
+      ],
+      "output": []
+    }
+  },
+  "scripts": {
+    "new": "modern new",
+    "dev": "tsc --watch",
+    "build": "wireit",
+    "test": "wireit"
+  },
+  "readme": "\n<p align=\"center\">\n  <a href=\"https://modernjs.dev\" target=\"blank\"><img src=\"https://lf3-static.bytednsdoc.com/obj/eden-cn/ylaelkeh7nuhfnuhf/modernjs-cover.png\" width=\"300\" alt=\"Modern.js Logo\" /></a>\n</p>\n<p align=\"center\">\n现代 Web 工程体系\n  <br/>\n  <a href=\"https://modernjs.dev\" target=\"blank\">\n    modernjs.dev\n  </a>\n</p>\n<p align=\"center\">\n  The meta-framework suite designed from scratch for frontend-focused modern web development\n</p>\n\n# Introduction\n\n> The doc site ([modernjs.dev](https://modernjs.dev)) and articles are only available in Chinese for now, we are planning to add English versions soon.\n\n- [Modern.js: Hello, World!](https://zhuanlan.zhihu.com/p/426707646)\n\n## Getting Started\n\n- [Quick Start](https://modernjs.dev/docs/start)\n- [Guides](https://modernjs.dev/docs/guides)\n- [API References](https://modernjs.dev/docs/apis)\n\n## Contributing\n\n- [Contributing Guide](https://github.com/modern-js-dev/modern.js/blob/main/CONTRIBUTING.md)\n"
+}

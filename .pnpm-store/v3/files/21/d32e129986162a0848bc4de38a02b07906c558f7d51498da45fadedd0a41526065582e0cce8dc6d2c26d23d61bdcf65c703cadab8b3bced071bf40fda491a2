@@ -1,0 +1,6 @@
+import { IProjectNode } from './get-projects';
+export declare const PROJECT_CONTENT_FILE_NAME = "project-content.json";
+export declare const MONOREPO_GIT_FILE_NAME = "monorepo-git.json";
+export declare const PROJECT_MEMORY_PATH = ".project-memory";
+export declare const checkProjectChangeByGit: (project: IProjectNode, rootPath: string) => Promise<boolean>;
+export declare const checkProjectChangeByContent: (project: IProjectNode) => Promise<boolean>;

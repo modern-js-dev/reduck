@@ -1,0 +1,23 @@
+import anymatch from 'anymatch';
+import { ICommandConfig } from '../../type';
+import { DagOperator } from '../../dag/operator';
+import { IProjectNode } from '../../projects/get-projects';
+import { Argu } from '../../utils/types';
+import { BuildWatchCmdsType } from './cmds';
+export interface IBuildWatchConfig extends ICommandConfig {
+  onlySelf?: boolean;
+  ignoreMaybeChanged?: Argu<typeof anymatch>;
+  needInit?: boolean;
+}
+export interface IProjectChangeResult {
+  /**
+   * The set of projects that have changed since the last iteration
+   */
+  changedProjects: Readonly<IProjectNode[]>;
+  /**
+   * Contains the git hashes for all tracked files in the repo
+   */
+
+  state: any;
+}
+export declare const runBuildWatchTask: (projectName: string, operator: DagOperator, config: IBuildWatchConfig, taskCmds?: BuildWatchCmdsType) => Promise<void>;

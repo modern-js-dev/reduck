@@ -1,0 +1,4 @@
+import type * as tt from '@babel/types';
+import type { NodePath } from '@babel/traverse';
+export declare function matchesPattern(calleePath: NodePath, pattern: string): boolean;
+export declare function isImportCall(calleePath: NodePath<tt.CallExpression>): boolean;

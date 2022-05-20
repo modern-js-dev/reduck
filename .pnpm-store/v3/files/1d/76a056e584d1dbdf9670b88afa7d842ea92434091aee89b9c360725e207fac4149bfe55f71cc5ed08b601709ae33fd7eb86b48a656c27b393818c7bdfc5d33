@@ -1,0 +1,64 @@
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+const RegList = {
+  before: {
+    head: '<head>',
+    body: '<body>'
+  },
+  after: {
+    head: '</head>',
+    body: '</body>'
+  }
+};
+
+class TemplateAPI {
+  constructor(content) {
+    _defineProperty(this, "content", void 0);
+
+    this.content = content;
+  }
+
+  get() {
+    return this.content;
+  }
+
+  set(content) {
+    this.content = content;
+  }
+
+  prependHead(fragment) {
+    const {
+      head
+    } = RegList.before;
+    return this.replace(head, `${head}${fragment}`);
+  }
+
+  appendHead(fragment) {
+    const {
+      head
+    } = RegList.after;
+    return this.replace(head, `${fragment}${head}`);
+  }
+
+  prependBody(fragment) {
+    const {
+      body
+    } = RegList.before;
+    return this.replace(body, `${body}${fragment}`);
+  }
+
+  appendBody(fragment) {
+    const {
+      body
+    } = RegList.after;
+    return this.replace(body, `${fragment}${body}`);
+  }
+
+  replace(reg, text) {
+    this.content = this.content.replace(reg, text);
+    return this;
+  }
+
+}
+
+export const createTemplateAPI = content => new TemplateAPI(content);

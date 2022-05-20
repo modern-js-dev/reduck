@@ -1,0 +1,32 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.isImportCall = isImportCall;
+exports.matchesPattern = matchesPattern;
+
+var _utils = require("@modern-js/utils");
+
+const t = _utils.Import.lazy('@babel/types', require);
+
+function matchesPattern(calleePath, pattern) {
+  const {
+    node
+  } = calleePath;
+
+  if (t.isMemberExpression(node)) {
+    return calleePath.matchesPattern(pattern);
+  }
+
+  if (!t.isIdentifier(node) || pattern.includes('.')) {
+    return false;
+  }
+
+  const name = pattern.split('.')[0];
+  return node.name === name;
+}
+
+function isImportCall(calleePath) {
+  return t.isImport(calleePath.node.callee);
+}

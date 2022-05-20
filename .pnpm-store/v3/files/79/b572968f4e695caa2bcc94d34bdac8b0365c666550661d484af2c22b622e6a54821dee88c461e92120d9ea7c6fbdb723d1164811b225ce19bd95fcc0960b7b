@@ -1,0 +1,62 @@
+import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
+import _objectSpread from "@babel/runtime/helpers/esm/objectSpread2";
+import _asyncToGenerator from "@babel/runtime/helpers/esm/asyncToGenerator";
+import _toConsumableArray from "@babel/runtime/helpers/esm/toConsumableArray";
+import _regeneratorRuntime from "@babel/runtime/regenerator";
+import { createPipeline } from "../farrow-pipeline";
+var WORKFLOW_SYMBOL = Symbol["for"]('MODERN_WORKFLOW');
+export var createWorkflow = function createWorkflow() {
+  var pipeline = createPipeline();
+
+  var use = function use() {
+    for (var _len = arguments.length, input = new Array(_len), _key = 0; _key < _len; _key++) {
+      input[_key] = arguments[_key];
+    }
+
+    pipeline.use.apply(pipeline, _toConsumableArray(input.map(mapWorkerToMiddleware)));
+    return workflow;
+  };
+
+  var run = /*#__PURE__*/function () {
+    var _ref = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee(input, options) {
+      var result;
+      return _regeneratorRuntime.wrap(function _callee$(_context) {
+        while (1) {
+          switch (_context.prev = _context.next) {
+            case 0:
+              result = pipeline.run(input, _objectSpread(_objectSpread({}, options), {}, {
+                onLast: function onLast() {
+                  return [];
+                }
+              }));
+              return _context.abrupt("return", result.filter(Boolean));
+
+            case 2:
+            case "end":
+              return _context.stop();
+          }
+        }
+      }, _callee);
+    }));
+
+    return function run(_x, _x2) {
+      return _ref.apply(this, arguments);
+    };
+  }();
+
+  var workflow = _objectSpread(_objectSpread({}, pipeline), {}, _defineProperty({
+    use: use,
+    run: run
+  }, WORKFLOW_SYMBOL, true));
+
+  return workflow;
+};
+export var isWorkflow = function isWorkflow(input) {
+  return Boolean(input === null || input === void 0 ? void 0 : input[WORKFLOW_SYMBOL]);
+};
+
+var mapWorkerToMiddleware = function mapWorkerToMiddleware(worker) {
+  return function (input, next) {
+    return [worker(input)].concat(_toConsumableArray(next(input)));
+  };
+};

@@ -1,0 +1,13 @@
+import type { Resolver } from 'webpack';
+import { MatchPath } from '@modern-js/utils/tsconfig-paths';
+export declare class TsConfigPathsPlugin {
+    source: string;
+    target: string;
+    cwd: string;
+    compilerOptions: any;
+    absoluteBaseUrl: string;
+    matchPath: MatchPath;
+    resolved: Map<string, string | undefined>;
+    constructor(cwd: string);
+    apply(resolver: Resolver): void;
+}

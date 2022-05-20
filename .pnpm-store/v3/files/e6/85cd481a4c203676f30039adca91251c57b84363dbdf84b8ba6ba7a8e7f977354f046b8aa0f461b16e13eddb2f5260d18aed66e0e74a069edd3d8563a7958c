@@ -1,0 +1,16 @@
+/**
+ * Copyright (c) 2015-present, Facebook, Inc.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file at
+ * https://github.com/facebook/create-react-app/blob/master/LICENSE
+ */
+declare function printFileSizesAfterBuild(webpackStats: any, previousSizeMap: {
+    root: string;
+    sizes: Record<string, number[]>;
+}, buildFolder: string, maxBundleGzipSize: number, maxChunkGzipSize: number): void;
+declare function measureFileSizesBeforeBuild(buildFolder: string): Promise<{
+    root: string;
+    sizes: Record<string, number[]>;
+}>;
+export { measureFileSizesBeforeBuild, printFileSizesAfterBuild };

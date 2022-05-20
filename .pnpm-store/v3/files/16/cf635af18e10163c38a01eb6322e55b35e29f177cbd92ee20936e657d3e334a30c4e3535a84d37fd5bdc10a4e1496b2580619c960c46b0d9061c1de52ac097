@@ -1,0 +1,46 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.render = void 0;
+
+var _runtimeCore = require("@modern-js/runtime-core");
+
+var _ssr = require("@modern-js/utils/ssr");
+
+var _prerender = require("../react/prerender");
+
+var _entry = _interopRequireDefault(require("./entry"));
+
+var _measure = require("./measure");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+const render = async (ctx, _ = process.cwd(), App) => {
+  const {
+    ssrContext
+  } = ctx;
+  return (0, _ssr.run)(ssrContext.request.headers, async () => {
+    const entry = new _entry.default({
+      ctx: ssrContext,
+      App
+    });
+    entry.metrics.emitCounter('app.visit.count', 1);
+    const end = (0, _measure.time)();
+    const html = await entry.renderToHtml(ctx);
+    const cost = end();
+    entry.logger.info('App Render Total cost = %d ms', cost);
+    entry.metrics.emitTimer('app.render.cost', cost);
+
+    const cacheConfig = _prerender.PreRender.config();
+
+    if (cacheConfig) {
+      ctx.ssrContext.cacheConfig = cacheConfig;
+    }
+
+    return html;
+  });
+};
+
+exports.render = render;

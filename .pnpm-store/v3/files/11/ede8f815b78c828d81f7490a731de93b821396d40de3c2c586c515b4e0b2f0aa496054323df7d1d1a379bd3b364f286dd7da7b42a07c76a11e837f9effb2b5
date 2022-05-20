@@ -1,0 +1,73 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _path = _interopRequireDefault(require("path"));
+
+var _fs = _interopRequireDefault(require("fs"));
+
+var _server = require("react-dom/server");
+
+var _ssr = require("@modern-js/utils/ssr");
+
+var _constants = require("@modern-js/utils/constants");
+
+var _server2 = require("@loadable/server");
+
+var _jsxRuntime = require("react/jsx-runtime");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+// todo: SSRContext
+const prefetch = async (App, context) => (0, _ssr.run)(context.ssrContext.request.headers, async () => {
+  var _context$store;
+
+  const {
+    ssrContext
+  } = context;
+
+  const loadablefile = _path.default.resolve(ssrContext.distDir, _constants.LOADABLE_STATS_FILE);
+
+  if (_fs.default.existsSync(loadablefile)) {
+    const extractor = new _server2.ChunkExtractor({
+      statsFile: _path.default.resolve(ssrContext.distDir, _constants.LOADABLE_STATS_FILE),
+      entrypoints: [ssrContext.entryName].filter(Boolean)
+    });
+    (0, _server.renderToStaticMarkup)(extractor.collectChunks( /*#__PURE__*/(0, _jsxRuntime.jsx)(App, {
+      context: context
+    })));
+  } else {
+    (0, _server.renderToStaticMarkup)( /*#__PURE__*/(0, _jsxRuntime.jsx)(App, {
+      context: context
+    }));
+  }
+
+  if (!context.loaderManager.hasPendingLoaders()) {
+    return {
+      i18nData: context.__i18nData__
+    };
+  }
+
+  const loadersData = await context.loaderManager.awaitPendingLoaders();
+  Object.keys(loadersData).forEach(id => {
+    const data = loadersData[id];
+
+    if (data._error) {
+      ssrContext.logger.error('App Prefetch Loader', data._error);
+      ssrContext.metrics.emitCounter('app.prefetch.loader.error', 1);
+      delete data._error;
+    }
+  });
+  return {
+    loadersData,
+    i18nData: context.__i18nData__,
+    // todo: move to plugin state
+    storeState: context === null || context === void 0 ? void 0 : (_context$store = context.store) === null || _context$store === void 0 ? void 0 : _context$store.getState()
+  };
+});
+
+var _default = prefetch;
+exports.default = _default;

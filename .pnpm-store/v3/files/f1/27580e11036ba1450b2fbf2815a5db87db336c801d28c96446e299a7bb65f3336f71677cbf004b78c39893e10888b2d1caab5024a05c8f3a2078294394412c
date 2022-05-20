@@ -1,0 +1,116 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.LoggerManager = void 0;
+
+var _events = _interopRequireDefault(require("events"));
+
+var _utils = require("@modern-js/utils");
+
+let _ = t => t,
+    _t;
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+const logText = _utils.Import.lazy('./logText', require);
+
+const readline = _utils.Import.lazy('../../../utils/readline', require);
+
+class LoggerManager extends _events.default {
+  constructor() {
+    super();
+
+    _defineProperty(this, "_compilering", void 0);
+
+    _defineProperty(this, "_listeners", void 0);
+
+    this._compilering = false;
+    this._listeners = [];
+  }
+
+  createLoggerText(option) {
+    return new logText.LoggerText(option);
+  }
+
+  addStdout(loggerText, stdout, config = {}) {
+    const {
+      event = {
+        data: true,
+        error: true
+      },
+      colors = {
+        data: _utils.chalk.green,
+        error: _utils.chalk.red,
+        warning: _utils.chalk.yellow
+      }
+    } = config;
+
+    if (event.data) {
+      stdout === null || stdout === void 0 ? void 0 : stdout.on('data', chunk => {
+        const data = chunk.toString();
+        const content = colors.data ? colors.data(data) : _utils.chalk.green(data);
+        loggerText.append(content);
+        this.emit('data');
+      });
+    }
+
+    if (event.error) {
+      stdout === null || stdout === void 0 ? void 0 : stdout.on('error', error => {
+        console.info('error');
+        const data = error.message;
+        const content = colors.error ? colors.error(data) : _utils.chalk.red(data);
+        loggerText.append(content);
+        loggerText.errorHappen();
+        this.emit('data');
+      });
+    }
+
+    this._listeners.push(stdout);
+  }
+
+  addStderr(loggerText, stderr, color = _utils.chalk.red) {
+    stderr === null || stderr === void 0 ? void 0 : stderr.on('data', chunk => {
+      const data = chunk.toString();
+      loggerText.append(color(data));
+      loggerText.errorHappen();
+      this.emit('data');
+    });
+  }
+
+  showCompiling() {
+    if (!this._compilering) {
+      this._compilering = true;
+      console.info(_utils.chalk.green(_t || (_t = _`Compiling in progress...`)));
+    }
+  }
+
+  disappearCompiling() {
+    if (this._compilering) {
+      readline.ReadlineUtils.clearLine(process.stdout);
+      this._compilering = false;
+    }
+  }
+
+  listenDateAndShow(logTexts // stdout: NodeJS.WriteStream & {
+  //   fd: 1;
+  // } = process.stdout,
+  ) {
+    this.on('data', () => {
+      this.disappearCompiling();
+      const content = logTexts.map(logtext => logtext.value).join(''); // 每次更新，使用新的内容覆盖旧的内容，有几率出现内容错乱问题
+
+      console.info(content);
+    });
+    return () => {
+      // eslint-disable-next-line no-process-exit
+      process.exit(0);
+    };
+  }
+
+}
+
+exports.LoggerManager = LoggerManager;

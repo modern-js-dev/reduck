@@ -1,0 +1,51 @@
+import path from 'path';
+import { Import, fs } from '@modern-js/utils';
+const buildFeature = Import.lazy('./build', require);
+const buildWatchFeature = Import.lazy('./build-watch', require);
+const bp = Import.lazy('./build-platform', require);
+export const build = async (api, config, modernConfig) => {
+  const {
+    appDirectory,
+    enableWatchMode,
+    platform,
+    clear = true,
+    isTsProject
+  } = config;
+  const {
+    output: {
+      path: outputPath = 'dist'
+    }
+  } = modernConfig; // TODO: maybe need watch mode in build platform
+
+  if (typeof platform === 'boolean' && platform) {
+    if (process.env.RUN_PLATFORM) {
+      await bp.buildPlatform(api, {
+        platform: 'all',
+        isTsProject
+      });
+    }
+
+    return;
+  }
+
+  if (typeof platform === 'string') {
+    if (process.env.RUN_PLATFORM) {
+      await bp.buildPlatform(api, {
+        platform,
+        isTsProject
+      });
+    }
+
+    return;
+  }
+
+  if (clear) {
+    fs.removeSync(path.join(appDirectory, outputPath));
+  }
+
+  if (enableWatchMode) {
+    await buildWatchFeature.buildInWatchMode(api, config, modernConfig);
+  } else {
+    await buildFeature.buildSourceCode(api, config, modernConfig);
+  }
+};

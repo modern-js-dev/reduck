@@ -1,0 +1,28 @@
+import { OutputConfig, ServerConfig, SourceConfig } from '.';
+export declare const defaults: {
+    source: SourceConfig;
+    output: OutputConfig;
+    server: ServerConfig;
+    dev: {
+        assetPrefix: boolean;
+        https: boolean;
+    };
+    deploy: {
+        domain: string;
+        domainByEntries: undefined;
+    };
+    tools: {
+        webpack: undefined;
+        babel: undefined;
+        postcss: undefined;
+        autoprefixer: undefined;
+        lodash: undefined;
+        devServer: undefined;
+        tsLoader: undefined;
+        terser: undefined;
+        minifyCss: undefined;
+    };
+    plugins: never[];
+    runtime: {};
+    runtimeByEntries: {};
+};

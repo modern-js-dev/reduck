@@ -1,0 +1,1 @@
+export declare const isBeyondReact17: (cwd: string) => boolean;

@@ -1,0 +1,9 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.clearConsole = void 0;
+const clearConsole = () => {
+    if (process.stdout.isTTY && !process.env.DEBUG) {
+        process.stdout.write('\x1B[H\x1B[2J');
+    }
+};
+exports.clearConsole = clearConsole;

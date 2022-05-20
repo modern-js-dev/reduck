@@ -1,0 +1,1 @@
+export declare function addSourceMappingUrl(code: string, loc: string): string;

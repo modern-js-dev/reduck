@@ -1,0 +1,12 @@
+import type { CommonAPI } from '@modern-js/plugin';
+import type { CliHooks } from './manager';
+import { AppContext, ConfigContext, useAppContext, useConfigContext, ResolvedConfigContext, useResolvedConfigContext } from './context';
+export declare const pluginAPI: {
+    setAppContext: (value: import("@modern-js/types/cli").IAppContext) => void;
+    useAppContext: () => import("@modern-js/types/cli").IAppContext;
+    useConfigContext: () => import("./config").UserConfig;
+    useResolvedConfigContext: () => import(".").NormalizedConfig;
+};
+/** all apis for cli plugin */
+export declare type PluginAPI = typeof pluginAPI & CommonAPI<CliHooks>;
+export { AppContext, ConfigContext, ResolvedConfigContext, useAppContext, useConfigContext, useResolvedConfigContext, };

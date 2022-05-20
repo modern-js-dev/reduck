@@ -1,0 +1,17 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.readTsConfigByFile = exports.readTsConfig = void 0;
+const path_1 = __importDefault(require("path"));
+const compiled_1 = require("./compiled");
+const readTsConfig = (root) => {
+    return (0, exports.readTsConfigByFile)(path_1.default.resolve(root, './tsconfig.json'));
+};
+exports.readTsConfig = readTsConfig;
+const readTsConfigByFile = (filename) => {
+    const content = compiled_1.fs.readFileSync(path_1.default.resolve(filename), 'utf-8');
+    return compiled_1.json5.parse(content);
+};
+exports.readTsConfigByFile = readTsConfigByFile;

@@ -1,0 +1,107 @@
+import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
+import _asyncToGenerator from "@babel/runtime/helpers/esm/asyncToGenerator";
+import _regeneratorRuntime from "@babel/runtime/regenerator";
+import { toSchemaCtor, Struct, NonStrict } from 'farrow-schema';
+import { createSchemaValidator } from 'farrow-schema/validator';
+import { HandleSuccess, InputValidationError, OutputValidationError } from "./response";
+
+var getErrorMessage = function getErrorMessage(error) {
+  var message = error.message;
+
+  if (Array.isArray(error.path) && error.path.length > 0) {
+    message = "path: ".concat(JSON.stringify(error.path), "\n").concat(message);
+  }
+
+  return message;
+};
+
+var HANDLER_WITH_SCHEMA = 'HANDLER_WITH_SCHEMA';
+export var isSchemaHandler = function isSchemaHandler(input) {
+  return input && (input === null || input === void 0 ? void 0 : input[HANDLER_WITH_SCHEMA]) === true;
+};
+export var isHandler = function isHandler(input) {
+  return input && typeof input === 'function';
+};
+export var baseMatch = function baseMatch(schema, handler) {
+  var validateApiInput = createRequestSchemaValidator(schema.request);
+  var validateApiOutput = createSchemaValidator(toSchemaCtor(schema.response));
+
+  var handle = /*#__PURE__*/function () {
+    var _ref = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee(input) {
+      var inputResult, output, outputResult;
+      return _regeneratorRuntime.wrap(function _callee$(_context) {
+        while (1) {
+          switch (_context.prev = _context.next) {
+            case 0:
+              inputResult = validateApiInput(input);
+
+              if (!inputResult.isErr) {
+                _context.next = 3;
+                break;
+              }
+
+              return _context.abrupt("return", InputValidationError(getErrorMessage(inputResult.value)));
+
+            case 3:
+              _context.next = 5;
+              return handler(input);
+
+            case 5:
+              output = _context.sent;
+              outputResult = validateApiOutput(output);
+
+              if (!outputResult.isErr) {
+                _context.next = 9;
+                break;
+              }
+
+              return _context.abrupt("return", OutputValidationError(getErrorMessage(outputResult.value)));
+
+            case 9:
+              return _context.abrupt("return", HandleSuccess(output));
+
+            case 10:
+            case "end":
+              return _context.stop();
+          }
+        }
+      }, _callee);
+    }));
+
+    return function handle(_x) {
+      return _ref.apply(this, arguments);
+    };
+  }();
+
+  return Object.assign(handle, _defineProperty({
+    schema: schema
+  }, HANDLER_WITH_SCHEMA, true));
+};
+export var match = baseMatch;
+
+var createRequestSchemaValidator = function createRequestSchemaValidator(schema) {
+  var descriptors = {};
+
+  if (schema.params) {
+    descriptors.params = schema.params;
+  }
+
+  if (schema.query) {
+    descriptors.query = schema.query;
+  }
+
+  if (schema.data) {
+    descriptors.data = schema.data;
+  }
+
+  if (schema.headers) {
+    descriptors.headers = schema.headers;
+  }
+
+  if (schema.cookies) {
+    descriptors.cookies = schema.cookies;
+  }
+
+  var RequestStruct = Struct(descriptors);
+  return createSchemaValidator(NonStrict(RequestStruct));
+};

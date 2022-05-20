@@ -1,0 +1,25 @@
+/// <reference types="node" />
+import type { ChildProcess } from 'child_process';
+export interface ITaskLogProviderConfig {
+  stdout: ChildProcess['stdout'] | NodeJS.ReadStream;
+  stderr: ChildProcess['stderr'] | NodeJS.ReadStream;
+  logConfig: {
+    label?: string;
+    color?: string;
+    badge?: string;
+    header?: string;
+    footer?: string;
+    contentLength?: number;
+  };
+}
+export declare class MultitasksLogger {
+  private readonly _taskNameList;
+  private readonly _taskStdoutListenerMap;
+  private readonly _taskStderrListenerMap;
+  private readonly _taskLogConfigMap;
+  constructor();
+  addLogProvider(name: string, config: ITaskLogProviderConfig): void;
+  startListen(taskName: string): void;
+  startListenAll(): void;
+  finishListen(): void;
+}

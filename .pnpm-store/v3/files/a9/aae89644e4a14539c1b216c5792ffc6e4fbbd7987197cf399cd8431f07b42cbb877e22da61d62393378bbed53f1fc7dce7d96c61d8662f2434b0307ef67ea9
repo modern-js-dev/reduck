@@ -1,0 +1,44 @@
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+class RouteAPI {
+  constructor(matched, router, url) {
+    _defineProperty(this, "router", void 0);
+
+    _defineProperty(this, "current", void 0);
+
+    _defineProperty(this, "url", void 0);
+
+    this.current = matched;
+    this.router = router;
+    this.url = url;
+  }
+
+  cur() {
+    return this.current.generate(this.url);
+  }
+
+  get(entryName) {
+    const {
+      router
+    } = this;
+    const matched = router.matchEntry(entryName);
+    return matched ? matched.generate(this.url) : null;
+  }
+
+  use(entryName) {
+    const {
+      router
+    } = this;
+    const matched = router.matchEntry(entryName);
+
+    if (matched) {
+      this.current = matched;
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+}
+
+export const createRouteAPI = (matched, router, url) => new RouteAPI(matched, router, url);

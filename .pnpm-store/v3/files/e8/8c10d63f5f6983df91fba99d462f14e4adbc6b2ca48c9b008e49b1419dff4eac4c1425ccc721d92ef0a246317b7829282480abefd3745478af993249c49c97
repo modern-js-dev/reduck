@@ -1,0 +1,21 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.loadEnv = void 0;
+const fs_1 = __importDefault(require("fs"));
+const path_1 = __importDefault(require("path"));
+const utils_1 = require("@modern-js/utils");
+const loadEnv = (appDirectory, mode = process.env.NODE_ENV) => {
+    // Don't change the order of the filenames， since they are ordered by the priority.
+    // Files on the left have more priority than files on the right.
+    [`.env.${mode}.local`, '.env.local', `.env.${mode}`, '.env']
+        .map(name => path_1.default.resolve(appDirectory, name))
+        .filter(filePath => fs_1.default.existsSync(filePath) && !fs_1.default.statSync(filePath).isDirectory())
+        .forEach(filePath => {
+        const envConfig = utils_1.dotenv.config({ path: filePath });
+        (0, utils_1.dotenvExpand)(envConfig);
+    });
+};
+exports.loadEnv = loadEnv;

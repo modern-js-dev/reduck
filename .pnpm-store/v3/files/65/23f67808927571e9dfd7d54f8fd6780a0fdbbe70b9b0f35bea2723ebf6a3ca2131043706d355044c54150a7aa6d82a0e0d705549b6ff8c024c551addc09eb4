@@ -1,0 +1,1 @@
+export declare const mergeRegex: (...regexes: (string | RegExp)[]) => RegExp;

@@ -1,0 +1,7 @@
+import { CSS_EXTENSIONS_RULE } from "../constants";
+export const isCssRule = file => file.endsWith('.css');
+export const isCssModuleRule = file => file.endsWith('.module.css');
+export const isLessRule = file => file.endsWith('.less');
+export const isLessModuleRule = file => file.endsWith('.module.less');
+export const isSassRule = file => CSS_EXTENSIONS_RULE.sassRule.test(file);
+export const isSassModuleRule = file => CSS_EXTENSIONS_RULE.sassModuleRule.test(file);

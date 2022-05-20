@@ -1,0 +1,27 @@
+import ChangesetPlugin from '@modern-js/plugin-changeset';
+import { i18n } from "./locale";
+import { newCli, deployCli, clearCli } from "./cli";
+import { getLocaleLanguage } from "./utils/language";
+import { hooks } from "./hooks";
+export default (() => ({
+  name: '@modern-js/monorepo-tools',
+  usePlugins: [ChangesetPlugin()],
+  registerHook: hooks,
+  setup: api => {
+    const locale = getLocaleLanguage();
+    i18n.changeLanguage({
+      locale
+    });
+    return {
+      commands({
+        program
+      }) {
+        clearCli(program, api);
+        deployCli(program, api);
+        newCli(program, locale);
+      }
+
+    };
+  },
+  post: ['@modern-js/plugin-changeset']
+}));

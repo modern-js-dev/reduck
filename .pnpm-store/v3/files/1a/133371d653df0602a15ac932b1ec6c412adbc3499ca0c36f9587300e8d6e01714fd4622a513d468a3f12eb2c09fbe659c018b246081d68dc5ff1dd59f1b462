@@ -1,0 +1,40 @@
+const ensureArrayParams = params => {
+  if (!Array.isArray(params)) {
+    return [params];
+  }
+
+  return params;
+};
+
+const addBabelPlugins = (plugins, config) => {
+  const userPlugins = ensureArrayParams(plugins);
+  config.plugins.push(...userPlugins);
+};
+
+const removeBabelPlugins = (plugins, config) => {
+  const internalPlugins = config.plugins || [];
+  config.plugins = internalPlugins.filter(p => {
+    const pluginName = p[0];
+    return !plugins.includes(pluginName);
+  });
+};
+
+const addBabelPresets = (presets, config) => {
+  const userPresets = ensureArrayParams(presets);
+  config.presets.push(...userPresets);
+};
+
+const removeBabelPresets = (presets, config) => {
+  const internalPresets = config.presets || [];
+  config.presets = internalPresets.filter(p => {
+    const presetName = p[0];
+    return !presets.includes(presetName);
+  });
+};
+
+export const getBabelUtils = config => ({
+  addPlugins: plugins => addBabelPlugins(plugins, config),
+  removePlugins: plugins => removeBabelPlugins(plugins, config),
+  addPresets: presets => addBabelPresets(presets, config),
+  removePresets: presets => removeBabelPresets(presets, config)
+});

@@ -1,0 +1,52 @@
+import _toConsumableArray from "@babel/runtime/helpers/esm/toConsumableArray";
+import spawn from 'cross-spawn';
+import { chalk, logger, minimist } from '@modern-js/utils';
+
+var ensureOption = function ensureOption(args, name, val) {
+  if (!args.hasOwnProperty(name) || args[name].length < 1) {
+    if (Array.isArray(val)) {
+      return ["--".concat(name), val.join(',')];
+    }
+
+    if (typeof val === 'boolean') {
+      return val ? ["--".concat(name)] : ["--no-".concat(name)];
+    } else {
+      return ["--".concat(name), val];
+    }
+  }
+
+  return [];
+};
+
+export default (function () {
+  var _args$_;
+
+  var rawArgs = process.argv.slice(3);
+  var args = minimist(rawArgs);
+  var exts = ['.js', '.jsx', '.ts', '.tsx', '.mjs', '.mjsx', '.cjs', '.cjsx'];
+  rawArgs.push.apply(rawArgs, _toConsumableArray(ensureOption(args, 'ext', exts)));
+  rawArgs.push.apply(rawArgs, _toConsumableArray(ensureOption(args, 'fix', true)));
+  rawArgs.push.apply(rawArgs, _toConsumableArray(ensureOption(args, 'format', 'codeframe'))); // default ignore pattern
+
+  ['node_modules/', 'dist/', 'output/', 'output_resource/'].forEach(function (pattern) {
+    rawArgs.push.apply(rawArgs, _toConsumableArray(ensureOption(args, 'ignore-pattern', pattern)));
+  });
+
+  if (args !== null && args !== void 0 && (_args$_ = args._) !== null && _args$_ !== void 0 && _args$_.length) {
+    rawArgs.push.apply(rawArgs, _toConsumableArray(args._));
+  } else {
+    rawArgs.push('./');
+  }
+
+  var eslintScript = require.resolve('eslint/bin/eslint.js');
+
+  logger.info(chalk.bold('Lint...'));
+  logger.info(chalk.bold("NODE_OPTIONS=\"--max-old-space-size=8192\" ".concat(eslintScript, " ").concat(rawArgs.join(' '))));
+  var childprocess = spawn(eslintScript, rawArgs, {
+    stdio: 'inherit'
+  }); // eslint-disable-next-line no-process-exit
+
+  childprocess.on('exit', function (code) {
+    return process.exit(code || 0);
+  });
+});

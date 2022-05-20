@@ -1,0 +1,50 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _lintStaged = _interopRequireDefault(require("lint-staged"));
+
+var _utils = require("@modern-js/utils");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+const printFormattedMsg = success => {
+  _utils.logger.log('');
+
+  _utils.logger.log('==============================');
+
+  _utils.logger.log('');
+
+  if (success) {
+    _utils.logger.log('[PRECOMMIT] Verified!');
+
+    _utils.logger.log('Please commit all autofixes caused by eslint, stylelint and prettier');
+  } else {
+    _utils.logger.log('[PRECOMMIT] failed!');
+
+    _utils.logger.log('');
+
+    _utils.logger.log('For TRULY URGENT case (like hotfix), you can skip the pre-commit checking:');
+
+    _utils.logger.log('git commit --no-verify -m "message"');
+
+    _utils.logger.log('Otherwise, you should solve all above issues one by one');
+  }
+
+  _utils.logger.log('');
+};
+
+var _default = async () => {
+  try {
+    // run lint-staged
+    const success = await (0, _lintStaged.default)();
+    printFormattedMsg(success);
+  } catch (err) {
+    _utils.logger.error(_utils.chalk.red(err));
+  }
+};
+
+exports.default = _default;

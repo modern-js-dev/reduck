@@ -1,0 +1,147 @@
+{
+  "name": "@modern-js/plugin-testing",
+  "description": "The meta-framework suite designed from scratch for frontend-focused modern web development.",
+  "homepage": "https://modernjs.dev",
+  "bugs": "https://github.com/modern-js-dev/modern.js/issues",
+  "repository": "modern-js-dev/modern.js",
+  "license": "MIT",
+  "keywords": [
+    "react",
+    "framework",
+    "modern",
+    "modern.js"
+  ],
+  "version": "1.5.5",
+  "jsnext:source": "./src/index.ts",
+  "types": "./dist/types/index.d.ts",
+  "main": "./dist/js/node/index.js",
+  "module": "./dist/js/treeshaking/index.js",
+  "jsnext:modern": "./dist/js/modern/index.js",
+  "exports": {
+    "./types": {
+      "jsnext:source": "./types/index.d.ts",
+      "default": "./types/index.d.ts"
+    },
+    "./type": {
+      "jsnext:source": "./types/index.d.ts",
+      "default": "./types/index.d.ts"
+    },
+    ".": {
+      "node": {
+        "jsnext:source": "./src/runtime-testing/index.ts",
+        "import": "./dist/js/modern/runtime-testing/index.js",
+        "require": "./dist/js/node/runtime-testing/index.js"
+      },
+      "default": "./dist/js/treeshaking/runtime-testing/index.js"
+    },
+    "./runtime": {
+      "jsnext:source": "./src/runtime-testing/index.ts",
+      "node": {
+        "import": "./dist/js/modern/runtime-testing/index.js",
+        "require": "./dist/js/node/runtime-testing/index.js"
+      },
+      "default": "./dist/js/treeshaking/runtime-testing/index.js"
+    },
+    "./runtime-base": {
+      "jsnext:source": "./src/runtime-testing/base.ts",
+      "node": {
+        "import": "./dist/js/modern/runtime-testing/base.js",
+        "require": "./dist/js/node/runtime-testing/base.js"
+      },
+      "default": "./dist/js/treeshaking/runtime-testing/base.js"
+    },
+    "./cli": {
+      "jsnext:source": "./src/cli/index.ts",
+      "default": "./dist/js/node/cli/index.js"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      ".": [
+        "./dist/types/runtime-testing/index.d.ts"
+      ],
+      "cli": [
+        "./dist/types/cli/index.d.ts"
+      ],
+      "runtime": [
+        "./dist/types/runtime-testing/index.d.ts"
+      ],
+      "type": [
+        "./types/index.d.ts"
+      ],
+      "types": [
+        "./types/index.d.ts"
+      ],
+      "runtime-base": [
+        "./dist/types/runtime-testing/base.d.ts"
+      ]
+    }
+  },
+  "dependencies": {
+    "@babel/core": "^7.17.0",
+    "@babel/preset-env": "^7.17.0",
+    "@babel/runtime": "^7",
+    "@modern-js-reduck/plugin-auto-actions": "^1.0.2",
+    "@modern-js-reduck/plugin-effects": "^1.0.2",
+    "@modern-js-reduck/plugin-immutable": "^1.0.1",
+    "@modern-js-reduck/store": "^1.0.3",
+    "@modern-js/babel-compiler": "^1.2.5",
+    "@modern-js/bff-utils": "^1.2.6",
+    "@modern-js/runtime-core": "^1.4.6",
+    "@modern-js/testing": "^1.5.2",
+    "@modern-js/testing-plugin-bff": "^1.4.3",
+    "@modern-js/utils": "^1.7.3",
+    "@modern-js/webpack": "^1.7.0",
+    "@testing-library/jest-dom": "^5.14.1",
+    "@testing-library/react": "^12.0.0",
+    "@types/testing-library__jest-dom": "^5.14.3"
+  },
+  "devDependencies": {
+    "@modern-js/core": "1.10.2",
+    "@scripts/build": "0.0.0",
+    "@scripts/jest-config": "0.0.0",
+    "@types/jest": "^27",
+    "@types/node": "^14",
+    "@types/react": "^17",
+    "@types/react-dom": "^17",
+    "jest": "^27",
+    "react": "^17",
+    "react-dom": "^17",
+    "typescript": "^4"
+  },
+  "sideEffects": false,
+  "modernConfig": {},
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
+  "wireit": {
+    "build": {
+      "command": "modern build",
+      "files": [
+        "src/**/*",
+        "tsconfig.json",
+        "package.json"
+      ],
+      "output": [
+        "dist/**/*"
+      ]
+    },
+    "test": {
+      "command": "jest --passWithNoTests",
+      "files": [
+        "src/**/*",
+        "tsconfig.json",
+        "package.json"
+      ],
+      "output": []
+    }
+  },
+  "scripts": {
+    "new": "modern new",
+    "dev": "modern build --watch",
+    "build": "wireit",
+    "test": "wireit"
+  },
+  "readme": "\n<p align=\"center\">\n  <a href=\"https://modernjs.dev\" target=\"blank\"><img src=\"https://lf3-static.bytednsdoc.com/obj/eden-cn/ylaelkeh7nuhfnuhf/modernjs-cover.png\" width=\"300\" alt=\"Modern.js Logo\" /></a>\n</p>\n<p align=\"center\">\n现代 Web 工程体系\n  <br/>\n  <a href=\"https://modernjs.dev\" target=\"blank\">\n    modernjs.dev\n  </a>\n</p>\n<p align=\"center\">\n  The meta-framework suite designed from scratch for frontend-focused modern web development\n</p>\n\n# Introduction\n\n> The doc site ([modernjs.dev](https://modernjs.dev)) and articles are only available in Chinese for now, we are planning to add English versions soon.\n\n- [Modern.js: Hello, World!](https://zhuanlan.zhihu.com/p/426707646)\n\n## Getting Started\n\n- [Quick Start](https://modernjs.dev/docs/start)\n- [Guides](https://modernjs.dev/docs/guides)\n- [API References](https://modernjs.dev/docs/apis)\n\n## Contributing\n\n- [Contributing Guide](https://github.com/modern-js-dev/modern.js/blob/main/CONTRIBUTING.md)\n"
+}

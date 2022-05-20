@@ -1,0 +1,45 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _pluginChangeset = _interopRequireDefault(require("@modern-js/plugin-changeset"));
+
+var _locale = require("./locale");
+
+var _cli = require("./cli");
+
+var _language = require("./utils/language");
+
+var _hooks = require("./hooks");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var _default = () => ({
+  name: '@modern-js/monorepo-tools',
+  usePlugins: [(0, _pluginChangeset.default)()],
+  registerHook: _hooks.hooks,
+  setup: api => {
+    const locale = (0, _language.getLocaleLanguage)();
+
+    _locale.i18n.changeLanguage({
+      locale
+    });
+
+    return {
+      commands({
+        program
+      }) {
+        (0, _cli.clearCli)(program, api);
+        (0, _cli.deployCli)(program, api);
+        (0, _cli.newCli)(program, locale);
+      }
+
+    };
+  },
+  post: ['@modern-js/plugin-changeset']
+});
+
+exports.default = _default;

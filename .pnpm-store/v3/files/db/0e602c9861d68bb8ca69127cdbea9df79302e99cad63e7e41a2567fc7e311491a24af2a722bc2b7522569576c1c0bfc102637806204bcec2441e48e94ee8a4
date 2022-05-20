@@ -1,0 +1,15 @@
+import webpack from 'webpack';
+import type { IAppContext, NormalizedConfig } from '@modern-js/core';
+export { webpack };
+export type { Compiler, Configuration, MultiCompiler, StatsCompilation, } from 'webpack';
+export { BaseWebpackConfig } from './config/base';
+export { CHAIN_ID } from './config/shared';
+export type { ChainIdentifier } from './config/shared';
+export * from './compiled';
+export declare enum WebpackConfigTarget {
+    CLIENT = 0,
+    NODE = 1,
+    MODERN = 2
+}
+export declare const getWebpackConfig: (target: WebpackConfigTarget, appContext: IAppContext, resolvedConfig: NormalizedConfig) => any;
+export { ClientWebpackConfig, ModernWebpackConfig, NodeWebpackConfig, } from './config';

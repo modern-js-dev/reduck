@@ -1,0 +1,111 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.MWASpecialSchemaMap = exports.MWANewActionSchema = exports.MWANewActionGenerators = exports.MWAActionTypesMap = exports.MWAActionTypes = exports.MWAActionReactors = exports.MWAActionFunctionsDevDependencies = exports.MWAActionFunctionsDependencies = exports.MWAActionFunctionsAppendTypeContent = exports.MWAActionFunctions = exports.MWAActionElements = void 0;
+
+var _common = require("../common");
+
+var _locale = require("../../locale");
+
+const MWAActionTypes = [_common.ActionType.Element, _common.ActionType.Function // ActionType.Refactor,
+];
+exports.MWAActionTypes = MWAActionTypes;
+const MWAActionFunctions = [_common.ActionFunction.UnBundle, _common.ActionFunction.TailwindCSS, _common.ActionFunction.Less, _common.ActionFunction.Sass, _common.ActionFunction.BFF, _common.ActionFunction.SSG, _common.ActionFunction.MicroFrontend, _common.ActionFunction.Electron, // ActionFunction.I18n,
+_common.ActionFunction.Test, _common.ActionFunction.Storybook, // ActionFunction.E2ETest,
+// ActionFunction.Doc,
+_common.ActionFunction.Polyfill, _common.ActionFunction.Deploy, _common.ActionFunction.Proxy];
+exports.MWAActionFunctions = MWAActionFunctions;
+const MWAActionElements = [_common.ActionElement.Entry, _common.ActionElement.Server];
+exports.MWAActionElements = MWAActionElements;
+const MWAActionReactors = [_common.ActionRefactor.BFFToApp];
+exports.MWAActionReactors = MWAActionReactors;
+const MWAActionTypesMap = {
+  [_common.ActionType.Element]: MWAActionElements,
+  [_common.ActionType.Function]: MWAActionFunctions,
+  [_common.ActionType.Refactor]: MWAActionReactors
+};
+exports.MWAActionTypesMap = MWAActionTypesMap;
+const MWASpecialSchemaMap = {
+  [_common.ActionFunction.Storybook]: {
+    key: _common.ActionFunction.Storybook,
+    label: () => _locale.i18n.t(_locale.localeKeys.action.function.mwa_storybook)
+  }
+};
+exports.MWASpecialSchemaMap = MWASpecialSchemaMap;
+const MWANewActionSchema = {
+  key: 'mwa_new_action',
+  isObject: true,
+  items: [{
+    key: 'actionType',
+    label: () => _locale.i18n.t(_locale.localeKeys.action.self),
+    type: ['string'],
+    mutualExclusion: true,
+    items: MWAActionTypes.map(type => ({
+      key: type,
+      label: _common.ActionTypeText[type],
+      type: ['string'],
+      mutualExclusion: true,
+      items: MWAActionTypesMap[type].map(item => MWASpecialSchemaMap[item] || {
+        key: item,
+        label: _common.ActionTypeTextMap[type][item]
+      })
+    }))
+  }]
+};
+exports.MWANewActionSchema = MWANewActionSchema;
+const MWAActionFunctionsDevDependencies = {
+  [_common.ActionFunction.UnBundle]: '@modern-js/plugin-unbundle',
+  [_common.ActionFunction.TailwindCSS]: '@modern-js/plugin-tailwindcss',
+  [_common.ActionFunction.Test]: '@modern-js/plugin-testing',
+  [_common.ActionFunction.E2ETest]: '@modern-js/plugin-e2e',
+  [_common.ActionFunction.Doc]: '@modern-js/plugin-docsite',
+  [_common.ActionFunction.Electron]: '@modern-js/plugin-electron',
+  [_common.ActionFunction.Storybook]: '@modern-js/plugin-storybook',
+  [_common.ActionFunction.Proxy]: '@modern-js/plugin-proxy'
+};
+exports.MWAActionFunctionsDevDependencies = MWAActionFunctionsDevDependencies;
+const MWAActionFunctionsDependencies = {
+  [_common.ActionFunction.Less]: '@modern-js/plugin-less',
+  [_common.ActionFunction.Sass]: '@modern-js/plugin-sass',
+  [_common.ActionFunction.BFF]: '@modern-js/plugin-bff',
+  [_common.ActionFunction.MicroFrontend]: '@modern-js/plugin-garfish',
+  [_common.ActionFunction.I18n]: '@modern-js/plugin-i18n',
+  [_common.ActionFunction.SSG]: '@modern-js/plugin-ssg',
+  [_common.ActionFunction.Polyfill]: '@modern-js/plugin-polyfill',
+  [_common.ActionFunction.TailwindCSS]: 'tailwindcss'
+};
+exports.MWAActionFunctionsDependencies = MWAActionFunctionsDependencies;
+const MWAActionFunctionsAppendTypeContent = {
+  [_common.ActionFunction.MicroFrontend]: `/// <reference types='@modern-js/plugin-garfish/types' />`
+};
+exports.MWAActionFunctionsAppendTypeContent = MWAActionFunctionsAppendTypeContent;
+const MWANewActionGenerators = {
+  [_common.ActionType.Element]: {
+    [_common.ActionElement.Entry]: '@modern-js/entry-generator',
+    [_common.ActionElement.Server]: '@modern-js/server-generator'
+  },
+  [_common.ActionType.Function]: {
+    [_common.ActionFunction.UnBundle]: '@modern-js/unbundle-generator',
+    [_common.ActionFunction.TailwindCSS]: '@modern-js/tailwindcss-generator',
+    [_common.ActionFunction.Less]: '@modern-js/dependence-generator',
+    [_common.ActionFunction.Sass]: '@modern-js/dependence-generator',
+    [_common.ActionFunction.BFF]: '@modern-js/bff-generator',
+    [_common.ActionFunction.MicroFrontend]: '@modern-js/dependence-generator',
+    [_common.ActionFunction.Electron]: '@modern-js/electron-generator',
+    [_common.ActionFunction.I18n]: '@modern-js/dependence-generator',
+    [_common.ActionFunction.Test]: '@modern-js/test-generator',
+    [_common.ActionFunction.E2ETest]: '@modern-js/dependence-generator',
+    [_common.ActionFunction.Doc]: '@modern-js/dependence-generator',
+    [_common.ActionFunction.Storybook]: '@modern-js/dependence-generator',
+    [_common.ActionFunction.SSG]: '@modern-js/ssg-generator',
+    [_common.ActionFunction.Polyfill]: '@modern-js/dependence-generator',
+    [_common.ActionFunction.Deploy]: '@modern-js/cloud-deploy-generator',
+    [_common.ActionFunction.Proxy]: '@modern-js/dependence-generator'
+  },
+  [_common.ActionType.Refactor]: {
+    [_common.ActionRefactor.BFFToApp]: '@modern-js/bff-refactor-generator'
+  }
+};
+exports.MWANewActionGenerators = MWANewActionGenerators;

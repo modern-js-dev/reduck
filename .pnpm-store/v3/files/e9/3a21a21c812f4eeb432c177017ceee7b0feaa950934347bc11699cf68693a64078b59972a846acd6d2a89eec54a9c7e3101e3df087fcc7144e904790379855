@@ -1,0 +1,69 @@
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+import { getMonorepoBaseData } from "../parse-config/monorepo";
+import { runBuildTask, runAllBuildTask } from "../features/build";
+import { getProjects } from "../projects/get-projects";
+import { initDAG } from "../dag"; // import { clearProjectsMemoryFile } from './projects/clear-memory-files';
+
+export const build = async (targetProjectName, option, api) => {
+  const {
+    appDirectory
+  } = api.useAppContext();
+  const {
+    self = true,
+    dept = false,
+    deps = true,
+    onlySelf = false,
+    all = false,
+    contentHash = false,
+    gitHash = false
+  } = option;
+  const projects = await getProjects({
+    packagesMatchs: {
+      enableAutoFinder: true
+    }
+  }, appDirectory);
+  const operator = initDAG(projects);
+  operator.checkCircle();
+  const {
+    rootPath,
+    packageManager
+  } = getMonorepoBaseData(appDirectory);
+  const overrideConfig = {};
+
+  if (all) {
+    overrideConfig.disableWithDeps = false;
+    overrideConfig.withSelf = true;
+    overrideConfig.withDept = true;
+  }
+
+  if (targetProjectName) {
+    runBuildTask(targetProjectName, operator, _objectSpread({
+      rootPath,
+      packageManager,
+      withSelf: self,
+      withDept: dept,
+      onlySelf,
+      disableWithDeps: !deps,
+      // The CI/CD phase is recommended to be switched on
+      disableContentHash: !contentHash,
+      enableGitHash: gitHash
+    }, overrideConfig));
+  } else {
+    const currentDir = process.cwd();
+
+    if (currentDir === appDirectory) {
+      await runAllBuildTask(operator, {
+        rootPath: currentDir,
+        packageManager,
+        disableContentHash: !contentHash,
+        enableGitHash: gitHash
+      });
+    } // TODO: 没有指定项目名称的构建任务如何处理
+
+  }
+};

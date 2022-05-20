@@ -1,0 +1,63 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _crossSpawn = _interopRequireDefault(require("cross-spawn"));
+
+var _utils = require("@modern-js/utils");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+const ensureOption = (args, name, val) => {
+  if (!args.hasOwnProperty(name) || args[name].length < 1) {
+    if (Array.isArray(val)) {
+      return [`--${name}`, val.join(',')];
+    }
+
+    if (typeof val === 'boolean') {
+      return val ? [`--${name}`] : [`--no-${name}`];
+    } else {
+      return [`--${name}`, val];
+    }
+  }
+
+  return [];
+};
+
+var _default = () => {
+  var _args$_;
+
+  const rawArgs = process.argv.slice(3);
+  const args = (0, _utils.minimist)(rawArgs);
+  const exts = ['.js', '.jsx', '.ts', '.tsx', '.mjs', '.mjsx', '.cjs', '.cjsx'];
+  rawArgs.push(...ensureOption(args, 'ext', exts));
+  rawArgs.push(...ensureOption(args, 'fix', true));
+  rawArgs.push(...ensureOption(args, 'format', 'codeframe')); // default ignore pattern
+
+  ['node_modules/', 'dist/', 'output/', 'output_resource/'].forEach(pattern => {
+    rawArgs.push(...ensureOption(args, 'ignore-pattern', pattern));
+  });
+
+  if (args !== null && args !== void 0 && (_args$_ = args._) !== null && _args$_ !== void 0 && _args$_.length) {
+    rawArgs.push(...args._);
+  } else {
+    rawArgs.push('./');
+  }
+
+  const eslintScript = require.resolve('eslint/bin/eslint.js');
+
+  _utils.logger.info(_utils.chalk.bold('Lint...'));
+
+  _utils.logger.info(_utils.chalk.bold(`NODE_OPTIONS="--max-old-space-size=8192" ${eslintScript} ${rawArgs.join(' ')}`));
+
+  const childprocess = (0, _crossSpawn.default)(eslintScript, rawArgs, {
+    stdio: 'inherit'
+  }); // eslint-disable-next-line no-process-exit
+
+  childprocess.on('exit', code => process.exit(code || 0));
+};
+
+exports.default = _default;

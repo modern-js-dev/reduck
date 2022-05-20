@@ -1,0 +1,66 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.requireModule = exports.isAllowedHttpMethod = exports.getLambdaDir = exports.getAllFiles = exports.getAllAPIFiles = exports.getAPIMode = exports.createExistChecker = void 0;
+
+var _path = _interopRequireDefault(require("path"));
+
+var _utils = require("@modern-js/utils");
+
+var _constant = require("./constant");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+const createExistChecker = base => target => _utils.fs.pathExistsSync(_path.default.resolve(base, target));
+
+exports.createExistChecker = createExistChecker;
+
+const getAPIMode = apiDir => {
+  const exist = createExistChecker(apiDir);
+
+  if (exist(_constant.FRAMEWORK_MODE_LAMBDA_DIR)) {
+    return _constant.APIMode.FARMEWORK;
+  }
+
+  return _constant.APIMode.FUNCTION;
+};
+
+exports.getAPIMode = getAPIMode;
+
+const isAllowedHttpMethod = method => _constant.AllHttpMethods.includes(method.toUpperCase());
+
+exports.isAllowedHttpMethod = isAllowedHttpMethod;
+const API_FILE_RULES = ['**/*.[tj]s', '!**/_*', '!**/_*/**/*.[tj]s', '!**/*.test.js', '!**/*.test.ts', '!**/*.d.ts', '!__test__/*.ts', '!__tests__/*.ts', '!node_modules/**', '!bootstrap.js'];
+
+const getAllAPIFiles = lambdaDir => getAllFiles(lambdaDir, API_FILE_RULES);
+
+exports.getAllAPIFiles = getAllAPIFiles;
+
+const getAllFiles = (lambdaDir, rules) => _utils.globby.sync(rules, {
+  cwd: lambdaDir,
+  gitignore: true
+}).map(file => _path.default.resolve(lambdaDir, file));
+
+exports.getAllFiles = getAllFiles;
+
+const getLambdaDir = apiDir => {
+  const mode = getAPIMode(apiDir);
+  const lambdaDir = mode === _constant.APIMode.FARMEWORK ? _path.default.join(apiDir, _constant.FRAMEWORK_MODE_LAMBDA_DIR) : apiDir;
+  return lambdaDir;
+};
+
+exports.getLambdaDir = getLambdaDir;
+
+const requireModule = modulePath => {
+  const requiredModule = require(modulePath);
+
+  if (requiredModule.__esModule && requiredModule.default) {
+    return requiredModule.default;
+  }
+
+  return requiredModule;
+};
+
+exports.requireModule = requireModule;

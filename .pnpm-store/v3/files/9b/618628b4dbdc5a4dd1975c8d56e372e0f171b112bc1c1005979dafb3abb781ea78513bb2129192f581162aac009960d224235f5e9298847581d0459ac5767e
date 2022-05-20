@@ -1,0 +1,2 @@
+import { ResolveItemParams, SingleFileCompilerResult } from '../types';
+export declare const sassResolve: (params: ResolveItemParams) => Promise<SingleFileCompilerResult>;

@@ -1,0 +1,12 @@
+var _babelJest$createTran;
+
+import babelJest from 'babel-jest';
+const babelTransformer = (_babelJest$createTran = babelJest.createTransformer) === null || _babelJest$createTran === void 0 ? void 0 : _babelJest$createTran.call(babelJest, {
+  presets: [[require.resolve('@modern-js/babel-preset-app'), {
+    appDirectory: process.cwd(),
+    modules: 'cjs'
+  }]],
+  configFile: false,
+  babelrc: false
+});
+export default babelTransformer;

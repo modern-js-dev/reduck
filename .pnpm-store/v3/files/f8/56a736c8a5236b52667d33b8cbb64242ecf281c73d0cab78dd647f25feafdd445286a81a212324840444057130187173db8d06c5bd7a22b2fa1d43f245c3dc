@@ -1,0 +1,8 @@
+export declare type WatchChangeTypeValueT = 'add' | 'unlink' | 'change';
+export declare const WatchChangeType: Record<'ADD' | 'UNLINK' | 'CHANGE', WatchChangeTypeValueT>;
+declare type RunTaskType = (option: {
+    changedFilePath: string;
+    changeType: WatchChangeTypeValueT;
+}) => void | Promise<void>;
+export declare const watch: (watchDir: string | string[], runTask: RunTaskType, ignored?: string[]) => import("./compiled").FSWatcher;
+export {};

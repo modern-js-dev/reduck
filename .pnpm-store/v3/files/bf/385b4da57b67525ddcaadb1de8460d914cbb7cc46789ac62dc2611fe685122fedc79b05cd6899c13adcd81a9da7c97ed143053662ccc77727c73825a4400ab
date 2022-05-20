@@ -1,0 +1,33 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _lint = _interopRequireDefault(require("./lint"));
+
+var _preCommit = _interopRequireDefault(require("./pre-commit"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var _default = () => ({
+  name: '@modern-js/plugin-jarvis',
+  setup: () => {
+    return {
+      commands({
+        program
+      }) {
+        program.command('lint [...files]').allowUnknownOption().description('lint and fix source files').option('--no-fix', 'disable auto fix source file').action(() => {
+          (0, _lint.default)();
+        });
+        program.command('pre-commit').description('auto run modern lint before commit').action(() => {
+          (0, _preCommit.default)();
+        });
+      }
+
+    };
+  }
+});
+
+exports.default = _default;

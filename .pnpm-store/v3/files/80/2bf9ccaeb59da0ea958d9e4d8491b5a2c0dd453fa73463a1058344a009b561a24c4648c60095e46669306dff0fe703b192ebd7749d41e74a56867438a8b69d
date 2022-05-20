@@ -1,0 +1,23 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.initEnv = void 0;
+
+const initEnv = ({
+  syntax,
+  type
+}) => {
+  if (syntax === 'es6+' && type === 'commonjs') {
+    return 'CJS_ES6';
+  } else if (syntax === 'es6+' && type === 'module') {
+    return 'ESM_ES6';
+  } else if (syntax === 'es5' && type === 'module') {
+    return 'ESM_ES5';
+  }
+
+  return '';
+};
+
+exports.initEnv = initEnv;

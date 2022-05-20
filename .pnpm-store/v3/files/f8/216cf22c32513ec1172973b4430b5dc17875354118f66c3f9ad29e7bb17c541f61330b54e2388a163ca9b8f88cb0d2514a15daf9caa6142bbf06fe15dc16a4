@@ -1,0 +1,9 @@
+import type { IAppContext, NormalizedConfig } from '@modern-js/core';
+import { ClientWebpackConfig } from './client';
+declare class ModernWebpackConfig extends ClientWebpackConfig {
+    constructor(appContext: IAppContext, options: NormalizedConfig);
+    name(): void;
+    plugins(): void;
+    loaders(): import("../../compiled/webpack-chain/types").Rule<import("../../compiled/webpack-chain/types").Module>;
+}
+export { ModernWebpackConfig };

@@ -1,0 +1,44 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _path = _interopRequireDefault(require("path"));
+
+var _babelCompiler = require("@modern-js/babel-compiler");
+
+var _testing = require("@modern-js/testing");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+const test = async api => {
+  const userConfig = api.useResolvedConfigContext();
+  const appContext = api.useAppContext();
+  userConfig.testing = userConfig.testing || {};
+  const jest = userConfig.testing.jest || userConfig.tools.jest;
+
+  if (Array.isArray(jest)) {
+    userConfig.testing.jest = jest[0];
+  }
+
+  userConfig.testing.jest = userConfig.testing.jest || userConfig.tools.jest;
+
+  const runtimeExportsPath = _path.default.join(appContext.internalDirectory, '.runtime-exports');
+
+  await (0, _babelCompiler.compiler)({
+    sourceDir: runtimeExportsPath,
+    rootDir: runtimeExportsPath,
+    distDir: runtimeExportsPath,
+    quiet: true
+  }, {
+    presets: [[require.resolve('@babel/preset-env'), {
+      modules: 'cjs'
+    }]]
+  });
+  await (0, _testing.runTest)(api, userConfig.testing);
+};
+
+var _default = test;
+exports.default = _default;

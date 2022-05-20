@@ -1,0 +1,2 @@
+export declare const readTsConfig: (root: string) => any;
+export declare const readTsConfigByFile: (filename: string) => any;

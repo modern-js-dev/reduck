@@ -1,0 +1,13 @@
+import type { IAppContext, NormalizedConfig, PluginAPI } from '@modern-js/core';
+import type { Entrypoint } from '@modern-js/types';
+export interface ImportSpecifier {
+  local?: string;
+  imported?: string;
+}
+export interface ImportStatement {
+  specifiers: ImportSpecifier[];
+  value: string;
+  initialize?: string;
+}
+export declare const createImportStatements: (statements: ImportStatement[]) => string;
+export declare const generateCode: (appContext: IAppContext, config: NormalizedConfig, entrypoints: Entrypoint[], api: PluginAPI) => Promise<void>;

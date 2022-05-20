@@ -1,0 +1,59 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.runClearTask = exports.defaultRemoveDirs = void 0;
+
+var path = _interopRequireWildcard(require("path"));
+
+var _utils = require("@modern-js/utils");
+
+var _nodeCoreLibrary = require("@rushstack/node-core-library");
+
+function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
+
+function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+
+const defaultRemoveDirs = ['node_modules'];
+exports.defaultRemoveDirs = defaultRemoveDirs;
+
+const runClearTask = (projectNames, projects, config) => {
+  const {
+    removeDirs = defaultRemoveDirs,
+    rootPath
+  } = config;
+
+  if (projectNames.length > 0) {
+    projects.forEach(project => {
+      if (projectNames.includes(project.name)) {
+        removeDirs.forEach(dir => {
+          const removePath = path.join(`${project.extra.path}`, dir);
+
+          _utils.logger.info(`remove ${removePath}`);
+
+          _nodeCoreLibrary.FileSystem.deleteFolder(removePath);
+        });
+      }
+    });
+  } else {
+    removeDirs.forEach(dir => {
+      const removePath = path.join(`${rootPath}`, dir);
+
+      _utils.logger.info(`remove ${removePath}`);
+
+      _nodeCoreLibrary.FileSystem.deleteFolder(removePath);
+    });
+    projects.forEach(project => {
+      removeDirs.forEach(dir => {
+        const removePath = path.join(`${project.extra.path}`, dir);
+
+        _utils.logger.info(`remove ${removePath}`);
+
+        _nodeCoreLibrary.FileSystem.deleteFolder(removePath);
+      });
+    });
+  }
+};
+
+exports.runClearTask = runClearTask;

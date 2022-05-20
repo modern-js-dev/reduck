@@ -1,0 +1,103 @@
+import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
+
+/**
+ * modified from https://github.com/farrow-js/farrow/tree/master/packages/farrow-pipeline
+ * license at https://github.com/farrow-js/farrow/blob/master/LICENSE
+ */
+import { createHooks } from "./hook";
+var ContextSymbol = Symbol["for"]('MODERN_CONTEXT');
+export var createContext = function createContext(value) {
+  var id = Symbol('MODERN_CONTEXT_ID');
+
+  var create = function create(value) {
+    var _Context;
+
+    var use = function use() {
+      var container = useContainer();
+      return Object.seal({
+        get value() {
+          return container.read(Context);
+        },
+
+        set value(v) {
+          container.write(Context, v);
+        }
+
+      });
+    };
+
+    var get = function get() {
+      var container = useContainer();
+      return container.read(Context);
+    };
+
+    var set = function set(v) {
+      var container = useContainer();
+      container.write(Context, v);
+    };
+
+    var Context = (_Context = {
+      id: id
+    }, _defineProperty(_Context, ContextSymbol, value), _defineProperty(_Context, "create", create), _defineProperty(_Context, "use", use), _defineProperty(_Context, "get", get), _defineProperty(_Context, "set", set), _Context);
+    return Context;
+  };
+
+  return create(value);
+};
+
+var createContextMap = function createContextMap(storage) {
+  var contextMap = new Map();
+  var contexts = Object.values(storage); // eslint-disable-next-line @typescript-eslint/prefer-for-of
+
+  for (var i = 0; i < contexts.length; i++) {
+    contextMap.set(contexts[i].id, contexts[i]);
+  }
+
+  return contextMap;
+};
+
+export var createContainer = function createContainer() {
+  var ContextStorage = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+  var contextMap = createContextMap(ContextStorage);
+
+  var read = function read(context) {
+    var target = contextMap.get(context.id);
+
+    if (target) {
+      return target[ContextSymbol];
+    }
+
+    return context[ContextSymbol];
+  };
+
+  var write = function write(context, value) {
+    contextMap.set(context.id, context.create(value));
+  };
+
+  return Object.freeze({
+    read: read,
+    write: write
+  });
+};
+
+var _createHooks = createHooks({
+  useContainer: function useContainer() {
+    throw new Error("Can't call useContainer out of scope, it should be placed on top of the function");
+  }
+}),
+    run = _createHooks.run,
+    hooks = _createHooks.hooks;
+
+export var runHooks = run;
+var useContainer = hooks.useContainer;
+export { useContainer };
+export var fromContainer = function fromContainer(container) {
+  return {
+    useContainer: function useContainer() {
+      return container;
+    }
+  };
+};
+export var runWithContainer = function runWithContainer(f, container) {
+  return runHooks(f, fromContainer(container));
+};

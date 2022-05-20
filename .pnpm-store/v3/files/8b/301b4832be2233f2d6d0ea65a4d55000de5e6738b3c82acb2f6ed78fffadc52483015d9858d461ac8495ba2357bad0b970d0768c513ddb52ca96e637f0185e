@@ -1,0 +1,10 @@
+export declare const WORKSPACE_FILE: {
+  LERNA: string;
+  YARN: string;
+  PNPM: string;
+};
+export declare const LOCK_FILE: {
+  YARN: string;
+  PNPM: string;
+  NPM: string;
+};

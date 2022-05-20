@@ -1,0 +1,20 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.initDAG = void 0;
+
+var _create = require("./create");
+
+var _operator = require("./operator");
+
+const initDAG = projects => {
+  const {
+    projectsMap
+  } = (0, _create.create)(projects);
+  const operator = new _operator.DagOperator(projects, projectsMap);
+  return operator;
+};
+
+exports.initDAG = initDAG;

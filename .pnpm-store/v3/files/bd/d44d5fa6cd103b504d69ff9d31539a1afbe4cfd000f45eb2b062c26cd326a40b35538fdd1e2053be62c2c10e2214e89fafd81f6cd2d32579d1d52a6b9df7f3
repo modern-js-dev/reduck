@@ -1,0 +1,2 @@
+import type { NormalizedConfig, SassLoaderOptions } from '@modern-js/core';
+export declare const getSassConfig: (config: NormalizedConfig, options?: SassLoaderOptions) => SassLoaderOptions;

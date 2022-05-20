@@ -1,0 +1,8 @@
+interface BumpOptions {
+  snapshot: boolean | string;
+  canary: boolean;
+  preid: string;
+  ignore: string[];
+}
+export declare function bump(options: BumpOptions): Promise<void>;
+export {};

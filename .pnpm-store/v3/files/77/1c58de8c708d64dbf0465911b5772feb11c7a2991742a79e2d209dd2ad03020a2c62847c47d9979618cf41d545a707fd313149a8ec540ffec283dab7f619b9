@@ -1,0 +1,54 @@
+import _asyncToGenerator from "@babel/runtime/helpers/esm/asyncToGenerator";
+import _regeneratorRuntime from "@babel/runtime/regenerator";
+import path from 'path';
+import { compiler } from '@modern-js/babel-compiler';
+import { runTest } from '@modern-js/testing';
+
+var test = /*#__PURE__*/function () {
+  var _ref = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee(api) {
+    var userConfig, appContext, jest, runtimeExportsPath;
+    return _regeneratorRuntime.wrap(function _callee$(_context) {
+      while (1) {
+        switch (_context.prev = _context.next) {
+          case 0:
+            userConfig = api.useResolvedConfigContext();
+            appContext = api.useAppContext();
+            userConfig.testing = userConfig.testing || {};
+            jest = userConfig.testing.jest || userConfig.tools.jest;
+
+            if (Array.isArray(jest)) {
+              userConfig.testing.jest = jest[0];
+            }
+
+            userConfig.testing.jest = userConfig.testing.jest || userConfig.tools.jest;
+            runtimeExportsPath = path.join(appContext.internalDirectory, '.runtime-exports');
+            _context.next = 9;
+            return compiler({
+              sourceDir: runtimeExportsPath,
+              rootDir: runtimeExportsPath,
+              distDir: runtimeExportsPath,
+              quiet: true
+            }, {
+              presets: [[require.resolve('@babel/preset-env'), {
+                modules: 'cjs'
+              }]]
+            });
+
+          case 9:
+            _context.next = 11;
+            return runTest(api, userConfig.testing);
+
+          case 11:
+          case "end":
+            return _context.stop();
+        }
+      }
+    }, _callee);
+  }));
+
+  return function test(_x) {
+    return _ref.apply(this, arguments);
+  };
+}();
+
+export default test;

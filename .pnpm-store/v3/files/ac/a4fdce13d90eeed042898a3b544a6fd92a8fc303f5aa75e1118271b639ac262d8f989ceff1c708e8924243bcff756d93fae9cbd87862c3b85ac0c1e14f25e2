@@ -1,0 +1,43 @@
+{
+  "name": "farrow-schema",
+  "version": "1.12.1",
+  "description": "A powerful and extensible schema builder",
+  "main": "dist/index.js",
+  "files": [
+    "src",
+    "dist",
+    "esm",
+    "validator.d.ts",
+    "validator.js",
+    "formatter.d.ts",
+    "formatter.js"
+  ],
+  "keywords": [
+    "Web Framework",
+    "TypeScript",
+    "Functional Programming"
+  ],
+  "author": "Jade Gu",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Lucifier129/farrow.git"
+  },
+  "dependencies": {
+    "tslib": "^2.1.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^27.0.2",
+    "jest": "^27.2.2",
+    "ts-jest": "^27.0.5",
+    "typescript": "^4.5.4"
+  },
+  "scripts": {
+    "build": "pnpm run build:dist && pnpm run build:esm",
+    "build:dist": "tsc -b ./tsconfig.json",
+    "build:esm": "tsc -b ./tsconfig.esm.json",
+    "test": "jest",
+    "test:coverage": "jest --collectCoverage --coverage"
+  },
+  "readme": "Farrow-Schema API\r\n\r\n`farrow-schema` is a powerful and extensible schema builder library.\r\n\r\n## Installation\r\n\r\n```shell\r\n# via npm\r\nnpm install --save farrow-schema\r\n\r\n# via yarn\r\nyarn add farrow-schema\r\n```\r\n\r\n## API\r\n\r\n```typescript\r\nimport {\r\n  Schema, // abstract class inherited by all schema\r\n  List, // List type constructor\r\n  ObjectType, // abstract class of object type schema\r\n  Int, // Int type\r\n  Float, // Float type\r\n  ID, // ID type\r\n  Struct, // Struct type constructor\r\n  Nullable, // Nullabel type constructor\r\n  Union, // Union type constructor\r\n  Intersect, // Intersection type constructor\r\n  Literal, // Literal type constructor\r\n  Record, // Record type constructor\r\n  Json, // Json type\r\n  Any, // Any type\r\n  Strict, // Strict type constructor\r\n  NonStrict, // NonStrict type constructor\r\n  Tuple, // Tuple type constrcutor\r\n  pick, // pick object/struct keys to create a new object/struct type\r\n  omit, // omit object/struct keys to create a new object/struct type\r\n  keyof, // get the keys of object/struct\r\n} from 'farrow-schema'\r\n\r\n// create transformer for transforming schema to another type\r\nimport { createTransformer } from 'farrow-schema/transformer'\r\n\r\n// schema validator\r\nimport { Validator } from 'farrow-schema/validator'\r\n```\r\n\r\n## Usage\r\n\r\n```typescript\r\nimport * as Schema from 'farrow-schema'\r\nimport { Validator } from 'farrow-schema/validator'\r\n\r\nconst { ObjectType, List, ID, Float, Nullable, Struct, Union, Intersect, Literal, Json, Any, Record } = Schema\r\n\r\n// define User Object, it supports recursive definition\r\nclass User extends ObjectType {\r\n  id = ID\r\n  name = String\r\n  orders = List(Order) // order list type\r\n}\r\n\r\n// define Order Object\r\nclass Order extends ObjectType {\r\n  id = ID\r\n  product = Product\r\n  user = User\r\n}\r\n\r\n// define Product Object\r\nclass Product extends ObjectType {\r\n  id = ID\r\n  title = String\r\n  description = String\r\n  price = Float\r\n}\r\n\r\n// define AppState Object\r\nclass AppState extends ObjectType {\r\n  descriptors = {\r\n    a: Boolean,\r\n    // a light way to construct struct type\r\n    b: Struct({\r\n      c: {\r\n        d: List(Nullable(String)),\r\n      },\r\n    }),\r\n  }\r\n\r\n  struct = Struct({\r\n    a: Number,\r\n    b: String,\r\n    c: {\r\n      deep: {\r\n        d: List(Boolean),\r\n      },\r\n    },\r\n  })\r\n\r\n  nullable = Nullable(List(Number))\r\n\r\n  union = Union(List(Number), List(String), List(Boolean))\r\n\r\n  intersect = Intersect(Struct({ a: String }), Struct({ b: Boolean }))\r\n\r\n  record = Record(Product)\r\n\r\n  literal = Literal(12)\r\n\r\n  json = Json\r\n\r\n  any = Any\r\n\r\n  getUser = User\r\n  getOrder = Order\r\n  // supports { [Schema.Type]: SchemaCtor }\r\n  getProduct = {\r\n    [Schema.Type]: Product,\r\n    description: 'get product',\r\n  }\r\n}\r\n\r\ntype T0 = Schema.TypeOf<AppState>\r\n\r\ntype T1 = Schema.TypeOf<User>\r\n\r\ntype T2 = Schema.TypeOf<Product>\r\n\r\nconst result0 = Validator.validate(Product, {\r\n  id : 'product id'\r\n  title : 'product title'\r\n  description : 'product description'\r\n  price : 1000.1\r\n})\r\n\r\nif (result0.isOk) {\r\n  console.log(result0.value)\r\n}\r\n```\r\n\r\n## ValidatorType\r\n\r\nit's useful to build your own validator-type with custom validate function.\r\n\r\n```typescript\r\nimport { ValidatorType } from 'farrow-schema/validator'\r\n\r\nclass DateType extends ValidatorType<Date> {\r\n  validate(input: unknown) {\r\n    if (input instanceof Date) {\r\n      return this.Ok(input)\r\n    }\r\n\r\n    if (typeof input === 'number' || typeof input === 'string') {\r\n      return this.Ok(new Date(input))\r\n    }\r\n\r\n    return this.Err(`${input} is not a valid date`)\r\n  }\r\n}\r\n\r\nclass EmailType extends ValidatorType<string> {\r\n  validate(input: unknown) {\r\n    if (typeof input !== 'string') {\r\n      return this.Err(`${input} should be a string`)\r\n    }\r\n\r\n    if (/^example@farrow\\.com$/.test(input)) {\r\n      return this.Ok(input)\r\n    }\r\n\r\n    return this.Err(`${input} is not a valid email`)\r\n  }\r\n}\r\n```\r\n\r\n## RegExp\r\n\r\nGiven a `regexp` for creating a validator-type\r\n\r\n```typescript\r\nimport { RegExp, createSchemaValidator } from 'farrow-schema/validator'\r\n\r\nlet Reg0 = RegExp(/123/)\r\nlet Reg1 = RegExp(/abc/i)\r\n\r\nlet validateReg0 = createSchemaValidator(Reg0)\r\nlet validateReg1 = createSchemaValidator(Reg1)\r\n\r\nexpect(assertOk(validateReg0('123'))).toBe('123')\r\nexpect(() => assertOk(validateReg0('12'))).toThrow()\r\n\r\nexpect(assertOk(validateReg1('abc'))).toBe('abc')\r\nexpect(assertOk(validateReg1('ABC'))).toBe('ABC')\r\nexpect(() => assertOk(validateReg1('cba'))).toThrow()\r\n```\r\n"
+}

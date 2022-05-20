@@ -1,0 +1,6 @@
+interface EntryPoint {
+    entryName: string;
+}
+export declare const isSingleEntry: (entrypoints: EntryPoint[]) => boolean;
+export declare const prettyInstructions: (appContext: any, config: any) => string;
+export {};

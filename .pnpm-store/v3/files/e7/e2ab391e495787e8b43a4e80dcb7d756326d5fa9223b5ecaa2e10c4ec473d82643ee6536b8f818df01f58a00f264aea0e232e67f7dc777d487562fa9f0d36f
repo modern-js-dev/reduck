@@ -1,0 +1,125 @@
+import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
+import _objectSpread from "@babel/runtime/helpers/esm/objectSpread2";
+
+var _FrameworkAppendTypeC;
+
+import { i18n, localeKeys } from "../locale";
+import { BooleanConfig, BooleanSchemas } from "../common/boolean";
+import { EnableLessSchema, EnableSassSchema } from "../common/css";
+export var mwaConfigWhenFunc = function mwaConfigWhenFunc(values) {
+  return values.needModifyMWAConfig === BooleanConfig.YES;
+};
+export var RunWay;
+
+(function (RunWay) {
+  RunWay["No"] = "no";
+  RunWay["Electron"] = "electron";
+})(RunWay || (RunWay = {}));
+
+export var RunWaySchema = {
+  key: 'runWay',
+  type: ['string'],
+  label: function label() {
+    return i18n.t(localeKeys.runWay.self);
+  },
+  mutualExclusion: true,
+  when: function when(_, extra) {
+    return (extra === null || extra === void 0 ? void 0 : extra.isEmptySrc) === undefined ? true : Boolean(extra === null || extra === void 0 ? void 0 : extra.isEmptySrc);
+  },
+  state: {
+    value: RunWay.No
+  },
+  items: Object.values(RunWay).map(function (runWay) {
+    return {
+      key: runWay,
+      label: function label() {
+        return i18n.t(localeKeys.runWay[runWay]);
+      }
+    };
+  })
+};
+export var ClientRoute;
+
+(function (ClientRoute) {
+  ClientRoute["SelfControlRoute"] = "selfControlRoute";
+  ClientRoute["ConventionalRoute"] = "conventionalRoute";
+  ClientRoute["No"] = "no";
+})(ClientRoute || (ClientRoute = {}));
+
+export var ClientRouteSchema = {
+  key: 'clientRoute',
+  type: ['string'],
+  label: function label() {
+    return i18n.t(localeKeys.entry.clientRoute.self);
+  },
+  mutualExclusion: true,
+  when: mwaConfigWhenFunc,
+  state: {
+    value: ClientRoute.SelfControlRoute
+  },
+  items: Object.values(ClientRoute).map(function (clientRoute) {
+    return {
+      key: clientRoute,
+      label: function label() {
+        return i18n.t(localeKeys.entry.clientRoute[clientRoute]);
+      }
+    };
+  })
+};
+export var DisableStateManagementSchema = {
+  key: 'disableStateManagement',
+  type: ['string'],
+  label: function label() {
+    return i18n.t(localeKeys.entry.disableStateManagement);
+  },
+  mutualExclusion: true,
+  when: mwaConfigWhenFunc,
+  state: {
+    value: BooleanConfig.NO
+  },
+  items: BooleanSchemas
+};
+export var EnableMWALessSchema = _objectSpread(_objectSpread({}, EnableLessSchema), {}, {
+  when: mwaConfigWhenFunc
+});
+export var EnableMWASassSchema = _objectSpread(_objectSpread({}, EnableSassSchema), {}, {
+  when: mwaConfigWhenFunc
+});
+export var NeedModifyMWAConfigSchema = {
+  key: 'needModifyMWAConfig',
+  label: function label() {
+    return i18n.t(localeKeys.needModifyConfig.self);
+  },
+  type: ['string'],
+  mutualExclusion: true,
+  state: {
+    value: BooleanConfig.NO
+  },
+  items: BooleanSchemas
+};
+export var Framework;
+
+(function (Framework) {
+  Framework["Express"] = "express";
+  Framework["Koa"] = "koa";
+  Framework["Egg"] = "egg";
+  Framework["Nest"] = "nest";
+})(Framework || (Framework = {}));
+
+export var FrameworkSchema = {
+  key: 'framework',
+  type: ['string'],
+  label: function label() {
+    return i18n.t(localeKeys.framework.self);
+  },
+  mutualExclusion: true,
+  items: Object.values(Framework).map(function (framework) {
+    return {
+      key: framework,
+      label: function label() {
+        return i18n.t(localeKeys.framework[framework]);
+      }
+    };
+  })
+};
+export var FrameworkAppendTypeContent = (_FrameworkAppendTypeC = {}, _defineProperty(_FrameworkAppendTypeC, Framework.Express, "/// <reference types='@modern-js/plugin-express/types' />"), _defineProperty(_FrameworkAppendTypeC, Framework.Koa, "/// <reference types='@modern-js/plugin-koa/types' />"), _defineProperty(_FrameworkAppendTypeC, Framework.Egg, "/// <reference types='@modern-js/plugin-egg/types' />"), _defineProperty(_FrameworkAppendTypeC, Framework.Nest, "/// <reference types='@modern-js/plugin-nest/types' />"), _FrameworkAppendTypeC);

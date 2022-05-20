@@ -1,0 +1,120 @@
+import _classCallCheck from "@babel/runtime/helpers/esm/classCallCheck";
+import _createClass from "@babel/runtime/helpers/esm/createClass";
+import _inherits from "@babel/runtime/helpers/esm/inherits";
+import _createSuper from "@babel/runtime/helpers/esm/createSuper";
+import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
+import _objectSpread from "@babel/runtime/helpers/esm/objectSpread2";
+import withSideEffect from 'react-side-effect';
+import React, { createElement } from 'react';
+import { getOutermostProperty, aggKeysFromPropsList, exist, aggMatchesFromPropsList } from "./util";
+var PROP_NAMES = {
+  INTERVAL: 'interval',
+  STALE_LIMIT: 'staleLimit',
+  LEVEL: 'level',
+  INCLUDES: 'includes',
+  EXCLUDES: 'excludes',
+  FALLBACK: 'fallback',
+  MATCHES: 'matches'
+};
+
+var handleClientStateChange = function handleClientStateChange() {// not used
+};
+
+var mapStateOnServer = function mapStateOnServer(reduceProps) {
+  var defaultProps = {
+    interval: 10,
+    staleLimit: false,
+    level: 0,
+    includes: null,
+    excludes: null,
+    fallback: false,
+    matches: null
+  };
+  return Object.keys(defaultProps).reduce(function (props, key) {
+    var propKey = key;
+    var reduceProp = reduceProps[propKey];
+    var nextProps = props;
+
+    if (exist(reduceProp)) {
+      nextProps = _objectSpread(_objectSpread({}, props), {}, _defineProperty({}, propKey, reduceProp));
+    }
+
+    return nextProps;
+  }, defaultProps);
+};
+
+var reducePropsToState = function reducePropsToState(propsList) {
+  var reduceProps = {
+    interval: getOutermostProperty(propsList, PROP_NAMES.INTERVAL),
+    staleLimit: getOutermostProperty(propsList, PROP_NAMES.STALE_LIMIT),
+    level: getOutermostProperty(propsList, PROP_NAMES.LEVEL),
+    includes: aggKeysFromPropsList(propsList, PROP_NAMES.INCLUDES),
+    excludes: aggKeysFromPropsList(propsList, PROP_NAMES.EXCLUDES),
+    fallback: getOutermostProperty(propsList, PROP_NAMES.FALLBACK),
+    matches: aggMatchesFromPropsList(propsList, PROP_NAMES.MATCHES)
+  };
+  return reduceProps;
+};
+
+function factory(Component) {
+  var Spr = /*#__PURE__*/function (_React$Component) {
+    _inherits(Spr, _React$Component);
+
+    var _super = _createSuper(Spr);
+
+    function Spr() {
+      _classCallCheck(this, Spr);
+
+      return _super.apply(this, arguments);
+    }
+
+    _createClass(Spr, [{
+      key: "verify",
+      value: function verify() {
+        return true;
+      }
+    }, {
+      key: "render",
+      value: function render() {
+        var newProps = _objectSpread({}, this.props);
+
+        var validate = this.verify();
+
+        if (!validate) {
+          throw new Error('invalid props, check usage');
+        }
+
+        return /*#__PURE__*/createElement(Component, _objectSpread({}, newProps));
+      }
+    }], [{
+      key: "canUseDOM",
+      get: function get() {
+        return Component.canUseDOM;
+      } // eslint-disable-next-line react/sort-comp
+      ,
+      set: function set(canUseDOM) {
+        Component.canUseDOM = canUseDOM;
+      }
+    }]);
+
+    return Spr;
+  }(React.Component);
+
+  _defineProperty(Spr, "peek", Component.peek);
+
+  _defineProperty(Spr, "rewind", Component.rewind);
+
+  _defineProperty(Spr, "config", function () {
+    var mappedState = Component.rewind();
+    return mappedState;
+  });
+
+  return Spr;
+}
+
+var NullComponent = function NullComponent() {
+  return null;
+};
+
+var SprSideEffects = withSideEffect(reducePropsToState, handleClientStateChange, mapStateOnServer)(NullComponent);
+export var PreRender = factory(SprSideEffects);

@@ -1,0 +1,113 @@
+import _typeof from "@babel/runtime/helpers/esm/typeof";
+import _asyncToGenerator from "@babel/runtime/helpers/esm/asyncToGenerator";
+import _regeneratorRuntime from "@babel/runtime/regenerator";
+import { compile, pathToRegexp } from 'path-to-regexp';
+import qs from 'query-string';
+import { handleRes } from "./handleRes";
+var realRequest;
+var realAllowedHeaders;
+
+var originFetch = function originFetch() {
+  return fetch.apply(void 0, arguments).then(handleRes);
+};
+
+export var configure = function configure(options) {
+  var request = options.request,
+      interceptor = options.interceptor,
+      allowedHeaders = options.allowedHeaders;
+  realRequest = request || originFetch;
+
+  if (interceptor && !request) {
+    realRequest = interceptor(fetch);
+  }
+
+  if (Array.isArray(allowedHeaders)) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    realAllowedHeaders = allowedHeaders;
+  }
+};
+export var createRequest = function createRequest(path, method, port) {
+  var fetch = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : originFetch;
+  var getFinalPath = compile(path, {
+    encode: encodeURIComponent
+  });
+  var keys = [];
+  pathToRegexp(path, keys);
+
+  var sender = /*#__PURE__*/function () {
+    var _ref = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee() {
+      var _len,
+          args,
+          _key,
+          fetcher,
+          payload,
+          finalPath,
+          finalURL,
+          headers,
+          body,
+          _args = arguments;
+
+      return _regeneratorRuntime.wrap(function _callee$(_context) {
+        while (1) {
+          switch (_context.prev = _context.next) {
+            case 0:
+              for (_len = _args.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+                args[_key] = _args[_key];
+              }
+
+              fetcher = realRequest || originFetch;
+              payload = _typeof(args[args.length - 1]) === 'object' ? args[args.length - 1] : {};
+              payload.params = payload.params || {};
+              keys.forEach(function (key, index) {
+                payload.params[key.name] = args[index];
+              });
+              finalPath = getFinalPath(payload.params);
+              finalURL = payload.query ? "".concat(finalPath, "?").concat(qs.stringify(payload.query)) : finalPath;
+              headers = payload.headers || {};
+              body = payload.data && _typeof(payload.data) === 'object' ? JSON.stringify(payload.data) : payload.body;
+
+              if (payload.data) {
+                headers['Content-Type'] = 'application/json';
+                body = _typeof(payload.data) === 'object' ? JSON.stringify(payload.data) : payload.body;
+              } else if (payload.body) {
+                headers['Content-Type'] = 'text/plain'; // eslint-disable-next-line prefer-destructuring
+
+                body = payload.body;
+              } else if (payload.formData) {
+                body = payload.formData; // https://stackoverflow.com/questions/44919424/bad-content-type-header-no-multipart-boundary-nodejs
+                // need multipart boundary aotu attached by browser when multipart is true
+                // headers['Content-Type'] = 'multipart/form-data';
+              } else if (payload.formUrlencoded) {
+                headers['Content-Type'] = 'application/x-www-form-urlencoded';
+
+                if (_typeof(payload.formUrlencoded) === 'object' && // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-expect-error
+                // eslint-disable-next-line node/prefer-global/url-search-params,node/no-unsupported-features/node-builtins
+                !(payload.formUrlencoded instanceof URLSearchParams)) {
+                  body = qs.stringify(payload.formUrlencoded);
+                } else {
+                  body = payload.formUrlencoded;
+                }
+              }
+
+              return _context.abrupt("return", fetcher(finalURL, {
+                method: method,
+                body: body,
+                headers: headers
+              }));
+
+            case 11:
+            case "end":
+              return _context.stop();
+          }
+        }
+      }, _callee);
+    }));
+
+    return function sender() {
+      return _ref.apply(this, arguments);
+    };
+  }();
+
+  return sender;
+};

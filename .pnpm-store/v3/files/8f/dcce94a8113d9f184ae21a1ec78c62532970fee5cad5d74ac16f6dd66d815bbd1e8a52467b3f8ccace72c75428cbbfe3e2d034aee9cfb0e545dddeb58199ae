@@ -1,0 +1,14 @@
+import type { IAppContext, NormalizedConfig } from '@modern-js/core';
+import { BaseWebpackConfig } from './base';
+export declare class ClientWebpackConfig extends BaseWebpackConfig {
+    htmlFilename: (name: string) => string;
+    constructor(appContext: IAppContext, options: NormalizedConfig);
+    name(): void;
+    entry(): void;
+    resolve(): void;
+    private getNodePolyfill;
+    private getCustomPublicEnv;
+    private useDefinePlugin;
+    plugins(): void;
+    useCopyPlugin(): void;
+}

@@ -1,0 +1,3 @@
+import { IProjectNode } from '../projects/get-projects';
+import { DagOperator } from './operator';
+export declare const initDAG: (projects: IProjectNode[]) => DagOperator;

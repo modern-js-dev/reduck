@@ -1,0 +1,10 @@
+import type { NormalizedConfig } from '@modern-js/core';
+import { Options as BabelPresetAppOptions } from '@modern-js/babel-preset-app';
+import type { BabelChain } from '@modern-js/babel-chain';
+export declare const getUseBuiltIns: (config: NormalizedConfig) => false | "entry" | "usage" | undefined;
+export declare const getBabelOptions: (metaName: string, appDirectory: string, config: NormalizedConfig, chain: BabelChain) => {
+    babelrc: boolean;
+    configFile: boolean;
+    compact: boolean;
+    presets: (string | BabelPresetAppOptions)[][];
+};

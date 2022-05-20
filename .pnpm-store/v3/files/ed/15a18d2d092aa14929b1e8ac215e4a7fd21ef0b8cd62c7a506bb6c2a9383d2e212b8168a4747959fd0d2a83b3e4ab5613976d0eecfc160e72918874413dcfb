@@ -1,0 +1,17 @@
+import _slicedToArray from "@babel/runtime/helpers/esm/slicedToArray";
+
+var getLatency = function getLatency(hrtime) {
+  var _process$hrtime = process.hrtime(hrtime),
+      _process$hrtime2 = _slicedToArray(_process$hrtime, 2),
+      s = _process$hrtime2[0],
+      ns = _process$hrtime2[1];
+
+  return s * 1e3 + ns / 1e6;
+};
+
+export var time = function time() {
+  var hrtime = process.hrtime();
+  return function () {
+    return getLatency(hrtime);
+  };
+};

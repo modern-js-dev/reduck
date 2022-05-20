@@ -1,0 +1,59 @@
+import _createForOfIteratorHelper from "@babel/runtime/helpers/esm/createForOfIteratorHelper";
+import path from 'path';
+import { ChunkExtractor } from '@loadable/server';
+
+function getLoadableScripts(extractor) {
+  var check = function check(scripts) {
+    return (scripts || '').includes('__LOADABLE_REQUIRED_CHUNKS___ext');
+  };
+
+  var scripts = extractor.getScriptTags();
+
+  if (!check(scripts)) {
+    return '';
+  }
+
+  return scripts.split('</script>') // 前两个 script为 loadable 必须的 script
+  .slice(0, 2).map(function (i) {
+    return "".concat(i, "</script>");
+  }).join('');
+}
+
+export var toHtml = function toHtml(jsx, renderer, next) {
+  var loadableManifest = renderer.loadableManifest,
+      chunksMap = renderer.result.chunksMap;
+
+  if (!loadableManifest || chunksMap.js) {
+    return next(jsx);
+  }
+
+  var extractor = new ChunkExtractor({
+    statsFile: loadableManifest,
+    entrypoints: [renderer.entryName]
+  });
+  var html = next(extractor.collectChunks(jsx));
+  var chunks = extractor.getChunkAssets(extractor.chunks);
+  chunksMap.js = (chunksMap.js || '') + getLoadableScripts(extractor);
+
+  var _iterator = _createForOfIteratorHelper(chunks),
+      _step;
+
+  try {
+    for (_iterator.s(); !(_step = _iterator.n()).done;) {
+      var v = _step.value;
+      var fileType = path.extname(v.url).slice(1);
+
+      if (fileType === 'js') {
+        chunksMap[fileType] += "<script src=\"".concat(v.url, "\"></script>");
+      } else if (fileType === 'css') {
+        chunksMap[fileType] += "<link href=\"".concat(v.url, "\" rel=\"stylesheet\" />");
+      }
+    }
+  } catch (err) {
+    _iterator.e(err);
+  } finally {
+    _iterator.f();
+  }
+
+  return html;
+};

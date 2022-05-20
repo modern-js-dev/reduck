@@ -1,0 +1,17 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getBuildInPlugins = void 0;
+
+var _babelChain = require("@modern-js/babel-chain");
+
+const getBuildInPlugins = opts => {
+  const chain = (0, _babelChain.createBabelChain)();
+  chain.plugin('@modern-js/babel-plugin-import-check').use(require.resolve("./import-check"), [opts]);
+  chain.plugin('@modern-js/babel-plugin-import-path').use(require.resolve("./import-path"), [opts]);
+  return chain;
+};
+
+exports.getBuildInPlugins = getBuildInPlugins;

@@ -1,0 +1,39 @@
+import { chalk } from '@modern-js/utils';
+export declare const colors: {
+  title: chalk.Chalk;
+};
+export declare const clearFlag = "\u001Bc";
+export declare const logTemplate: (title: string, messageStack: string[], {
+  noBottomBorder,
+  bottomBorderText,
+  noLeftBorder,
+  leftBorder,
+  contentColor
+}?: {
+  noBottomBorder?: boolean | undefined;
+  bottomBorderText?: string | undefined;
+  noLeftBorder?: boolean | undefined;
+  leftBorder?: string | undefined;
+  contentColor?: ((s: string) => string) | undefined;
+}) => string;
+export interface LoggerTextOption {
+  title: string;
+  contentConfig?: {
+    noBottomBorder?: boolean;
+    bottomBorderText?: string;
+    noLeftBorder?: boolean;
+    leftBorder?: string;
+    contentColor?: (s: string) => string;
+    replace?: string[];
+  };
+}
+export declare class LoggerText {
+  messages: string[];
+  hasErrorMessage: boolean;
+  option: LoggerTextOption;
+  constructor(option: LoggerTextOption);
+  append(message: string): void;
+  errorHappen(): void;
+  hasMessages(): boolean;
+  get value(): string;
+}

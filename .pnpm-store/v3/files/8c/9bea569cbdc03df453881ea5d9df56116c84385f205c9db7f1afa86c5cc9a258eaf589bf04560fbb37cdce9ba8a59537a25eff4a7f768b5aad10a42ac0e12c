@@ -1,0 +1,38 @@
+import _objectSpread from "@babel/runtime/helpers/esm/objectSpread2";
+import { i18n, localeKeys } from "../locale";
+import { BooleanConfig, BooleanSchemas, Language, LanguageSchema, PackageManager, PackageManagerSchema, PackageNameSchema, PackagePathSchema } from "../common";
+import { EnableLessSchema, EnableSassSchema } from "../common/css";
+export var moduleConfigWhenFunc = function moduleConfigWhenFunc(values) {
+  return values.needModifyModuleConfig === BooleanConfig.YES;
+};
+export var EnableModuleLessSchema = _objectSpread(_objectSpread({}, EnableLessSchema), {}, {
+  when: moduleConfigWhenFunc
+});
+export var EnableModuleSassSchema = _objectSpread(_objectSpread({}, EnableSassSchema), {}, {
+  when: moduleConfigWhenFunc
+});
+export var NeedModifyModuleConfigSchema = {
+  key: 'needModifyModuleConfig',
+  label: function label() {
+    return i18n.t(localeKeys.needModifyConfig.self);
+  },
+  type: ['string'],
+  mutualExclusion: true,
+  state: {
+    value: BooleanConfig.NO
+  },
+  items: BooleanSchemas
+};
+export var ModuleSchemas = [PackageNameSchema, PackagePathSchema, LanguageSchema, PackageManagerSchema, NeedModifyModuleConfigSchema, EnableModuleLessSchema, EnableModuleSassSchema];
+export var ModuleSchema = {
+  key: 'module',
+  isObject: true,
+  items: ModuleSchemas
+};
+export var ModuleDefaultConfig = {
+  language: Language.TS,
+  packageManager: PackageManager.Pnpm,
+  needModifyModuleConfig: BooleanConfig.NO,
+  enableLess: BooleanConfig.NO,
+  enableSass: BooleanConfig.NO
+};

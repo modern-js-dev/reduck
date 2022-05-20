@@ -1,0 +1,106 @@
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+import path from 'path';
+import { getEntryOptions, createRuntimeExportsUtils, PLUGIN_SCHEMAS } from '@modern-js/utils';
+const PLUGIN_IDENTIFIER = 'router';
+const ROUTES_IDENTIFIER = 'routes';
+export default (() => ({
+  name: '@modern-js/plugin-router',
+  required: ['@modern-js/runtime'],
+  setup: api => {
+    const runtimeConfigMap = new Map();
+    let pluginsExportsUtils;
+    const runtimeModulePath = path.resolve(__dirname, '../../../../');
+    return {
+      config() {
+        const appContext = api.useAppContext();
+        pluginsExportsUtils = createRuntimeExportsUtils(appContext.internalDirectory, 'plugins');
+        return {
+          source: {
+            alias: {
+              '@modern-js/runtime/plugins': pluginsExportsUtils.getPath()
+            }
+          }
+        };
+      },
+
+      validateSchema() {
+        return PLUGIN_SCHEMAS['@modern-js/plugin-router'];
+      },
+
+      modifyEntryImports({
+        entrypoint,
+        imports
+      }) {
+        const {
+          entryName,
+          fileSystemRoutes
+        } = entrypoint;
+        const userConfig = api.useResolvedConfigContext();
+        const {
+          packageName
+        } = api.useAppContext();
+        const runtimeConfig = getEntryOptions(entryName, userConfig.runtime, userConfig.runtimeByEntries, packageName);
+        runtimeConfigMap.set(entryName, runtimeConfig);
+
+        if (runtimeConfig !== null && runtimeConfig !== void 0 && runtimeConfig.router) {
+          imports.push({
+            value: '@modern-js/runtime/plugins',
+            specifiers: [{
+              imported: PLUGIN_IDENTIFIER
+            }]
+          });
+        } else if (fileSystemRoutes) {
+          throw new Error(`should enable runtime.router for entry ${entryName}`);
+        }
+
+        return {
+          entrypoint,
+          imports
+        };
+      },
+
+      modifyEntryRuntimePlugins({
+        entrypoint,
+        plugins
+      }) {
+        const {
+          entryName,
+          fileSystemRoutes
+        } = entrypoint;
+        const {
+          serverRoutes
+        } = api.useAppContext();
+        const runtimeConfig = runtimeConfigMap.get(entryName);
+
+        if (runtimeConfig.router) {
+          // Todo: plugin-router best to only handle manage client route.
+          // here support base server route usage, part for compatibility
+          const serverBase = serverRoutes.filter(route => route.entryName === entryName).map(route => route.urlPath).sort((a, b) => a.length - b.length > 0 ? -1 : 1);
+          plugins.push({
+            name: PLUGIN_IDENTIFIER,
+            options: JSON.stringify(_objectSpread(_objectSpread({
+              serverBase
+            }, runtimeConfig.router), {}, {
+              routesConfig: fileSystemRoutes ? `{ ${ROUTES_IDENTIFIER}, globalApp: App }` : undefined
+            })).replace(/"routesConfig"\s*:\s*"((\S|\s)+)"/g, '"routesConfig": $1,')
+          });
+        }
+
+        return {
+          entrypoint,
+          plugins
+        };
+      },
+
+      addRuntimeExports() {
+        pluginsExportsUtils.addExport(`export { default as router } from '${runtimeModulePath}'`);
+      }
+
+    };
+  }
+}));

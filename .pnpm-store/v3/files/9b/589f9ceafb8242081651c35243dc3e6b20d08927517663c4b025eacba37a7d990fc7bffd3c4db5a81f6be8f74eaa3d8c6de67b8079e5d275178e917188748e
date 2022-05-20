@@ -1,0 +1,1 @@
+export var MODERNJS_CONFIG_KEY = '__modernjs_config__';

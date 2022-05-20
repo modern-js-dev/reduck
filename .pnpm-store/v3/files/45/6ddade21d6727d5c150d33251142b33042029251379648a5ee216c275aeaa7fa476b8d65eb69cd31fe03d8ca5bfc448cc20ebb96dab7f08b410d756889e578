@@ -1,0 +1,39 @@
+/// <reference types="node" />
+
+/**
+ * 1. 注册构建任务
+ * 2. 监听各个构建任务进程中的信息：process.stdout.on('data' | 'error')
+ * 3. 分别输出内容
+ */
+import type { ChildProcess } from 'child_process';
+import EventEmitter from 'events';
+import type { LoggerTextOption, LoggerText } from './logText';
+export declare type STDOUT = ChildProcess['stdout'] | (NodeJS.WriteStream & {
+  fd: 1;
+});
+export declare type STDERR = ChildProcess['stderr'] | (NodeJS.WriteStream & {
+  fd: 2;
+});
+interface IAddStdoutConfig {
+  event?: {
+    data?: boolean;
+    error?: boolean;
+  };
+  colors?: {
+    data?: (s: string) => string;
+    error?: (s: string) => string;
+    warning?: (s: string) => string;
+  };
+}
+export declare class LoggerManager extends EventEmitter {
+  private _compilering;
+  private readonly _listeners;
+  constructor();
+  createLoggerText(option: LoggerTextOption): LoggerText;
+  addStdout(loggerText: LoggerText, stdout: STDOUT, config?: IAddStdoutConfig): void;
+  addStderr(loggerText: LoggerText, stderr: STDERR, color?: (s: string) => string): void;
+  showCompiling(): void;
+  disappearCompiling(): void;
+  listenDateAndShow(logTexts: LoggerText[]): () => never;
+}
+export {};

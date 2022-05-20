@@ -1,0 +1,195 @@
+import _asyncToGenerator from "@babel/runtime/helpers/esm/asyncToGenerator";
+import _regeneratorRuntime from "@babel/runtime/regenerator";
+
+/**
+ * @file run jest by nodejs API
+ * @description
+ * Jest does not provide node API to run jest.
+ * The followed code is inspired by
+ * https://github.com/facebook/jest/blob/fdc74af37235354e077edeeee8aa2d1a4a863032/packages/jest-cli/src/cli/index.ts#L21
+ */
+import yargs from 'yargs/yargs';
+import { runCLI } from 'jest';
+import { chalk } from '@modern-js/utils';
+import { getJestUtils, patchConfig } from "./config";
+import { debug } from "./utils";
+
+var buildArgv = /*#__PURE__*/function () {
+  var _ref = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee(rawArgv, config) {
+    var argv, result;
+    return _regeneratorRuntime.wrap(function _callee$(_context) {
+      while (1) {
+        switch (_context.prev = _context.next) {
+          case 0:
+            _context.next = 2;
+            return yargs(rawArgv).argv;
+
+          case 2:
+            argv = _context.sent;
+            result = {
+              $0: argv.$0,
+              _: argv._.slice(1)
+            };
+            Object.keys(argv).forEach(function (key) {
+              if (key.includes('-') || key === '_') {
+                return;
+              }
+
+              result[key] = argv[key];
+            });
+
+            if (config) {
+              result.config = JSON.stringify(config);
+            }
+
+            return _context.abrupt("return", result);
+
+          case 7:
+          case "end":
+            return _context.stop();
+        }
+      }
+    }, _callee);
+  }));
+
+  return function buildArgv(_x, _x2) {
+    return _ref.apply(this, arguments);
+  };
+}();
+
+var readResultsAndExit = function readResultsAndExit(result, globalConfig) {
+  var code = !result || result.success ? 0 : globalConfig.testFailureExitCode; // Only exit if needed
+
+  process.on('exit', function () {
+    if (typeof code === 'number' && code !== 0) {
+      process.exitCode = code;
+    }
+  });
+
+  if (globalConfig.forceExit) {
+    if (!globalConfig.detectOpenHandles) {
+      console.warn("".concat(chalk.bold('Force exiting Jest: '), "Have you considered using `--detectOpenHandles` to detect ") + "async operations that kept running after all tests finished?");
+    } // eslint-disable-next-line no-process-exit
+
+
+    process.exit(code);
+  } else if (!globalConfig.detectOpenHandles) {
+    setTimeout(function () {
+      console.warn(chalk.yellow.bold('Jest did not exit one second after the test run has completed.\n\n') + chalk.yellow('This usually means that there are asynchronous operations that ' + "weren't stopped in your tests. Consider running Jest with " + '`--detectOpenHandles` to troubleshoot this issue.'));
+    }, 1000).unref();
+  }
+};
+/**
+ * Node API: execute jest
+ */
+
+
+export function runJest(_x3) {
+  return _runJest.apply(this, arguments);
+}
+/**
+ * Node API: run test
+ */
+
+function _runJest() {
+  _runJest = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee2(config) {
+    var pwd,
+        argvConfig,
+        _yield$runCLI,
+        results,
+        globalConfig,
+        _args2 = arguments;
+
+    return _regeneratorRuntime.wrap(function _callee2$(_context2) {
+      while (1) {
+        switch (_context2.prev = _context2.next) {
+          case 0:
+            pwd = _args2.length > 1 && _args2[1] !== undefined ? _args2[1] : process.cwd();
+            _context2.prev = 1;
+            _context2.next = 4;
+            return buildArgv(process.argv.slice(2), config);
+
+          case 4:
+            argvConfig = _context2.sent;
+            _context2.next = 7;
+            return runCLI(argvConfig, [pwd]);
+
+          case 7:
+            _yield$runCLI = _context2.sent;
+            results = _yield$runCLI.results;
+            globalConfig = _yield$runCLI.globalConfig;
+            readResultsAndExit(results, globalConfig);
+            _context2.next = 17;
+            break;
+
+          case 13:
+            _context2.prev = 13;
+            _context2.t0 = _context2["catch"](1);
+            console.error(chalk.red((_context2.t0 === null || _context2.t0 === void 0 ? void 0 : _context2.t0.stack) || _context2.t0)); // eslint-disable-next-line no-process-exit
+
+            process.exit(1);
+
+          case 17:
+          case "end":
+            return _context2.stop();
+        }
+      }
+    }, _callee2, null, [[1, 13]]);
+  }));
+  return _runJest.apply(this, arguments);
+}
+
+export function runTest(_x4, _x5) {
+  return _runTest.apply(this, arguments);
+}
+
+function _runTest() {
+  _runTest = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee3(api, config) {
+    var pwd,
+        jestUtils,
+        hookRunners,
+        testConfigOperator,
+        finalConfig,
+        _args3 = arguments;
+    return _regeneratorRuntime.wrap(function _callee3$(_context3) {
+      while (1) {
+        switch (_context3.prev = _context3.next) {
+          case 0:
+            pwd = _args3.length > 2 && _args3[2] !== undefined ? _args3[2] : process.cwd();
+            process.env.NODE_ENV = 'test';
+            jestUtils = getJestUtils(config);
+            _context3.next = 5;
+            return patchConfig(jestUtils);
+
+          case 5:
+            // 确保用户设置的配置可以被插件处理，比如设置在 projects 中
+            jestUtils.setJestUserConfig();
+            hookRunners = api.useHookRunners();
+            _context3.next = 9;
+            return hookRunners.jestConfig(jestUtils, {
+              onLast: function onLast(input) {
+                return input;
+              }
+            });
+
+          case 9:
+            testConfigOperator = _context3.sent;
+            testConfigOperator.getFinalConfig();
+            finalConfig = testConfigOperator.jestConfig;
+            debug('Jest config:', finalConfig);
+            _context3.next = 15;
+            return runJest(finalConfig, pwd);
+
+          case 15:
+            _context3.next = 17;
+            return hookRunners.afterTest();
+
+          case 17:
+          case "end":
+            return _context3.stop();
+        }
+      }
+    }, _callee3);
+  }));
+  return _runTest.apply(this, arguments);
+}

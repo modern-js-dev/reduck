@@ -1,0 +1,140 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.downloadPackage = downloadPackage;
+
+var _os = _interopRequireDefault(require("os"));
+
+var _utils = require("@modern-js/utils");
+
+var _axios = _interopRequireDefault(require("axios"));
+
+var _tar = _interopRequireDefault(require("tar"));
+
+var _getNpmTarballUrl = require("./getNpmTarballUrl");
+
+var _getNpmVersion = require("./getNpmVersion");
+
+var _fsExists = require("./fsExists");
+
+var _packageManager = require("./packageManager");
+
+var _constants = require("../constants");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+async function isValidCache(cacheDir) {
+  /* generator cache can use
+   * 1. .codesmith.completed exist
+   * 2. cache time is within the validity period
+   */
+  if (await (0, _fsExists.fsExists)(`${cacheDir}/.codesmith.completed`)) {
+    const preCacheTimeStr = await _utils.fs.readFile(`${cacheDir}/.codesmith.completed`, {
+      encoding: 'utf-8'
+    });
+    const preCacheTime = preCacheTimeStr ? new Date(preCacheTimeStr) : new Date(0);
+
+    if (Number(new Date()) - Number(preCacheTime) < _constants.CATCHE_VALIDITY_PREIOD) {
+      return true;
+    }
+
+    return false;
+  }
+
+  return false;
+}
+
+async function downloadAndDecompressTargz(tarballPkg, targetDir) {
+  const response = await (0, _axios.default)({
+    method: 'get',
+    url: tarballPkg,
+    responseType: 'stream'
+  });
+
+  if (response.status !== 200) {
+    throw new Error(`download tar package get bad status code: ${response.status}`);
+  }
+
+  const contentLength = Number(response.headers['content-length']); // create tmp file
+
+  const randomId = Math.floor(Math.random() * 10000);
+  const tempTgzFilePath = `${_os.default.tmpdir()}/temp-${randomId}.tgz`;
+
+  const dest = _utils.fs.createWriteStream(tempTgzFilePath);
+
+  await new Promise((resolve, reject) => {
+    response.data.pipe(dest);
+    response.data.on('error', err => {
+      reject(err);
+    });
+    dest.on('finish', () => {
+      resolve();
+    });
+  });
+
+  if ((await _utils.fs.stat(tempTgzFilePath)).size !== contentLength) {
+    throw new Error('download tar package get bad content length');
+  }
+
+  await new Promise((resolve, reject) => {
+    _utils.fs.createReadStream(tempTgzFilePath).pipe(_tar.default.x({
+      strip: 1,
+      C: `${targetDir}`
+    })).on('finish', () => {
+      resolve();
+    }).on('error', err => {
+      reject(err);
+    });
+  });
+}
+/**
+ * download npm package
+ * @param {string} pkgName
+ * @param {string} pkgVersion
+ * @param {string} registryUrl
+ * @returns void
+ */
+
+
+async function downloadPackage(pkgName, pkgVersion = 'latest', options = {}) {
+  const {
+    registryUrl,
+    install
+  } = options; // get pkgName version
+
+  const version = await (0, _getNpmVersion.getNpmVersion)(pkgName, {
+    registryUrl,
+    version: pkgVersion
+  });
+
+  if (version === undefined) {
+    throw new Error(`package ${pkgName}@${pkgVersion} not found in registry`);
+  }
+
+  const targetDir = `${_os.default.tmpdir()}/csmith-generator/${pkgName}@${version}`;
+
+  if ((await (0, _fsExists.fsExists)(targetDir)) && (await isValidCache(targetDir))) {
+    return targetDir;
+  }
+
+  await _utils.fs.remove(targetDir);
+  await _utils.fs.mkdirp(targetDir); // get package tarball
+
+  const tarballPkg = await (0, _getNpmTarballUrl.getNpmTarballUrl)(pkgName, version, {
+    registryUrl
+  }); // download tarball and compress it to target directory
+
+  await downloadAndDecompressTargz(tarballPkg, targetDir);
+
+  if (install) {
+    await (0, _packageManager.runInstall)(targetDir);
+  } // write completed flag
+
+
+  await _utils.fs.writeFile(`${targetDir}/.codesmith.completed`, new Date().toISOString(), {
+    encoding: 'utf-8'
+  });
+  return targetDir;
+}

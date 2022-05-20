@@ -1,0 +1,78 @@
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+import minimatch from 'minimatch';
+export const defaultIgnores = ['**/bower_components/**', '**/coverage/**', '**/node_modules/**', '**/.*/**', '**/*.d.ts', '**/*.log'];
+
+/**
+ * `require.cache` already is a dependency tree, however require cache's
+ * `module.parent` is the module that first required. so we have to implement
+ *  a new tree which revisit the cache tree to find all parent node
+ */
+export class DependencyTree {
+  constructor() {
+    _defineProperty(this, "tree", void 0);
+
+    _defineProperty(this, "ignore", void 0);
+
+    this.tree = new Map();
+    this.ignore = [...defaultIgnores];
+  }
+
+  getNode(path) {
+    return this.tree.get(path);
+  }
+  /**
+   * update dependency tree
+   *
+   * @param cache
+   */
+
+
+  update(cache) {
+    this.tree.clear(); // insert all module that not ignored
+
+    Object.keys(cache).forEach(path => {
+      if (!this.shouldIgnore(path)) {
+        const module = cache[path];
+        this.tree.set(module.filename, {
+          module,
+          parent: new Set(),
+          children: new Set()
+        });
+      }
+    }); // update treeNode parent and children
+
+    for (const treeNode of this.tree.values()) {
+      const {
+        parent
+      } = treeNode.module;
+      const {
+        children
+      } = treeNode.module;
+
+      if (parent && !this.shouldIgnore(parent.filename)) {
+        const parentTreeNode = this.tree.get(parent.filename);
+
+        if (parentTreeNode) {
+          treeNode.parent.add(parentTreeNode);
+        }
+      }
+
+      children.forEach(child => {
+        if (!this.shouldIgnore(child.filename)) {
+          const childTreeNode = this.tree.get(child.filename);
+
+          if (childTreeNode) {
+            treeNode.children.add(childTreeNode);
+            childTreeNode.parent.add(treeNode);
+          }
+        }
+      });
+    }
+  }
+
+  shouldIgnore(path) {
+    return !path || Boolean(this.ignore.find(rule => minimatch.match([path], rule).length > 0));
+  }
+
+}

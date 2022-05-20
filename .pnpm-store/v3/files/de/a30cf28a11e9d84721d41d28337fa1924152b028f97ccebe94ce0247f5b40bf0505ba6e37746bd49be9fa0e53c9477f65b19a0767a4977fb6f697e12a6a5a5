@@ -1,0 +1,43 @@
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+import { createAsyncPipeline } from "../farrow-pipeline";
+const ASYNC_WORKFLOW_SYMBOL = Symbol.for('MODERN_ASYNC_WORKFLOW');
+export const isAsyncWorkflow = input => Boolean(input === null || input === void 0 ? void 0 : input[ASYNC_WORKFLOW_SYMBOL]);
+export const createAsyncWorkflow = () => {
+  const pipeline = createAsyncPipeline();
+
+  const use = (...input) => {
+    pipeline.use(...input.map(mapAsyncWorkerToAsyncMiddleware));
+    return workflow;
+  };
+
+  const run = async (input, options) => {
+    const result = pipeline.run(input, _objectSpread(_objectSpread({}, options), {}, {
+      onLast: () => []
+    }));
+
+    if (isPromise(result)) {
+      return result.then(result => result.filter(Boolean));
+    } else {
+      return result.filter(Boolean);
+    }
+  };
+
+  const workflow = _objectSpread(_objectSpread({}, pipeline), {}, {
+    use,
+    run,
+    [ASYNC_WORKFLOW_SYMBOL]: true
+  });
+
+  return workflow;
+};
+
+const mapAsyncWorkerToAsyncMiddleware = worker => async (input, next) => [await worker(input), ...(await next(input))];
+
+function isPromise(obj) {
+  return Boolean(obj) && (typeof obj === 'object' || typeof obj === 'function') && typeof obj.then === 'function';
+}

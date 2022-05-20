@@ -1,0 +1,135 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+var _exportNames = {
+  SolutionDefaultConfig: true,
+  SolutionSchemas: true
+};
+exports.SolutionSchemas = exports.SolutionDefaultConfig = void 0;
+
+var _base = require("./base");
+
+Object.keys(_base).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;
+  if (key in exports && exports[key] === _base[key]) return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function () {
+      return _base[key];
+    }
+  });
+});
+
+var _common = require("./common");
+
+Object.keys(_common).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;
+  if (key in exports && exports[key] === _common[key]) return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function () {
+      return _common[key];
+    }
+  });
+});
+
+var _module = require("./module");
+
+Object.keys(_module).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;
+  if (key in exports && exports[key] === _module[key]) return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function () {
+      return _module[key];
+    }
+  });
+});
+
+var _monorepo = require("./monorepo");
+
+Object.keys(_monorepo).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;
+  if (key in exports && exports[key] === _monorepo[key]) return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function () {
+      return _monorepo[key];
+    }
+  });
+});
+
+var _mwa = require("./mwa");
+
+Object.keys(_mwa).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;
+  if (key in exports && exports[key] === _mwa[key]) return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function () {
+      return _mwa[key];
+    }
+  });
+});
+
+var _locale = require("./locale");
+
+Object.keys(_locale).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;
+  if (key in exports && exports[key] === _locale[key]) return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function () {
+      return _locale[key];
+    }
+  });
+});
+
+var _newAction = require("./newAction");
+
+Object.keys(_newAction).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;
+  if (key in exports && exports[key] === _newAction[key]) return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function () {
+      return _newAction[key];
+    }
+  });
+});
+
+var _expand = require("./expand");
+
+Object.keys(_expand).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;
+  if (key in exports && exports[key] === _expand[key]) return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function () {
+      return _expand[key];
+    }
+  });
+});
+const SolutionDefaultConfig = {
+  [_common.Solution.MWA]: _mwa.MWADefaultConfig,
+  [_common.Solution.Module]: _module.ModuleDefaultConfig,
+  [_common.Solution.Monorepo]: _monorepo.MonorepoDefaultConfig
+};
+exports.SolutionDefaultConfig = SolutionDefaultConfig;
+const SolutionSchemas = {
+  [_common.Solution.MWA]: _mwa.MWASchemas,
+  [_common.Solution.Module]: _module.ModuleSchemas,
+  [_common.Solution.Monorepo]: _monorepo.MonorepoSchemas,
+  custom: _base.BaseSchemas
+};
+exports.SolutionSchemas = SolutionSchemas;

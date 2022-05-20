@@ -1,0 +1,232 @@
+"use strict";
+
+var path = _interopRequireWildcard(require("path"));
+
+var _utils = require("@modern-js/utils");
+
+function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
+
+function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+
+const logger = _utils.Import.lazy('../features/build/logger', require);
+
+const cssConfig = _utils.Import.lazy('@modern-js/css-config', require);
+
+const hooks = _utils.Import.lazy('../hooks', require);
+
+const core = _utils.Import.lazy('@modern-js/core', require);
+
+const compiler = _utils.Import.lazy('@modern-js/style-compiler', require);
+
+const STYLE_DIRS = 'styles';
+const SRC_STYLE_DIRS = 'src';
+
+const checkStylesDirExist = option => {
+  const {
+    appDirectory
+  } = option;
+  return _utils.fs.existsSync(path.join(appDirectory, STYLE_DIRS));
+};
+
+const generatorFileAndReturnLog = (result, successMessage = '') => {
+  if (result.code === 0) {
+    for (const file of result.dists) {
+      _utils.fs.ensureFileSync(file.filename);
+
+      _utils.fs.writeFileSync(file.filename, file.content);
+    }
+
+    return successMessage;
+  } else {
+    return result.errors.join('\n');
+  }
+};
+
+const getPostcssOption = (appDirectory, modernConfig) => {
+  var _postcssOption$postcs;
+
+  const postcssOption = cssConfig.getPostcssConfig(appDirectory, modernConfig, false);
+  return {
+    plugins: (postcssOption === null || postcssOption === void 0 ? void 0 : (_postcssOption$postcs = postcssOption.postcssOptions) === null || _postcssOption$postcs === void 0 ? void 0 : _postcssOption$postcs.plugins) || [],
+    enableSourceMap: (postcssOption === null || postcssOption === void 0 ? void 0 : postcssOption.sourceMap) || false,
+    options: {}
+  };
+};
+
+const copyOriginStyleFiles = ({
+  targetDir,
+  outputDir
+}) => {
+  const styleFiles = _utils.glob.sync(`${targetDir}/**/*.{css,sass,scss,less}`);
+
+  if (styleFiles.length > 0) {
+    _utils.fs.ensureDirSync(outputDir);
+  }
+
+  for (const styleFile of styleFiles) {
+    const file = path.relative(targetDir, styleFile);
+
+    _utils.fs.ensureFileSync(path.join(outputDir, file));
+
+    _utils.fs.copyFileSync(styleFile, path.join(outputDir, file));
+  }
+};
+
+const logCompilerMessage = compilerMessage => {
+  console.info(logger.clearFlag);
+  console.info(compilerMessage.src);
+  console.info(compilerMessage.styles);
+};
+
+const taskMain = async ({
+  modernConfig,
+  appContext
+}) => {
+  const {
+    assetsPath = 'styles',
+    path: outputPath = 'dist',
+    jsPath = 'js',
+    importStyle
+  } = modernConfig.output;
+  const {
+    appDirectory
+  } = appContext;
+  const lessOption = await core.mountHook().moduleLessConfig({
+    modernConfig
+  }, {
+    onLast: async _ => null
+  });
+  const sassOption = await core.mountHook().moduleSassConfig({
+    modernConfig
+  }, {
+    onLast: async _ => null
+  });
+  const postcssOption = getPostcssOption(appDirectory, modernConfig);
+  const existStylesDir = checkStylesDirExist({
+    appDirectory
+  });
+  const compilerMessage = {
+    src: '',
+    styles: ''
+  }; // 编译 styles 目录样式
+
+  let styleEmitter = null;
+
+  if (existStylesDir) {
+    styleEmitter = compiler.styleCompiler({
+      watch: true,
+      projectDir: appDirectory,
+      stylesDir: path.resolve(appDirectory, STYLE_DIRS),
+      outDir: path.join(appDirectory, outputPath, assetsPath),
+      enableVirtualDist: true,
+      compilerOption: {
+        less: lessOption,
+        sass: sassOption,
+        postcss: postcssOption
+      }
+    });
+    styleEmitter.on(compiler.BuildWatchEvent.firstCompiler, styleResult => {
+      compilerMessage.styles = generatorFileAndReturnLog(styleResult, `[Style Compiler] Successfully for 'styles' dir`);
+      logCompilerMessage(compilerMessage);
+    });
+    styleEmitter.on(compiler.BuildWatchEvent.compilering, () => {
+      compilerMessage.styles = `[${assetsPath}] Compiling...`;
+      logCompilerMessage(compilerMessage);
+    });
+    styleEmitter.on(compiler.BuildWatchEvent.watchingCompiler, styleResult => {
+      compilerMessage.styles = generatorFileAndReturnLog(styleResult, `[Style Compiler] Successfully for 'styles' dir`);
+      logCompilerMessage(compilerMessage);
+    }); // await styleEmitter.watch();
+  } // 编译 src 内的样式代码
+
+
+  const srcDir = path.resolve(appDirectory, SRC_STYLE_DIRS);
+  const outputDirToSrc = path.join(appDirectory, outputPath, jsPath, assetsPath);
+
+  if (importStyle === 'compiled-code') {
+    compilerMessage.src = `[src] Compiling`;
+    const srcStyleEmitter = compiler.styleCompiler({
+      watch: true,
+      projectDir: appDirectory,
+      stylesDir: srcDir,
+      outDir: outputDirToSrc,
+      enableVirtualDist: true,
+      compilerOption: {
+        less: lessOption,
+        sass: sassOption,
+        postcss: postcssOption
+      }
+    });
+    srcStyleEmitter.on(compiler.BuildWatchEvent.firstCompiler, srcStyleResult => {
+      compilerMessage.src = generatorFileAndReturnLog(srcStyleResult, `[Style Compiler] Successfully for 'src' dir`);
+      logCompilerMessage(compilerMessage);
+    });
+    srcStyleEmitter.on(compiler.BuildWatchEvent.compilering, () => {
+      compilerMessage.src = `[src] Compiling`;
+      logCompilerMessage(compilerMessage);
+    });
+    srcStyleEmitter.on(compiler.BuildWatchEvent.watchingCompiler, srcStyleResult => {
+      compilerMessage.src = generatorFileAndReturnLog(srcStyleResult, `[Style Compiler] Successfully for 'src' dir`);
+      logCompilerMessage(compilerMessage);
+    });
+    styleEmitter && (await styleEmitter.watch());
+    await srcStyleEmitter.watch();
+  } else {
+    compilerMessage.src = `['src' dir] Copying in progress`;
+    styleEmitter && (await styleEmitter.watch());
+    logCompilerMessage(compilerMessage);
+    copyOriginStyleFiles({
+      targetDir: srcDir,
+      outputDir: outputDirToSrc
+    });
+    compilerMessage.src = `[Style Compiler] Successfully for 'src' dir`;
+    logCompilerMessage(compilerMessage);
+    (0, _utils.watch)(`${srcDir}/**/*.{css,less,sass,scss}`, ({
+      changeType,
+      changedFilePath
+    }) => {
+      compilerMessage.src = `['src' dir] Copying in progress`;
+      logCompilerMessage(compilerMessage);
+
+      if (changeType === _utils.WatchChangeType.UNLINK) {
+        const removeFile = path.normalize(`${outputDirToSrc}/${path.relative(srcDir, changedFilePath)}`);
+
+        _utils.fs.removeSync(removeFile);
+      } else {
+        copyOriginStyleFiles({
+          targetDir: srcDir,
+          outputDir: outputDirToSrc
+        });
+      }
+
+      compilerMessage.src = `[Style Compiler] Successfully for 'src' dir`;
+      logCompilerMessage(compilerMessage);
+    });
+  }
+};
+
+(async () => {
+  let options;
+
+  if (process.env.CORE_INIT_OPTION_FILE) {
+    ({
+      options
+    } = require(process.env.CORE_INIT_OPTION_FILE));
+  }
+
+  hooks.buildLifeCycle();
+  const {
+    resolved: modernConfig,
+    appContext
+  } = await core.cli.init([], options);
+  await core.manager.run(async () => {
+    try {
+      await taskMain({
+        modernConfig,
+        appContext
+      });
+    } catch (e) {
+      console.error(e);
+    }
+  });
+})();

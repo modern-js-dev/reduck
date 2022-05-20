@@ -1,0 +1,46 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getFiles = void 0;
+
+var _path = _interopRequireDefault(require("path"));
+
+var _utils = require("@modern-js/utils");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+// get style file's real path
+const getRealFiles = (files = [], stylesDir = process.cwd()) => files.map(file => _path.default.join(stylesDir, file)); // get all extension glob string
+
+
+const getExtString = extensions => `{${extensions.join(',')}}`; // delete same file
+
+
+const filterRepeatFile = (files = []) => Array.from(new Set(files));
+
+const getIncludeFiles = (include = ['./'], stylesDir = process.cwd(), extensions = ['.css']) => {
+  const ret = [];
+  const exts = getExtString(extensions);
+
+  for (let start = 0, len = include.length; start < len; start++) {
+    const includePath = _path.default.join(stylesDir, include[start]);
+
+    ret.push(..._utils.glob.sync(`${includePath}/**/*${exts}`));
+  }
+
+  return filterRepeatFile(ret);
+};
+
+const getFiles = options => {
+  const {
+    files = [],
+    include = ['./'],
+    stylesDir = process.cwd(),
+    extensions = ['.css']
+  } = options;
+  return [...getRealFiles(files, stylesDir), ...getIncludeFiles(include, stylesDir, extensions)];
+};
+
+exports.getFiles = getFiles;

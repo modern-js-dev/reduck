@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=yes">
+  <title>valid domain checker</title>
+</head>
+<body>
+  <h1>valid domain checker</h1>
+  <form id="form">
+    <div>
+      <input type="text" id="domain" value="example.com" placeholder="example.com" />
+    </div>
+    <div>
+      <label for="subdomain"><input type="checkbox" id="subdomain" />subdomain</label>
+      <label for="topLevel"><input type="checkbox" id="topLevel" />topLevel</label>
+      <label for="wildcard"><input type="checkbox" id="wildcard" />wildcard</label>
+      <label for="unicode"><input type="checkbox" id="unicode" />allowUnicode</label>
+    </div>
+  </form>
+  <output id="output"></output>
+  <script src="dist/bundle.js"></script>
+    <a href="https://github.com/miguelmota/is-valid-domain" target="_blank"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
+</body>
+</html>

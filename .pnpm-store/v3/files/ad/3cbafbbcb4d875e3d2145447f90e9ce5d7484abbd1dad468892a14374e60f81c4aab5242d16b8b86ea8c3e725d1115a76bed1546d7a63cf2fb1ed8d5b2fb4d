@@ -1,0 +1,62 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.handleDirectory = handleDirectory;
+
+var _path = _interopRequireDefault(require("path"));
+
+var _utils = require("@modern-js/utils");
+
+var _reader = require("./reader");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+async function handleDirectory(ctx, entryPath, urlPath) {
+  const {
+    path: pathname
+  } = ctx;
+
+  const filepath = _path.default.join(entryPath, trimLeft(pathname, urlPath)); // If can match accurately, always return the one that matches accurately
+
+
+  let content = await (0, _reader.readFile)(filepath);
+
+  let contentType = _utils.mime.contentType(_path.default.extname(filepath) || ''); // automatic addressing
+
+
+  if (!content) {
+    if (pathname.endsWith('/')) {
+      content = await (0, _reader.readFile)(`${filepath}index.html`);
+    } else if (!pathname.includes('.')) {
+      content = await (0, _reader.readFile)(`${filepath}.html`);
+
+      if (!content) {
+        content = await (0, _reader.readFile)(`${filepath}/index.html`);
+      }
+    } // set content-type as html
+
+
+    if (content) {
+      contentType = _utils.mime.contentType('html');
+    }
+  }
+
+  if (!content) {
+    return null;
+  }
+
+  return {
+    content,
+    contentType: contentType || ''
+  };
+}
+
+const trimLeft = (str, prefix) => {
+  if (str.startsWith(prefix)) {
+    return str.substring(prefix.length);
+  }
+
+  return str;
+};

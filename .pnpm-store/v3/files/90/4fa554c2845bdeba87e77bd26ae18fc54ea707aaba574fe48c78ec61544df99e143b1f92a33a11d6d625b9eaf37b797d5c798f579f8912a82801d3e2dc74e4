@@ -1,0 +1,6 @@
+import { APIHandlerInfo } from './extract-api-handlers';
+export declare type ExtraAPIHandlerInfo = APIHandlerInfo & {
+  path?: string;
+};
+export declare const useAPIHandlerInfos: () => ExtraAPIHandlerInfo[];
+export declare const injectAPIHandlerInfos: (apiDir: string, prefix?: string | undefined) => void;

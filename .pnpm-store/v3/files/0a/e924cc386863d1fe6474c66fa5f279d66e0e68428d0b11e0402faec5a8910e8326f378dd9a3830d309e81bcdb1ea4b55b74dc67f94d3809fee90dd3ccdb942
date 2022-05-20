@@ -1,0 +1,23 @@
+import { getProjects } from "../projects/get-projects";
+import { getMonorepoBaseData } from "../parse-config/monorepo";
+import { runClearTask } from "../features/clear";
+export const clear = async (projectNames, option, api) => {
+  const {
+    removeDirs
+  } = option;
+  const {
+    appDirectory
+  } = api.useAppContext();
+  const projects = await getProjects({
+    packagesMatchs: {
+      enableAutoFinder: true
+    }
+  }, appDirectory);
+  const {
+    rootPath
+  } = getMonorepoBaseData(appDirectory);
+  runClearTask(projectNames, projects, {
+    rootPath,
+    removeDirs
+  });
+};

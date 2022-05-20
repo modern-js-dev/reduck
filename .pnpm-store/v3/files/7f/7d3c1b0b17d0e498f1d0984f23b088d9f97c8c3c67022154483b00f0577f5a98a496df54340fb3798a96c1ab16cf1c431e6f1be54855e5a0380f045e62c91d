@@ -1,0 +1,3 @@
+import { UserConfig } from '../config';
+export declare const deepGet: (obj: any, key: string) => any;
+export declare const repeatKeyWarning: (schema: any, jsConfig: UserConfig, pkgConfig: UserConfig) => void;

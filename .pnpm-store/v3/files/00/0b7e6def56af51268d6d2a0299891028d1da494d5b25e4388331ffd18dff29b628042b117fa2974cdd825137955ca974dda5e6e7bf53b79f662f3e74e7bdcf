@@ -1,0 +1,179 @@
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+import path from 'path';
+import { LOADABLE_STATS_FILE } from '@modern-js/utils/constants';
+import React from 'react';
+import ReactDomServer from 'react-dom/server';
+import serialize from 'serialize-javascript';
+import ReactHelmet from 'react-helmet';
+import { toFragments } from "./template";
+import { RenderLevel } from "./type";
+import helmetReplace from "./helmet";
+import { reduce } from "./reduce";
+import * as loadableRenderer from "./loadable";
+import * as styledComponentRenderer from "./styledComponent";
+import { time } from "./measure";
+
+const buildTemplateData = (context, data, renderLevel) => {
+  const {
+    request
+  } = context;
+  return {
+    data,
+    context: {
+      request: {
+        params: request.params,
+        query: request.query,
+        pathname: request.pathname,
+        host: request.host,
+        url: request.url,
+        headers: request.headers,
+        cookieMap: request.cookieMap
+      }
+    },
+    renderLevel
+  };
+};
+
+export default class Entry {
+  constructor(options) {
+    _defineProperty(this, "entryName", void 0);
+
+    _defineProperty(this, "result", void 0);
+
+    _defineProperty(this, "metrics", void 0);
+
+    _defineProperty(this, "logger", void 0);
+
+    _defineProperty(this, "App", void 0);
+
+    _defineProperty(this, "fragments", void 0);
+
+    const {
+      ctx
+    } = options;
+    const {
+      entryName,
+      template: templateHTML
+    } = ctx;
+    this.fragments = toFragments(templateHTML);
+    this.entryName = entryName;
+    this.App = options.App;
+    this.metrics = ctx.metrics;
+    this.logger = ctx.logger;
+    this.result = {
+      renderLevel: RenderLevel.CLIENT_RENDER,
+      html: '',
+      chunksMap: {
+        js: '',
+        css: ''
+      }
+    };
+  }
+
+  async renderToHtml(context) {
+    const {
+      ssrContext
+    } = context;
+
+    if (ssrContext.redirection.url) {
+      return '';
+    }
+
+    const prefetchData = await this.prefetch(context);
+
+    if (ssrContext.redirection.url) {
+      return '';
+    }
+
+    if (this.result.renderLevel >= RenderLevel.SERVER_PREFETCH) {
+      this.result.html = this.renderToString(context);
+    }
+
+    if (ssrContext.redirection.url) {
+      return '';
+    }
+
+    let html = '';
+    const templateData = buildTemplateData(ssrContext, prefetchData, this.result.renderLevel);
+    const SSRData = this.getSSRDataScript(templateData);
+
+    for (const fragment of this.fragments) {
+      if (fragment.isVariable && fragment.content === 'SSRDataScript') {
+        html += fragment.getValue(SSRData);
+      } else {
+        html += fragment.getValue(this.result);
+      }
+    }
+
+    const helmetData = ReactHelmet.renderStatic();
+    return helmetData ? helmetReplace(html, helmetData) : html;
+  }
+
+  async prefetch(context) {
+    const {
+      App: {
+        prefetch
+      }
+    } = this;
+    let prefetchData;
+    const end = time();
+
+    try {
+      prefetchData = prefetch ? await prefetch(context) : null;
+      this.result.renderLevel = RenderLevel.SERVER_PREFETCH;
+      const prefetchCost = end();
+      this.logger.debug(`App Prefetch cost = %d ms`, prefetchCost);
+      this.metrics.emitTimer('app.prefetch.cost', prefetchCost);
+    } catch (e) {
+      this.result.renderLevel = RenderLevel.CLIENT_RENDER;
+      this.logger.error('App Prefetch Render', e);
+      this.metrics.emitCounter('app.prefetch.render.error', 1);
+    }
+
+    return prefetchData || {};
+  }
+
+  renderToString(context) {
+    let html = '';
+    const end = time();
+    const {
+      ssrContext
+    } = context;
+
+    try {
+      const App = /*#__PURE__*/React.createElement(this.App, {
+        context: Object.assign(context, {
+          ssr: true
+        })
+      }); // Todo render Hook
+
+      const renderContext = {
+        loadableManifest: path.resolve(ssrContext.distDir, LOADABLE_STATS_FILE),
+        result: this.result,
+        entryName: this.entryName
+      };
+      html = reduce(App, renderContext, [styledComponentRenderer.toHtml, loadableRenderer.toHtml, jsx => ReactDomServer.renderToString(jsx)]);
+      const cost = end();
+      this.logger.debug('App Render To HTML cost = %d ms', cost);
+      this.metrics.emitTimer('app.render.html.cost', cost);
+      this.result.renderLevel = RenderLevel.SERVER_RENDER;
+    } catch (e) {
+      this.logger.error('App Render To HTML', e);
+      this.metrics.emitCounter('app.render.html.error', 1);
+    }
+
+    return html;
+  }
+
+  getSSRDataScript(templateData) {
+    return {
+      SSRDataScript: `
+        <script>window._SSR_DATA = ${serialize(templateData, {
+        isJSON: true
+      })}</script>
+      `
+    };
+  }
+
+}

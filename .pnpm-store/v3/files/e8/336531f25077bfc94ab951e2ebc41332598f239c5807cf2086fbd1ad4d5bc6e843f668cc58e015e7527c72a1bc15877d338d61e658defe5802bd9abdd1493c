@@ -1,0 +1,56 @@
+"use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __exportStar = (this && this.__exportStar) || function(m, exports) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.NodeWebpackConfig = exports.ModernWebpackConfig = exports.ClientWebpackConfig = exports.getWebpackConfig = exports.WebpackConfigTarget = exports.CHAIN_ID = exports.BaseWebpackConfig = exports.webpack = void 0;
+const webpack_1 = __importDefault(require("webpack"));
+exports.webpack = webpack_1.default;
+const config_1 = require("./config");
+var base_1 = require("./config/base");
+Object.defineProperty(exports, "BaseWebpackConfig", { enumerable: true, get: function () { return base_1.BaseWebpackConfig; } });
+var shared_1 = require("./config/shared");
+Object.defineProperty(exports, "CHAIN_ID", { enumerable: true, get: function () { return shared_1.CHAIN_ID; } });
+__exportStar(require("./compiled"), exports);
+var WebpackConfigTarget;
+(function (WebpackConfigTarget) {
+    WebpackConfigTarget[WebpackConfigTarget["CLIENT"] = 0] = "CLIENT";
+    WebpackConfigTarget[WebpackConfigTarget["NODE"] = 1] = "NODE";
+    WebpackConfigTarget[WebpackConfigTarget["MODERN"] = 2] = "MODERN";
+})(WebpackConfigTarget = exports.WebpackConfigTarget || (exports.WebpackConfigTarget = {}));
+const getWebpackConfig = (target, appContext, resolvedConfig) => {
+    let Config = null;
+    switch (target) {
+        case WebpackConfigTarget.CLIENT:
+            Config = config_1.ClientWebpackConfig;
+            break;
+        case WebpackConfigTarget.MODERN:
+            Config = config_1.ModernWebpackConfig;
+            break;
+        case WebpackConfigTarget.NODE:
+            Config = config_1.NodeWebpackConfig;
+            break;
+        default:
+            Config = null;
+    }
+    if (!Config) {
+        return null;
+    }
+    const config = new Config(appContext, resolvedConfig);
+    return config.config();
+};
+exports.getWebpackConfig = getWebpackConfig;
+var config_2 = require("./config");
+Object.defineProperty(exports, "ClientWebpackConfig", { enumerable: true, get: function () { return config_2.ClientWebpackConfig; } });
+Object.defineProperty(exports, "ModernWebpackConfig", { enumerable: true, get: function () { return config_2.ModernWebpackConfig; } });
+Object.defineProperty(exports, "NodeWebpackConfig", { enumerable: true, get: function () { return config_2.NodeWebpackConfig; } });

@@ -1,0 +1,53 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.createRuntimeExportsUtils = void 0;
+const path_1 = __importDefault(require("path"));
+const compiled_1 = require("./compiled");
+const path_2 = require("./path");
+const memo = (fn) => {
+    const cache = new Map();
+    return (...params) => {
+        const stringifiedParams = JSON.stringify(params);
+        const cachedResult = cache.get(stringifiedParams);
+        if (cachedResult) {
+            return cachedResult;
+        }
+        const res = fn(...params);
+        cache.set(stringifiedParams, res);
+        return res;
+    };
+};
+exports.createRuntimeExportsUtils = memo((pwd = '', namespace, ts = false) => {
+    const entryExportFile = path_1.default.join(pwd, `.runtime-exports/${namespace ? `${namespace}.js` : 'index.js'}`);
+    const entryExportTsFile = path_1.default.join(pwd, `.runtime-exports/${namespace ? `${namespace}.d.ts` : 'index.d.ts'}`);
+    // const ensure = () => {
+    //   if (!fs.existsSync(entryExportFile)) {
+    //     fs.outputFileSync(entryExportFile, '');
+    //   }
+    //   fs.ensureFileSync(entryExportFile);
+    // };
+    const addExport = (statement) => {
+        // eslint-disable-next-line no-param-reassign
+        statement = (0, path_2.normalizeOutputPath)(statement);
+        try {
+            compiled_1.fs.ensureFileSync(entryExportFile);
+            compiled_1.fs.ensureFileSync(entryExportTsFile);
+            if (!compiled_1.fs.readFileSync(entryExportFile, 'utf8').includes(statement)) {
+                compiled_1.fs.appendFileSync(entryExportFile, `${statement}\n`);
+                ts &&
+                    compiled_1.fs.appendFileSync(entryExportTsFile, `${statement.replace('.js', '.d')}\n`);
+            }
+        }
+        catch {
+            // FIXME:
+        }
+    };
+    const getPath = () => entryExportFile;
+    return {
+        addExport,
+        getPath,
+    };
+});

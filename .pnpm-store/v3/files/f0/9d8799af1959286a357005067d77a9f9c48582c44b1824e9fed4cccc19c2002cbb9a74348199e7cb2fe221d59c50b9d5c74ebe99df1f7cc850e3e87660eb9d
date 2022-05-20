@@ -1,0 +1,57 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.ModernSSRDevServer = exports.ModernAPIDevServer = void 0;
+
+var _prodServer = require("@modern-js/prod-server");
+
+var _devServer = require("./dev-server");
+
+class ModernSSRDevServer extends _devServer.ModernDevServer {
+  prepareAPIHandler(_m, _) {
+    return null;
+  }
+
+  filterRoutes(routes) {
+    return routes.filter(route => route.isSSR);
+  }
+
+  async setupBeforeProdMiddleware() {
+    if (this.runMode === _prodServer.RUN_MODE.FULL) {
+      await super.setupBeforeProdMiddleware();
+    }
+  }
+
+  async emitRouteHook(_, _input) {
+    if (this.runMode === _prodServer.RUN_MODE.FULL) {
+      await super.emitRouteHook(_, _input);
+    }
+  }
+
+}
+
+exports.ModernSSRDevServer = ModernSSRDevServer;
+
+class ModernAPIDevServer extends _devServer.ModernDevServer {
+  prepareWebHandler(_) {
+    return null;
+  }
+
+  filterRoutes(routes) {
+    return routes.filter(route => route.isApi);
+  }
+
+  async setupBeforeProdMiddleware() {
+    if (this.runMode === _prodServer.RUN_MODE.FULL) {
+      await super.setupBeforeProdMiddleware();
+    }
+  }
+
+  async emitRouteHook(_, _input) {// empty
+  }
+
+}
+
+exports.ModernAPIDevServer = ModernAPIDevServer;

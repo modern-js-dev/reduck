@@ -1,0 +1,6 @@
+import { ICompilerOptions, ICompilerResult } from './type';
+export declare const sourceDirAndFileNamesValidMessage = "At least one of the sourceDir and filenames configurations must be configured";
+export declare const watchDirValidMessage = "should set watchDir when enableWatch is true";
+export declare const validateSourceDirAndFileNames: (compilerOptions: ICompilerOptions) => ICompilerResult | null;
+export declare const validateWatchDir: (compilerOptions: ICompilerOptions) => ICompilerResult | null;
+export declare const validate: (compilerOptions: ICompilerOptions) => ICompilerResult | null;

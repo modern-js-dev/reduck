@@ -1,0 +1,1 @@
+export declare function pre(type: 'enter' | 'exit', tag?: string): Promise<void>;

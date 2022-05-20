@@ -1,0 +1,26 @@
+import { lifecycle as buildLifeCycle } from './build';
+import { lifecycle as devLifeCycle } from './dev';
+export { buildLifeCycle, devLifeCycle };
+export declare const lifecycle: () => void;
+export declare const hooks: {
+  moduleToolsMenu: import("@modern-js/plugin").ParallelWorkflow<undefined, {
+    name: string;
+    value: string;
+    runTask: (p: any) => void | Promise<void>;
+  }>;
+  platformBuild: import("@modern-js/plugin").ParallelWorkflow<import("./build").PlatformBuildOption, {
+    name: string;
+    title: string;
+    taskPath: string;
+    params: string[];
+  }>;
+  moduleLessConfig: import("@modern-js/plugin").AsyncPipeline<{
+    modernConfig: import("@modern-js/core").NormalizedConfig;
+  }, import("@modern-js/style-compiler").LessOption | undefined>;
+  moduleSassConfig: import("@modern-js/plugin").AsyncPipeline<{
+    modernConfig: import("@modern-js/core").NormalizedConfig;
+  }, import("@modern-js/style-compiler").SassOptions<"sync"> | undefined>;
+  moduleTailwindConfig: import("@modern-js/plugin").AsyncPipeline<{
+    modernConfig: import("@modern-js/core").NormalizedConfig;
+  }, any>;
+};

@@ -1,0 +1,168 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.isStaticFile = exports.default = void 0;
+
+var _path = _interopRequireDefault(require("path"));
+
+var _utils = require("@modern-js/utils");
+
+var _core = require("@babel/core");
+
+var _utils2 = require("./utils");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+const replaceValueHash = {};
+
+const isResourceInSrc = (srcDir, resourcePath) => !_path.default.relative(srcDir, _path.default.dirname(resourcePath)).includes('..');
+
+const getImportFileDistPath = (compilerFile, srcDir, importName) => {
+  const dir = _path.default.dirname(compilerFile);
+
+  const compilerFileRelativeLoc = _path.default.relative(dir, srcDir);
+
+  const importFileRelativeLoc = _path.default.relative(srcDir, _path.default.dirname(_path.default.join(dir, importName)));
+
+  const inSrc = isResourceInSrc(srcDir, _path.default.join(dir, importName));
+
+  const importFileDistDir = _path.default.join(inSrc ? '..' : '../..', compilerFileRelativeLoc, 'styles', importFileRelativeLoc);
+
+  const importFileName = _path.default.basename(importName);
+
+  const importFileDistPath = _path.default.join(importFileDistDir, importFileName);
+
+  return (0, _utils.slash)(importFileDistPath);
+};
+
+const isStaticFile = (file, filename) => {
+  const tests = [[/\.js$/, '.js'], [/\.jsx$/, '.jsx'], [/\.ts$/, '.ts'], [/\.tsx$/, '.tsx']]; // check this file is static file
+  // by string and determine if the file with the added suffix exists
+
+  return !tests.some(([regex, prefix]) => regex.test(file) || _utils.fs.existsSync(_path.default.join(_path.default.dirname(filename), file) + prefix) || _utils.fs.existsSync(_path.default.join(_path.default.dirname(filename), file, 'index') + prefix));
+};
+
+exports.isStaticFile = isStaticFile;
+
+const isStyleFile = file => {
+  const tests = [/\.css$/, /\.less$/, /\.sass$/, /\.scss$/];
+  return tests.some(regex => regex.test(file));
+};
+
+const getReplacePath = (importName, filename, srcDir, importStyle) => {
+  if (!filename || !importName) {
+    return '';
+  }
+
+  if (!(0, _utils2.isProjectFile)(importName)) {
+    return '';
+  }
+
+  if (!isStaticFile(importName, filename)) {
+    return '';
+  }
+
+  let realFilepath = getImportFileDistPath(filename, srcDir, importName);
+
+  if (isStyleFile(realFilepath) && importStyle === 'compiled-code') {
+    realFilepath = realFilepath.replace(/\.(less|sass|scss)$/, '.css');
+  }
+
+  return realFilepath;
+};
+
+const importPath = () => ({
+  name: 'import-path',
+  visitor: {
+    Program(nodePath, {
+      opts,
+      file
+    }) {
+      nodePath.traverse({
+        ImportDeclaration({
+          node
+        }) {
+          const {
+            source
+          } = node;
+          const {
+            appDirectory,
+            importStyle = 'source-code'
+          } = opts;
+
+          const srcDir = _path.default.join(appDirectory, 'src');
+
+          const {
+            opts: {
+              filename
+            }
+          } = file;
+          const importName = source !== null && source !== void 0 && source.value ? source.value : undefined;
+          const replaceValue = getReplacePath(importName, filename, srcDir, importStyle); // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
+
+          const hashKey = filename + (importName || '');
+
+          if (replaceValue) {
+            if (typeof filename === 'string' && !replaceValueHash[hashKey]) {
+              node.source.value = replaceValue;
+              replaceValueHash[hashKey] = replaceValue;
+            } else if (typeof filename === 'string' && replaceValueHash[hashKey]) {
+              node.source.value = replaceValueHash[hashKey];
+            } else {
+              node.source.value = replaceValue;
+            }
+          }
+        },
+
+        // dynamic import
+        CallExpression({
+          node
+        }) {
+          const {
+            appDirectory,
+            importStyle = 'source-code'
+          } = opts;
+
+          const srcDir = _path.default.join(appDirectory, 'src');
+
+          const {
+            filename
+          } = file.opts;
+          const {
+            callee,
+            arguments: args
+          } = node;
+
+          if (callee.type === 'Import' || callee.type === 'Identifier' && callee.name === 'require') {
+            const firstArg = args[0];
+
+            if (firstArg.value) {
+              const importName = firstArg.value;
+              const replaceValue = getReplacePath(importName, filename, srcDir, importStyle); // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
+
+              const hashKey = filename + (importName || '');
+
+              if (replaceValue) {
+                if (typeof filename === 'string' && !replaceValueHash[hashKey]) {
+                  node.arguments = [_core.types.stringLiteral(replaceValue)];
+                  replaceValueHash[hashKey] = replaceValue;
+                } else if (typeof filename === 'string' && replaceValueHash[hashKey]) {
+                  node.arguments = [_core.types.stringLiteral(replaceValueHash[hashKey])];
+                } else {
+                  node.arguments = [_core.types.stringLiteral(replaceValue)];
+                }
+              }
+            }
+          }
+        }
+
+      });
+    }
+
+  }
+});
+
+var _default = importPath;
+exports.default = _default;

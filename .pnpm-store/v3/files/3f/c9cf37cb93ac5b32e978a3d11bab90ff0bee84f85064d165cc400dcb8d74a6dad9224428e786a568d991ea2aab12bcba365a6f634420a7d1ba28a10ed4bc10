@@ -1,0 +1,24 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.applyPatches = void 0;
+
+var _transformer = require("./transformer");
+
+var _assetsModule = require("./assetsModule");
+
+const _applyPatches = async (patches, testOperator) => {
+  for (const patch of patches) {
+    await patch(testOperator);
+  }
+};
+
+const patches = [_transformer.patchTransformer, _assetsModule.patchAssetsModule];
+
+const applyPatches = async testConfig => {
+  await _applyPatches(patches, testConfig);
+};
+
+exports.applyPatches = applyPatches;

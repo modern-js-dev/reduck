@@ -1,0 +1,41 @@
+{
+  "name": "farrow-api",
+  "version": "1.12.1",
+  "description": "A type-friendly BFF framework",
+  "main": "dist/index.js",
+  "files": [
+    "src",
+    "dist"
+  ],
+  "keywords": [
+    "Web Framework",
+    "TypeScript",
+    "Functional Programming"
+  ],
+  "author": "Jade Gu",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Lucifier129/farrow.git"
+  },
+  "devDependencies": {
+    "@types/jest": "^27.0.1",
+    "@types/prettier": "^2.4.0",
+    "jest": "^27.2.2",
+    "ts-jest": "^27.0.5",
+    "typescript": "^4.5.4"
+  },
+  "dependencies": {
+    "farrow-pipeline": "^1.12.0",
+    "farrow-schema": "^1.12.1",
+    "cosmiconfig": "^7.0.0",
+    "prettier": "^2.4.1",
+    "tslib": "^2.1.0"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "test": "jest",
+    "test:coverage": "jest --collectCoverage --coverage"
+  },
+  "readme": "# farrow-api\r\n\r\n**farrow-api**: Schema-based Api builder\r\n\r\n## Setup\r\n\r\nInstall via npm or yarn\r\n\r\n```shell\r\n# via npm\r\nnpm install --save farrow-api\r\n\r\n# via yarn\r\nyarn add farrow-api\r\n```\r\n\r\n## Usage\r\n\r\nWriting `farrow-api` is just like typing in a higher-order way, we define a api-type via `farrow-schema`. And then use [farrow-api-server](../farrow-api-server/README.md) to attach api to a http server.\r\n\r\n```typescript\r\nimport { Api } from 'farrow-api'\r\nimport { Int, List, ObjectType, Type, TypeOf } from 'farrow-schema'\r\n\r\n/**\r\n * define Todo\r\n */\r\nexport class Todo extends ObjectType {\r\n  id = {\r\n    description: `Todo id`,\r\n    [Type]: Int,\r\n  }\r\n\r\n  content = {\r\n    description: 'Todo content',\r\n    [Type]: String,\r\n  }\r\n\r\n  completed = {\r\n    description: 'Todo status',\r\n    [Type]: Boolean,\r\n  }\r\n}\r\n\r\n// infer the type of Todo\r\nexport type TodoType = TypeOf<Todo>\r\n\r\n// define Todos\r\nexport const Todos = List(Todo)\r\n\r\n// define AddTodoInput\r\nexport class AddTodoInput extends ObjectType {\r\n  content = {\r\n    description: 'a content of todo for creating',\r\n    [Type]: String,\r\n  }\r\n}\r\n\r\n// define AddTodoInput\r\nexport class AddTodoOutput extends ObjectType {\r\n  todos = {\r\n    description: 'Todo list',\r\n    [Type]: Todos,\r\n  }\r\n}\r\n\r\n// define an api via input schema and output schema\r\nexport const addTodo = Api(\r\n  {\r\n    description: 'add todo',\r\n    input: AddTodoInput,\r\n    output: AddTodoOutput,\r\n  },\r\n  (input) => {\r\n    // impl addTodo\r\n    return {\r\n      todos: [],\r\n    }\r\n  },\r\n)\r\n\r\n// define RemoveTodoInput\r\nexport class RemoveTodoInput extends ObjectType {\r\n  id = {\r\n    description: 'Todo id for removing',\r\n    [Type]: Int,\r\n  }\r\n}\r\n\r\n// define RemoveTodoOutput\r\nexport class RemoveTodoOutput extends ObjectType {\r\n  todos = {\r\n    description: 'Remain todo list',\r\n    [Type]: Todos,\r\n  }\r\n}\r\n\r\n// define an api without impl\r\nexport const removeTodo = Api({\r\n  description: 'remove todo',\r\n  input: RemoveTodoInput,\r\n  output: RemoveTodoOutput,\r\n})\r\n\r\n// an api is also a pipeline\r\nremoveTodo.use((input, next) => {\r\n  return next(input)\r\n})\r\n\r\n// impl remove todo via pipeline.use\r\nremoveTodo.use((input) => {\r\n  state.todos = state.todos.filter((todo) => todo.id !== input.id)\r\n  return {\r\n    todos: state.todos,\r\n  }\r\n})\r\n\r\n// combine all api to an object/entries\r\nexport const entries = {\r\n  addTodo,\r\n  removeTodo,\r\n}\r\n```\r\n\r\n## API\r\n\r\n```typescript\r\n/**\r\n * create Api via ApiDefinition\r\n */\r\nconst Api: (definition: ApiDefinition, impl?: ApiImpl<T> | undefined) => ApiType<T>\r\n\r\n/**\r\n * ApiDefinition\r\n */\r\nexport type ApiDefinition = {\r\n  /**\r\n   * input schema of api\r\n   */\r\n  input: SchemaCtorInput\r\n  /**\r\n   * output schema of api\r\n   */\r\n  output: SchemaCtorInput\r\n  /**\r\n   * description of api\r\n   */\r\n  description?: string\r\n  /**\r\n   * depcreated info of api if needed\r\n   */\r\n  deprecated?: string\r\n}\r\n```\r\n"
+}

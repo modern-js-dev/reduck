@@ -1,0 +1,12 @@
+import type { ICommandConfig } from '../../type';
+import { DagOperator } from '../../dag/operator';
+export interface IBuildConfig extends ICommandConfig {
+  withSelf?: boolean;
+  onlySelf?: boolean;
+  withDept?: boolean;
+  disableWithDeps?: boolean;
+  disableContentHash?: boolean;
+  enableGitHash?: boolean;
+}
+export declare const runBuildTask: (projectName: string, operator: DagOperator, config: IBuildConfig, taskCmds?: string[]) => Promise<void>;
+export declare const runAllBuildTask: (operator: DagOperator, config: IBuildConfig, taskCmds?: string[]) => Promise<void>;

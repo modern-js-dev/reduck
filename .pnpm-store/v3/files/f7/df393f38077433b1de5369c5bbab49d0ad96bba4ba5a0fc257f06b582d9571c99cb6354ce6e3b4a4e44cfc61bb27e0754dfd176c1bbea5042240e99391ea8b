@@ -1,0 +1,70 @@
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+import path from 'path';
+import postcss from 'postcss';
+import { likeCssLoaderPostCssPlugins } from "./postcssPlugins";
+export const postcssResolve = async (css, params, {
+  sourcemapContent: _sourcemapContent = ''
+} = {}) => {
+  const {
+    stylesDir,
+    file,
+    outDir,
+    options
+  } = params;
+  const {
+    postcss: userPostcssOption
+  } = options;
+  const from = file;
+  const relativePath = path.relative(stylesDir, file);
+  const to = path.join(outDir, relativePath);
+  const config = {
+    plugins: [...likeCssLoaderPostCssPlugins(file, (userPostcssOption === null || userPostcssOption === void 0 ? void 0 : userPostcssOption.plugins) || [])],
+    options: {
+      from,
+      to
+    }
+  };
+  let result = null;
+
+  try {
+    result = await postcss([...config.plugins, ...((userPostcssOption === null || userPostcssOption === void 0 ? void 0 : userPostcssOption.plugins) || [])]).process(css, _objectSpread(_objectSpread({
+      // not allow user to cover from and to attr
+      from,
+      to,
+      map: userPostcssOption !== null && userPostcssOption !== void 0 && userPostcssOption.enableSourceMap ? {
+        prev: _sourcemapContent,
+        inline: false
+      } : false
+    }, config.options), userPostcssOption === null || userPostcssOption === void 0 ? void 0 : userPostcssOption.options));
+  } catch (err) {
+    return {
+      code: 1,
+      filename: to,
+      content: '',
+      error: err.message,
+      sourceMap: '',
+      sourceMapFileName: ''
+    };
+  }
+
+  const compilerSuccessResult = {
+    code: 0,
+    content: result.css,
+    filename: to.replace(path.extname(to), '.css'),
+    error: null,
+    sourceMap: '',
+    sourceMapFileName: ''
+  };
+
+  if (result.map) {
+    compilerSuccessResult.sourceMapFileName = `${to}.map`;
+    compilerSuccessResult.sourceMap = result.map.toString();
+  }
+
+  return compilerSuccessResult;
+};

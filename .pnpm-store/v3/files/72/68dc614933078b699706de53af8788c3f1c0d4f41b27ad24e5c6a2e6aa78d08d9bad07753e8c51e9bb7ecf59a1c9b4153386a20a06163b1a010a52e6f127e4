@@ -1,0 +1,647 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.ModernServer = void 0;
+
+var _http = require("http");
+
+var _util = _interopRequireDefault(require("util"));
+
+var _path = _interopRequireDefault(require("path"));
+
+var _utils = require("@modern-js/utils");
+
+var _axios = _interopRequireDefault(require("axios"));
+
+var _lodash = require("@modern-js/utils/lodash");
+
+var _route = require("../libs/route");
+
+var _render = require("../libs/render");
+
+var _serveFile = require("../libs/serve-file");
+
+var _utils2 = require("../utils");
+
+var reader = _interopRequireWildcard(require("../libs/render/reader"));
+
+var _proxy = require("../libs/proxy");
+
+var _context = require("../libs/context");
+
+var _constants = require("../constants");
+
+var _template = require("../libs/hook-api/template");
+
+var _route2 = require("../libs/hook-api/route");
+
+const _excluded = ["getMiddlewares"];
+
+function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
+
+function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+function _objectWithoutProperties(source, excluded) { if (source == null) return {}; var target = _objectWithoutPropertiesLoose(source, excluded); var key, i; if (Object.getOwnPropertySymbols) { var sourceSymbolKeys = Object.getOwnPropertySymbols(source); for (i = 0; i < sourceSymbolKeys.length; i++) { key = sourceSymbolKeys[i]; if (excluded.indexOf(key) >= 0) continue; if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue; target[key] = source[key]; } } return target; }
+
+function _objectWithoutPropertiesLoose(source, excluded) { if (source == null) return {}; var target = {}; var sourceKeys = Object.keys(source); var key, i; for (i = 0; i < sourceKeys.length; i++) { key = sourceKeys[i]; if (excluded.indexOf(key) >= 0) continue; target[key] = source[key]; } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+const API_DIR = './api';
+const SERVER_DIR = './server';
+
+class ModernServer {
+  // appDirectory
+  // product dist dir
+  // work on src or dist
+  constructor({
+    pwd,
+    config,
+    routes,
+    staticGenerate,
+    logger,
+    metrics,
+    runMode,
+    proxyTarget
+  }) {
+    var _config$output;
+
+    _defineProperty(this, "pwd", void 0);
+
+    _defineProperty(this, "distDir", void 0);
+
+    _defineProperty(this, "workDir", void 0);
+
+    _defineProperty(this, "router", void 0);
+
+    _defineProperty(this, "conf", void 0);
+
+    _defineProperty(this, "handlers", []);
+
+    _defineProperty(this, "presetRoutes", void 0);
+
+    _defineProperty(this, "runner", void 0);
+
+    _defineProperty(this, "logger", void 0);
+
+    _defineProperty(this, "metrics", void 0);
+
+    _defineProperty(this, "runMode", void 0);
+
+    _defineProperty(this, "reader", reader);
+
+    _defineProperty(this, "proxyTarget", void 0);
+
+    _defineProperty(this, "staticFileHandler", void 0);
+
+    _defineProperty(this, "routeRenderHandler", void 0);
+
+    _defineProperty(this, "frameWebHandler", null);
+
+    _defineProperty(this, "frameAPIHandler", null);
+
+    _defineProperty(this, "proxyHandler", null);
+
+    _defineProperty(this, "_handler", void 0);
+
+    _defineProperty(this, "staticGenerate", void 0);
+
+    require('ignore-styles');
+
+    this.pwd = pwd;
+    this.distDir = _path.default.join(pwd, ((_config$output = config.output) === null || _config$output === void 0 ? void 0 : _config$output.path) || 'dist');
+    this.workDir = this.distDir;
+    this.conf = config;
+    (0, _utils2.debug)('server conf', this.conf);
+    this.logger = logger;
+    this.metrics = metrics;
+    this.router = new _route.RouteMatchManager();
+    this.presetRoutes = routes;
+    this.proxyTarget = proxyTarget;
+    this.staticGenerate = staticGenerate || false;
+    this.runMode = runMode || _constants.RUN_MODE.TYPE;
+    process.env.BUILD_TYPE = `${this.staticGenerate ? 'ssg' : 'ssr'}`;
+  } // server prepare
+
+
+  async onInit(runner) {
+    var _conf$bff;
+
+    this.runner = runner;
+    const {
+      distDir,
+      staticGenerate,
+      conf
+    } = this; // Todo: why add this middleware
+
+    this.addHandler((ctx, next) => {
+      ctx.res.setHeader('Access-Control-Allow-Origin', '*');
+      ctx.res.setHeader('Access-Control-Allow-Credentials', 'false');
+      next();
+    });
+    (0, _utils2.debug)('final server conf', this.conf); // proxy handler, each proxy has own handler
+
+    this.proxyHandler = (0, _proxy.createProxyHandler)((_conf$bff = conf.bff) === null || _conf$bff === void 0 ? void 0 : _conf$bff.proxy);
+
+    if (this.proxyHandler) {
+      this.proxyHandler.forEach(handler => {
+        this.addHandler(handler);
+      });
+    } // start file reader
+
+
+    this.reader.init(); // use preset routes priority
+
+    const usageRoutes = this.filterRoutes(this.getRoutes());
+    this.router.reset(usageRoutes); // warmup ssr bundle in production env
+
+    this.warmupSSRBundle();
+    await this.prepareFrameHandler(); // Only work when without setting `assetPrefix`.
+    // Setting `assetPrefix` means these resources should be uploaded to CDN.
+
+    const staticPathRegExp = (0, _utils2.getStaticReg)(this.conf.output || {});
+    this.staticFileHandler = (0, _serveFile.createStaticFileHandler)([{
+      path: staticPathRegExp,
+      target: distDir
+    }]);
+    this.routeRenderHandler = (0, _render.createRenderHandler)({
+      distDir,
+      staticGenerate
+    });
+    await this.setupBeforeProdMiddleware();
+    this.addHandler(this.staticFileHandler);
+    this.addHandler(this.routeHandler.bind(this)); // compose middlewares to http handler
+
+    this.compose();
+  } // close any thing run in server
+
+
+  async onClose() {
+    this.reader.close();
+  } // server ready
+
+
+  onRepack(_) {// empty
+  } // invoke when http server listen
+
+
+  onListening(_) {// empty
+  }
+
+  onServerChange(_) {
+    this.prepareFrameHandler();
+  } // exposed requestHandler
+
+
+  getRequestHandler() {
+    return this.requestHandler.bind(this);
+  }
+
+  async createHTTPServer(handler) {
+    return (0, _http.createServer)(handler);
+  }
+  /* —————————————————————— function will be overwrite —————————————————————— */
+  // get routes info
+
+
+  getRoutes() {
+    // Preferred to use preset routes
+    if (this.presetRoutes) {
+      return this.presetRoutes;
+    } // read routes from spec file
+
+
+    const file = _path.default.join(this.distDir, _utils.ROUTE_SPEC_FILE);
+
+    if (_utils.fs.existsSync(file)) {
+      const content = _utils.fs.readJSONSync(file);
+
+      return content.routes;
+    }
+
+    return [];
+  } // add promisify request handler to server
+  // handler should do not do more things after invoke next
+
+
+  addHandler(handler) {
+    if (handler[Symbol.toStringTag] === 'AsyncFunction') {
+      this.handlers.push(handler);
+    } else {
+      this.handlers.push(_util.default.promisify(handler));
+    }
+  } // return 404 page
+
+
+  render404(context) {
+    context.error(_constants.ERROR_DIGEST.ENOTF, '404 Not Found');
+    this.renderErrorPage(context, 404);
+  } // gather frame extension and get framework handler
+
+
+  async prepareFrameHandler() {
+    const {
+      workDir,
+      runner
+    } = this; // server hook, gather plugin inject
+
+    const _createMiddlewareColl = (0, _utils2.createMiddlewareCollecter)(),
+          {
+      getMiddlewares
+    } = _createMiddlewareColl,
+          collector = _objectWithoutProperties(_createMiddlewareColl, _excluded);
+
+    await runner.gather(collector);
+    const {
+      api: pluginAPIExt,
+      web: pluginWebExt
+    } = getMiddlewares();
+
+    const apiDir = _path.default.join(workDir, API_DIR);
+
+    const serverDir = _path.default.join(workDir, SERVER_DIR); // get api or web server handler from server-framework plugin
+
+
+    if (await _utils.fs.pathExists(_path.default.join(serverDir))) {
+      const webExtension = (0, _utils2.mergeExtension)(pluginWebExt);
+      this.frameWebHandler = await this.prepareWebHandler(webExtension);
+    }
+
+    if (_utils.fs.existsSync(apiDir)) {
+      const mode = _utils.fs.existsSync(_path.default.join(apiDir, _constants.AGGRED_DIR.lambda)) ? _constants.ApiServerMode.frame : _constants.ApiServerMode.func;
+      (0, _utils2.debug)('exists api dir', mode); // if use lambda/, mean framework style of writing, then discard user extension
+
+      const apiExtension = (0, _utils2.mergeExtension)(pluginAPIExt);
+      this.frameAPIHandler = await this.prepareAPIHandler(mode, apiExtension);
+    }
+  }
+
+  async prepareWebHandler(extension) {
+    const {
+      workDir,
+      runner
+    } = this;
+    return runner.prepareWebServer({
+      pwd: workDir,
+      config: extension
+    }, {
+      onLast: () => null
+    });
+  }
+
+  async prepareAPIHandler(mode, extension) {
+    const {
+      workDir,
+      runner,
+      conf
+    } = this;
+    const {
+      bff
+    } = conf;
+    const prefix = (bff === null || bff === void 0 ? void 0 : bff.prefix) || '/api';
+    return runner.prepareApiServer({
+      pwd: workDir,
+      mode,
+      config: extension,
+      prefix: Array.isArray(prefix) ? prefix[0] : prefix
+    }, {
+      onLast: () => null
+    });
+  }
+
+  filterRoutes(routes) {
+    return routes;
+  }
+
+  async emitRouteHook(eventName, input) {
+    input.context = (0, _lodash.clone)(input.context);
+    return this.runner[eventName](input, {
+      onLast: _utils2.noop
+    });
+  }
+
+  async setupBeforeProdMiddleware() {
+    const {
+      conf,
+      runner
+    } = this;
+    const preMiddleware = await runner.beforeProdServer(conf);
+    preMiddleware.flat().forEach(mid => {
+      this.addHandler(mid);
+    });
+  }
+
+  async handleAPI(context) {
+    const {
+      req,
+      res
+    } = context;
+
+    if (!this.frameAPIHandler) {
+      throw new Error('can not found api handler');
+    }
+
+    await this.frameAPIHandler(req, res);
+  }
+
+  async handleWeb(context, route) {
+    return this.routeRenderHandler({
+      ctx: context,
+      route,
+      runner: this.runner
+    });
+  }
+
+  async proxy() {
+    return null;
+  } // warmup ssr function
+
+
+  warmupSSRBundle() {
+    const {
+      distDir
+    } = this;
+    const bundles = this.router.getBundles();
+    bundles.forEach(bundle => {
+      const filepath = _path.default.join(distDir, bundle); // if error, just throw and let process die
+
+
+      require(filepath);
+    });
+  }
+  /* —————————————————————— private function —————————————————————— */
+  // handler route.json, include api / csr / ssr
+
+
+  async routeHandler(context) {
+    const {
+      req,
+      res
+    } = context;
+    await this.emitRouteHook('beforeMatch', {
+      context
+    }); // match routes in the route spec
+
+    const matched = this.router.match(context.path);
+
+    if (!matched) {
+      this.render404(context);
+      return;
+    }
+
+    if (res.headersSent) {
+      return;
+    }
+
+    const routeAPI = (0, _route2.createRouteAPI)(matched, this.router, context.url);
+    await this.emitRouteHook('afterMatch', {
+      context,
+      routeAPI
+    });
+
+    if (res.headersSent) {
+      return;
+    }
+
+    const {
+      current
+    } = routeAPI;
+    const route = current.generate(context.url);
+    context.setParams(route.params);
+    context.setServerData('router', {
+      baseUrl: route.urlPath,
+      params: route.params
+    }); // route is api service
+
+    if (route.isApi) {
+      await this.handleAPI(context);
+      return;
+    }
+
+    if (this.frameWebHandler) {
+      await this.frameWebHandler(req, res);
+    } // frameWebHandler has process request
+
+
+    if (res.headersSent) {
+      return;
+    }
+
+    if (route.entryName) {
+      await this.emitRouteHook('beforeRender', {
+        context
+      });
+    }
+
+    const file = await this.handleWeb(context, route);
+
+    if (!file) {
+      this.render404(context);
+      return;
+    }
+
+    if (file.redirect) {
+      res.statusCode = file.statusCode;
+      res.setHeader('Location', file.content);
+      res.end();
+      return;
+    }
+
+    let response = file.content;
+
+    if (route.entryName) {
+      const templateAPI = (0, _template.createTemplateAPI)(file.content.toString());
+      await this.emitRouteHook('afterRender', {
+        context,
+        templateAPI
+      });
+      await this.injectMicroFE(context, templateAPI);
+      templateAPI.appendHead(`<script>window._SERVER_DATA=${JSON.stringify(context.serverData)}</script>`);
+      response = templateAPI.get();
+    }
+
+    res.setHeader('content-type', file.contentType);
+    res.end(response);
+  }
+
+  async injectMicroFE(context, templateAPI) {
+    var _conf$runtime, _conf$server;
+
+    const {
+      conf
+    } = this;
+    const masterApp = (_conf$runtime = conf.runtime) === null || _conf$runtime === void 0 ? void 0 : _conf$runtime.masterApp; // no inject if not master App
+
+    if (!masterApp) {
+      return;
+    }
+
+    const manifest = masterApp.manifest || {};
+    let modules = [];
+    const {
+      modules: configModules = []
+    } = manifest; // while config modules is an string, fetch data from remote
+
+    if (typeof configModules === 'string') {
+      const moduleRequestUrl = configModules;
+
+      try {
+        const {
+          data: remoteModules
+        } = await _axios.default.get(moduleRequestUrl);
+
+        if (Array.isArray(remoteModules)) {
+          modules.push(...remoteModules);
+        }
+      } catch (e) {
+        context.error(_constants.ERROR_DIGEST.EMICROINJ, e);
+      }
+    } else if (Array.isArray(configModules)) {
+      modules.push(...configModules);
+    }
+
+    const {
+      headers
+    } = context.req;
+    const debugName = headers['x-micro-frontend-module-name'] || context.query['__debug__micro-frontend-module-name'];
+    const debugEntry = headers['x-micro-frontend-module-entry'] || context.query['__debug__micro-frontend-module-entry']; // add debug micro App to first
+
+    if (debugName && debugEntry && (_conf$server = conf.server) !== null && _conf$server !== void 0 && _conf$server.enableMicroFrontendDebug) {
+      modules = modules.map(m => {
+        if (m.name === debugName) {
+          return {
+            name: debugName,
+            entry: debugEntry
+          };
+        }
+
+        return m;
+      });
+    }
+
+    try {
+      // Todo Safety xss
+      const injection = JSON.stringify(_objectSpread(_objectSpread({}, manifest), {}, {
+        modules
+      }));
+      templateAPI.appendHead(`<script>window.modern_manifest=${injection}</script>`);
+    } catch (e) {
+      context.error(_constants.ERROR_DIGEST.EMICROINJ, e);
+    }
+  } // compose handlers and create the final handler
+
+
+  compose() {
+    const {
+      handlers
+    } = this;
+
+    if (!Array.isArray(handlers)) {
+      throw new TypeError('Middleware stack must be an array!');
+    }
+
+    for (const fn of handlers) {
+      if (typeof fn !== 'function') {
+        throw new TypeError('Middleware must be composed of functions!');
+      }
+    }
+
+    this._handler = (context, next) => {
+      let i = 0;
+
+      const dispatch = () => {
+        const handler = handlers[i++];
+
+        if (!handler) {
+          return next();
+        }
+
+        return handler(context, dispatch).catch(onError);
+      };
+
+      const onError = err => {
+        this.onError(context, err);
+      };
+
+      return dispatch();
+    };
+  }
+
+  requestHandler(req, res, next = () => {// empty
+  }) {
+    res.statusCode = 200;
+    req.logger = this.logger;
+    req.metrics = this.metrics;
+    let context;
+
+    try {
+      context = (0, _context.createContext)(req, res);
+    } catch (e) {
+      this.logger.error(e);
+      res.statusCode = 500;
+      res.setHeader('content-type', _utils.mime.contentType('html'));
+      return res.end((0, _utils2.createErrorDocument)(500, _constants.ERROR_PAGE_TEXT[500]));
+    }
+
+    try {
+      return this._handler(context, next);
+    } catch (err) {
+      return this.onError(context, err);
+    }
+  }
+
+  onError(context, err) {
+    context.error(_constants.ERROR_DIGEST.EINTER, err);
+    this.renderErrorPage(context, 500);
+  }
+
+  async renderErrorPage(context, status) {
+    const {
+      res
+    } = context;
+    context.status = status;
+    res.setHeader('content-type', _utils.mime.contentType('html'));
+    const statusPage = `/${status}`;
+    const customErrorPage = `/_error`;
+    const matched = this.router.match(statusPage) || this.router.match(customErrorPage); // if no custom status page find
+
+    if (matched) {
+      const route = matched.generate(context.url);
+      const {
+        entryName
+      } = route; // check entryName, avoid matched '/' route
+
+      if (entryName === status.toString() || entryName === '_error') {
+        try {
+          const file = await this.routeRenderHandler({
+            route,
+            ctx: context,
+            runner: this.runner
+          });
+
+          if (file) {
+            context.res.end(file.content);
+            return;
+          }
+        } catch (e) {// just catch error when the rendering error occurred in the custom error page.
+        }
+      }
+    }
+
+    const text = _constants.ERROR_PAGE_TEXT[status] || _constants.ERROR_PAGE_TEXT[500];
+    context.res.end((0, _utils2.createErrorDocument)(status, text));
+  }
+
+}
+/* eslint-enable max-lines */
+
+
+exports.ModernServer = ModernServer;

@@ -1,0 +1,3 @@
+import { execa } from '@modern-js/utils';
+export declare const CHANGESET_PATH: string;
+export declare function execaWithStreamLog(command: string, args: string[]): execa.ExecaChildProcess<string>;

@@ -1,0 +1,227 @@
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+import path from 'path';
+import { EventEmitter } from 'events';
+import { fs, ora, chalk } from '@modern-js/utils';
+import { FsMaterial } from "../materials/FsMaterial";
+import { nodeRequire } from "../utils/nodeRequire";
+import { getGeneratorDir } from "../utils/getGeneratorDir";
+export class GeneratorCore {
+  // event handles, to handle generator lifecycle
+  constructor({
+    logger,
+    materialsManager,
+    outputPath
+  }) {
+    this.logger = void 0;
+    this.materialsManager = void 0;
+    this.outputPath = void 0;
+    this.output = {
+      fs: async (file, content, options) => {
+        const filePath = path.resolve(this.outputPath, file.toString());
+        await fs.mkdirp(path.dirname(filePath));
+        await fs.writeFile(filePath, content, options);
+      }
+    };
+    this._context = void 0;
+    this.event = void 0;
+    this.logger = logger;
+    this.materialsManager = materialsManager;
+    this.outputPath = outputPath;
+    this.event = new EventEmitter();
+    this._context = _objectSpread({
+      materials: {},
+      config: {},
+      data: {},
+      current: null
+    }, this.lifeCycleMethod);
+  }
+
+  get lifeCycleMethod() {
+    return {
+      handleForged: this.handleForged.bind(this)
+    };
+  }
+
+  setConfig(config) {
+    this._context.config = config;
+  }
+
+  addMaterial(key, material) {
+    this._context.materials[key] = material;
+  }
+
+  setCurrent(current) {
+    this._context.current = current;
+  }
+
+  setOutputPath(outputPath) {
+    this.outputPath = outputPath;
+  }
+
+  async loadLocalGenerator(generator) {
+    this.logger.debug('[runGenerator] generator is absolute, using local generator');
+    let generatorPkg;
+    let pkgJson;
+
+    try {
+      const generatorDir = await getGeneratorDir(generator);
+      generatorPkg = await this.materialsManager.loadLocalGenerator(generatorDir);
+    } catch (e) {
+      this.logger.debug('load local generator failed:', e);
+      return {
+        generatorPkg: null
+      };
+    } // check package.json file exist
+
+
+    try {
+      pkgJson = nodeRequire(generatorPkg.get('package.json').filePath);
+    } catch (e) {
+      this.logger.debug('nodeRequire fail:', e);
+      this.logger.error('can not require package.json');
+      this.logger.warn(`generator need a package.json in top directory
+check path: ${chalk.blue.underline(generator)} exist a package.json file or not`);
+      return {
+        generatorPkg: null
+      };
+    }
+
+    this.logger.debug(`[runGenerator] generator version is ${pkgJson.version}`);
+    const materialKey = `${pkgJson.name}@local`;
+    this.logger.debug(`[runGenerator] loaded local generator, ${generator}`);
+    return {
+      generatorPkg,
+      pkgJson,
+      materialKey
+    };
+  }
+
+  async loadRemoteGenerator(generator) {
+    this.logger.debug('[runGenerator] task.generator is remote package');
+
+    try {
+      const generatorPkg = await this.materialsManager.loadRemoteGenerator(generator);
+      const pkgJson = nodeRequire(generatorPkg.get('package.json').filePath);
+      const materialKey = `${pkgJson.name}@${pkgJson.version}`;
+      this.logger.debug(`[runTask] loaded remote generator, ${pkgJson.name}@${pkgJson.version}`);
+      return {
+        generatorPkg,
+        pkgJson,
+        materialKey
+      };
+    } catch (e) {
+      this.logger.debug('load remote generator failed:', e);
+      this.logger.error(`load remote generator failed: Package ${generator} could not be found or get timeout`);
+      return {
+        generatorPkg: null
+      };
+    }
+  } // when generator has finish forge template file, can trigger this function to emit `forged` event
+
+
+  handleForged(generatorName, context, // the flag is marked whether need to wait `handle forged success` event
+  needWait = false, projectPath = '') {
+    if (needWait) {
+      this.event.emit(`forged`, generatorName, context.materials.default.basePath, _objectSpread(_objectSpread({}, context.data), context.config), projectPath, this);
+      return new Promise((resolve, reject) => {
+        try {
+          this.event.on('handle forged success', resolve);
+        } catch (e) {
+          reject(e);
+        }
+      });
+    }
+
+    return Promise.resolve();
+  }
+
+  async loadGenerator(generator) {
+    const loadGeneratorPromise = path.isAbsolute(generator) ? this.loadLocalGenerator(generator) : this.loadRemoteGenerator(generator);
+    const {
+      generatorPkg,
+      pkgJson,
+      materialKey
+    } = await loadGeneratorPromise;
+
+    if (!generatorPkg || !pkgJson || !materialKey) {
+      return {};
+    }
+
+    this.logger.debug('[runGenerator] task.generator loaded');
+    const generatorScript = nodeRequire(generatorPkg.basePath);
+
+    if (typeof generatorScript !== 'function') {
+      this.logger.debug(`generator module [${pkgJson.name}] export default is not a function`, generatorScript);
+      throw new Error(`generator module [${pkgJson.name}] export default is not a function`);
+    }
+
+    return {
+      materialKey,
+      generatorPkg,
+      generatorScript
+    };
+  }
+
+  async runGenerator(generator, config = {}) {
+    const spinner = ora('Loading...').start();
+    spinner.color = 'yellow';
+    const {
+      materialKey,
+      generatorPkg,
+      generatorScript
+    } = await this.loadGenerator(generator);
+
+    if (!materialKey || !generatorPkg) {
+      throw new Error('load generator failed');
+    }
+
+    this.addMaterial(materialKey, generatorPkg);
+    this.setConfig(config || {}); // run generator
+
+    this.setCurrent({
+      material: generatorPkg
+    });
+    spinner.stop();
+    await generatorScript(this._context, this);
+    this.setCurrent(null);
+  }
+
+  async runSubGenerator(subGenerator, relativePwdPath = '', config) {
+    const spinner = ora('Loading...').start();
+    spinner.color = 'yellow';
+    const {
+      materialKey,
+      generatorPkg,
+      generatorScript
+    } = await this.loadGenerator(subGenerator);
+
+    if (!materialKey || !generatorPkg) {
+      throw new Error('load generator failed');
+    }
+
+    this.addMaterial(materialKey, generatorPkg);
+
+    const subContext = _objectSpread(_objectSpread({}, this._context), {}, {
+      config: _objectSpread(_objectSpread({}, this._context.config), config),
+      materials: _objectSpread(_objectSpread({}, this._context.materials), {}, {
+        default: new FsMaterial(path.resolve(this.outputPath, relativePwdPath))
+      }),
+      current: {
+        material: generatorPkg
+      }
+    });
+
+    this.logger.debug('subContext', subContext);
+    const preOutputPath = this.outputPath;
+    this.setOutputPath(path.resolve(this.outputPath, relativePwdPath || ''));
+    spinner.stop();
+    await generatorScript(subContext, this);
+    this.setOutputPath(preOutputPath);
+  }
+
+}

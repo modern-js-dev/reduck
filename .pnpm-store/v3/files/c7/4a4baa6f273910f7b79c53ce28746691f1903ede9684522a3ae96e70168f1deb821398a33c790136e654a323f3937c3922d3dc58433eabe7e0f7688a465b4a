@@ -1,0 +1,6 @@
+import { GeneralizedProps, MetaKeyMap, MetaKeyMatch } from './type';
+export declare const getInnermostProperty: (propsList: GeneralizedProps[], propName: string) => any;
+export declare const getOutermostProperty: (propsList: GeneralizedProps[], propName: string) => any;
+export declare const aggKeysFromPropsList: (propsList: GeneralizedProps[], propName: string) => MetaKeyMap;
+export declare const aggMatchesFromPropsList: (propsList: GeneralizedProps[], propName: string) => MetaKeyMatch;
+export declare function exist(target: any): boolean;

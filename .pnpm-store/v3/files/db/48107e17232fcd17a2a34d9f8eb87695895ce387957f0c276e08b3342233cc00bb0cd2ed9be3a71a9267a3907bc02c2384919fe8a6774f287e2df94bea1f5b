@@ -1,0 +1,72 @@
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+import { RouteMatcher } from "./matcher";
+export class RouteMatchManager {
+  constructor() {
+    _defineProperty(this, "matchers", void 0);
+
+    _defineProperty(this, "specs", []);
+
+    this.matchers = [];
+  } // get all routes matches pathname
+
+
+  filter(pathname) {
+    return this.matchers.reduce((matches, matcher) => {
+      if (matcher.matchUrlPath(pathname)) {
+        matches.push(matcher);
+      }
+
+      return matches;
+    }, []);
+  } // get best match from a set of matches
+
+
+  best(pathname, matches) {
+    let best;
+    let matchedLen = 0;
+
+    for (const match of matches) {
+      const len = match.matchLength(pathname);
+
+      if (len === null) {
+        continue;
+      }
+
+      if (len > matchedLen) {
+        best = match;
+        matchedLen = len;
+      }
+    }
+
+    return best;
+  } // reset routes matcher
+
+
+  reset(specs) {
+    this.specs = specs;
+    const matchers = specs.reduce((ms, spec) => {
+      ms.push(new RouteMatcher(spec));
+      return ms;
+    }, []);
+    this.matchers = matchers;
+  } // get best match from all matcher in manager
+
+
+  match(pathname) {
+    const matches = this.filter(pathname);
+    const best = this.best(pathname, matches);
+    return best;
+  }
+
+  matchEntry(entryname) {
+    return this.matchers.find(matcher => matcher.matchEntry(entryname));
+  }
+
+  getBundles() {
+    const bundles = this.specs.filter(route => route.isSSR).map(route => route.bundle);
+    return bundles;
+  }
+
+}
+export { RouteMatcher };

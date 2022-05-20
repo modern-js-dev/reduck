@@ -1,0 +1,4 @@
+export declare const getSourceIncludes: {
+    (this: any, ...args: any[]): (string | RegExp)[];
+    cache: Map<string, (string | RegExp)[]>;
+};

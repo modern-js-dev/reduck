@@ -1,0 +1,119 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.aggMatchesFromPropsList = exports.aggKeysFromPropsList = void 0;
+exports.exist = exist;
+exports.getOutermostProperty = exports.getInnermostProperty = void 0;
+const REQUEST_META = ['header', 'query'];
+
+const getInnermostProperty = function getInnermostProperty(propsList, propName) {
+  for (let i = propsList.length - 1; i >= 0; i--) {
+    const props = propsList[i];
+
+    if (props.hasOwnProperty(propName)) {
+      return props[propName];
+    }
+  }
+
+  return null;
+};
+
+exports.getInnermostProperty = getInnermostProperty;
+
+const getOutermostProperty = function getOutermostProperty(propsList, propName) {
+  for (const props of propsList) {
+    if (props.hasOwnProperty(propName)) {
+      return props[propName];
+    }
+  }
+
+  return null;
+};
+
+exports.getOutermostProperty = getOutermostProperty;
+
+const aggKeysFromPropsList = function aggKeysFromPropsList(propsList, propName) {
+  const initResult = REQUEST_META.reduce((result, next) => {
+    const key = next;
+    result[key] = [];
+    return result;
+  }, {});
+  const res = propsList.filter(props => usefulObject(props[propName])).reduce((result, next) => {
+    REQUEST_META.forEach(key => {
+      const prop = next[propName];
+
+      if (prop !== null && prop !== void 0 && prop.hasOwnProperty(key) && usefulArray(prop[key])) {
+        result[key] = unique(result[key].concat(prop[key]));
+      }
+    });
+    return result;
+  }, initResult);
+  return REQUEST_META.reduce((result, next) => {
+    var _result$key;
+
+    const key = next;
+
+    if (result[key] && ((_result$key = result[key]) === null || _result$key === void 0 ? void 0 : _result$key.length) === 0) {
+      delete result[key];
+    }
+
+    return result;
+  }, res);
+};
+
+exports.aggKeysFromPropsList = aggKeysFromPropsList;
+
+const aggMatchesFromPropsList = function aggMatchesFromPropsList(propsList, propName) {
+  const initResult = REQUEST_META.reduce((result, next) => {
+    const key = next;
+    result[key] = {};
+    return result;
+  }, {});
+  const res = propsList.filter(props => usefulObject(props[propName])).reduce((result, next) => {
+    REQUEST_META.forEach(key => {
+      const prop = next[propName]; // 这边目前是浅拷贝，越后渲染优先级越高
+
+      if (prop !== null && prop !== void 0 && prop.hasOwnProperty(key) && usefulObject(prop[key])) {
+        result[key] = Object.assign(result[key], prop[key]);
+      }
+    });
+    return result;
+  }, initResult);
+  return REQUEST_META.reduce((result, next) => {
+    const key = next;
+
+    if (result[key] && Object.keys(result[key]).length === 0) {
+      delete result[key];
+    }
+
+    return result;
+  }, res);
+};
+
+exports.aggMatchesFromPropsList = aggMatchesFromPropsList;
+
+function unique(arr) {
+  return Array.from(new Set(arr));
+}
+
+function usefulObject(target) {
+  if (!exist(target)) {
+    return false;
+  }
+
+  return target.constructor === Object && Object.keys(target).length > 0;
+}
+
+function usefulArray(target) {
+  if (!exist(target)) {
+    return false;
+  }
+
+  return Array.isArray(target) && target.length > 0;
+}
+
+function exist(target) {
+  return target != null;
+}

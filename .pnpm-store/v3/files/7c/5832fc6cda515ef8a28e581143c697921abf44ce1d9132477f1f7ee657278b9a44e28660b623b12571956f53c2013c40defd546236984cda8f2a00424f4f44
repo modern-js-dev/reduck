@@ -1,0 +1,26 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.DEFAULT_DEV_OPTIONS = void 0;
+
+var _utils = require("@modern-js/utils");
+
+const DEFAULT_DEV_OPTIONS = {
+  client: {
+    port: '8080',
+    overlay: false,
+    logging: 'none',
+    path: _utils.HMR_SOCK_PATH,
+    host: 'localhost'
+  },
+  https: false,
+  devMiddleware: {
+    writeToDisk: true
+  },
+  watch: true,
+  hot: true,
+  liveReload: true
+};
+exports.DEFAULT_DEV_OPTIONS = DEFAULT_DEV_OPTIONS;

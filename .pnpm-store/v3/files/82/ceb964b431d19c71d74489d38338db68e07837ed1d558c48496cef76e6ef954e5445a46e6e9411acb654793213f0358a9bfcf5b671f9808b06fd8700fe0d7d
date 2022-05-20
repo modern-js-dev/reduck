@@ -1,0 +1,24 @@
+/// <reference types="node" />
+import { SSRServerContext } from './serverRender/type';
+export declare const formatServer: (request: SSRServerContext['request']) => {
+  params: Record<string, string>;
+  pathname: string;
+  query: Record<string, string>;
+  headers: import("http").IncomingHttpHeaders;
+  host: string;
+  cookie: string | undefined;
+  userAgent: string | undefined;
+  referer: string | undefined;
+};
+export declare const formatClient: (request: SSRServerContext['request']) => {
+  params: Record<string, string>;
+  host: string;
+  pathname: string;
+  headers: import("http").IncomingHttpHeaders;
+  cookieMap: any;
+  cookie: string;
+  userAgent: string;
+  referer: any;
+  query: Record<string, string>;
+  url: string;
+};

@@ -1,0 +1,16 @@
+/**
+ * Copyright JS Foundation and other contributors.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file at
+ * https://github.com/jantimon/html-webpack-plugin/blob/main/LICENSE
+ *
+ * Modified from https://github.com/jantimon/html-webpack-plugin/blob/2f5de7ab9e8bca60e9e200f2e4b4cfab90db28d4/index.js#L800
+ */
+export declare type MetaAttributes = {
+    [attributeName: string]: string | boolean;
+};
+export interface MetaOptions {
+    [name: string]: string | false | MetaAttributes;
+}
+export declare const generateMetaTags: (metaOptions?: MetaOptions | undefined) => string;

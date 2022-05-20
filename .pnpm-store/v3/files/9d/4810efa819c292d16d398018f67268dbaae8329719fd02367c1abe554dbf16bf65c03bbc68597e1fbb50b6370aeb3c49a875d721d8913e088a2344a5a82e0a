@@ -1,0 +1,22 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.CHANGESET_PATH = void 0;
+exports.execaWithStreamLog = execaWithStreamLog;
+
+var _utils = require("@modern-js/utils");
+
+const CHANGESET_PATH = require.resolve('@changesets/cli');
+
+exports.CHANGESET_PATH = CHANGESET_PATH;
+
+function execaWithStreamLog(command, args) {
+  const promise = (0, _utils.execa)(command, args, {
+    stdin: 'inherit',
+    stdout: 'inherit',
+    stderr: 'inherit'
+  });
+  return promise;
+}

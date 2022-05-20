@@ -1,0 +1,14 @@
+export declare const JS_EXTENSIONS: string[];
+export declare const INDEX_FILE_NAME = "index";
+export declare const APP_FILE_NAME = "App";
+export declare const PAGES_DIR_NAME = "pages";
+export declare const FILE_SYSTEM_ROUTES_FILE_NAME = "routes.js";
+export declare const ENTRY_POINT_FILE_NAME = "index.js";
+export declare const FILE_SYSTEM_ROUTES_DYNAMIC_REGEXP: RegExp;
+export declare const FILE_SYSTEM_ROUTES_LAYOUT = "_layout";
+export declare const FILE_SYSTEM_ROUTES_GLOBAL_LAYOUT = "_app";
+export declare const FILE_SYSTEM_ROUTES_INDEX = "index";
+export declare const FILE_SYSTEM_ROUTES_IGNORED_REGEX: RegExp;
+export declare const HTML_PARTIALS_FOLDER = "html";
+export declare const HTML_PARTIALS_EXTENSIONS: string[];
+export declare const FILE_SYSTEM_ROUTES_COMPONENTS_DIR = "internal_components";

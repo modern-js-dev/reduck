@@ -1,0 +1,4 @@
+import { ServerPlugin } from './plugin';
+declare type Plugin = string | [string, any] | ServerPlugin;
+export declare const loadPlugins: (plugins: Plugin[], appDirectory: string) => any[];
+export {};

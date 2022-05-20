@@ -1,0 +1,8 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.bff_info_key = void 0;
+const bff_info_key = 'modern_bff_info';
+exports.bff_info_key = bff_info_key;

@@ -1,0 +1,8 @@
+export declare const getProjectsByWorkspaceFile: (rootPath: string, config: {
+  enableAutoFinder?: boolean;
+  workspaceFile?: string;
+}, ignoreConfigs: string[]) => Promise<import("../package").Package[]>;
+export declare const syncGetProjectsByWorkspaceFile: (rootPath: string, config: {
+  enableAutoFinder?: boolean;
+  workspaceFile?: string;
+}, ignoreConfigs: string[]) => import("../package").Package[];

@@ -1,0 +1,15 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.ZH_LOCALE = void 0;
+const ZH_LOCALE = {
+  packageName: {
+    exit: '项目名称 {value} 已存在'
+  },
+  packagePath: {
+    exit: '目录 {value} 已存在'
+  }
+};
+exports.ZH_LOCALE = ZH_LOCALE;

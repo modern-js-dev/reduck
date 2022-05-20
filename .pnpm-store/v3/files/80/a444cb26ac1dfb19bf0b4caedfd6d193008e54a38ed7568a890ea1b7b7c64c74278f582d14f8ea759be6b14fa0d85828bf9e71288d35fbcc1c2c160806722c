@@ -1,0 +1,99 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getWatchedFiles = exports.default = void 0;
+
+var _path = _interopRequireDefault(require("path"));
+
+var _utils = require("@modern-js/utils");
+
+var _dependencyTree = require("./dependency-tree");
+
+var _statsCache = require("./stats-cache");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+const getWatchedFiles = watcher => {
+  const watched = watcher.getWatched();
+  const files = [];
+  Object.keys(watched).forEach(dir => {
+    watched[dir].forEach(fileName => {
+      files.push(_path.default.join(dir, fileName));
+    });
+  });
+  return files;
+};
+
+exports.getWatchedFiles = getWatchedFiles;
+
+class Watcher {
+  constructor() {
+    _defineProperty(this, "dependencyTree", null);
+
+    _defineProperty(this, "watcher", void 0);
+  }
+
+  listen(files, options, callback) {
+    const watched = files.filter(Boolean);
+    const filenames = watched.map(filename => filename.replace(/\\/g, '/'));
+    const cache = new _statsCache.StatsCache();
+
+    const watcher = _utils.chokidar.watch(filenames, options);
+
+    watcher.on('ready', () => {
+      cache.add(getWatchedFiles(watcher));
+    });
+    watcher.on('change', changed => {
+      if (!_utils.fs.existsSync(changed) || cache.isDiff(changed)) {
+        cache.refresh(changed);
+        callback(changed);
+      }
+    });
+    watcher.on('add', changed => {
+      if (!cache.has(changed)) {
+        cache.add([changed]);
+        callback(changed);
+      }
+    });
+    watcher.on('unlink', changed => {
+      cache.del(changed);
+      callback(changed);
+    });
+    this.watcher = watcher;
+  }
+
+  createDepTree() {
+    this.dependencyTree = new _dependencyTree.DependencyTree();
+  }
+
+  updateDepTree() {
+    var _this$dependencyTree;
+
+    (_this$dependencyTree = this.dependencyTree) === null || _this$dependencyTree === void 0 ? void 0 : _this$dependencyTree.update(require.cache);
+  }
+
+  cleanDepCache(filepath) {
+    var _this$dependencyTree2;
+
+    const node = (_this$dependencyTree2 = this.dependencyTree) === null || _this$dependencyTree2 === void 0 ? void 0 : _this$dependencyTree2.getNode(filepath);
+
+    if (node && require.cache[filepath]) {
+      delete require.cache[filepath];
+
+      for (const parentNode of node.parent.values()) {
+        this.cleanDepCache(parentNode.module.filename);
+      }
+    }
+  }
+
+  close() {
+    return this.watcher.close();
+  }
+
+}
+
+exports.default = Watcher;

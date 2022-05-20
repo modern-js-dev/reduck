@@ -1,0 +1,44 @@
+import _objectSpread from "@babel/runtime/helpers/esm/objectSpread2";
+import { createStore as originCreateStore } from '@modern-js-reduck/store';
+import effectsPlugin from '@modern-js-reduck/plugin-effects';
+import autoActionsPlugin from '@modern-js-reduck/plugin-auto-actions';
+import immerPlugin from '@modern-js-reduck/plugin-immutable';
+import { MODERNJS_CONFIG_KEY } from "../constant";
+export var effects = function effects() {
+  return effectsPlugin;
+};
+export var immer = function immer() {
+  return immerPlugin;
+};
+export var autoActions = function autoActions() {
+  return autoActionsPlugin;
+};
+export var createStore = function createStore(props) {
+  var createStatePlugins = function createStatePlugins() {
+    var _modernConfig$runtime;
+
+    var modernConfig = global[MODERNJS_CONFIG_KEY];
+    var stateConfig = modernConfig === null || modernConfig === void 0 ? void 0 : (_modernConfig$runtime = modernConfig.runtime) === null || _modernConfig$runtime === void 0 ? void 0 : _modernConfig$runtime.state;
+    var plugins = [];
+
+    if ((stateConfig === null || stateConfig === void 0 ? void 0 : stateConfig.effects) !== false) {
+      plugins.push(effects());
+    }
+
+    if ((stateConfig === null || stateConfig === void 0 ? void 0 : stateConfig.autoActions) !== false) {
+      plugins.push(autoActions());
+    }
+
+    if ((stateConfig === null || stateConfig === void 0 ? void 0 : stateConfig.immer) !== false) {
+      plugins.push(immer());
+    }
+
+    return ((props === null || props === void 0 ? void 0 : props.plugins) || []).concat(plugins);
+  };
+
+  var config = _objectSpread(_objectSpread({}, props || {}), {}, {
+    plugins: createStatePlugins()
+  });
+
+  return originCreateStore(config);
+};

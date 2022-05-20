@@ -1,0 +1,78 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.render = void 0;
+
+var _path = _interopRequireDefault(require("path"));
+
+var _utils = require("@modern-js/utils");
+
+var _cookie = _interopRequireDefault(require("cookie"));
+
+var _cache = _interopRequireDefault(require("./cache"));
+
+var _measure = require("./measure");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+const render = async (ctx, renderOptions, runner) => {
+  const {
+    urlPath,
+    bundle,
+    distDir,
+    template,
+    entryName,
+    staticGenerate
+  } = renderOptions;
+
+  const bundleJS = _path.default.join(distDir, bundle);
+
+  const context = {
+    request: {
+      baseUrl: urlPath,
+      params: ctx.params,
+      pathname: ctx.path,
+      host: ctx.host,
+      query: ctx.query,
+      url: ctx.href,
+      cookieMap: _cookie.default.parse(ctx.headers.cookie || ''),
+      headers: ctx.headers
+    },
+    redirection: {},
+    template,
+    entryName,
+    distDir,
+    staticGenerate,
+    logger: undefined,
+    metrics: undefined
+  };
+  context.logger = (0, _measure.createLogger)(context, ctx.logger);
+  context.metrics = (0, _measure.createMetrics)(context, ctx.metrics);
+  runner.extendSSRContext(context);
+
+  const serverRender = require(bundleJS)[_utils.SERVER_RENDER_FUNCTION_NAME];
+
+  const html = await (0, _cache.default)(serverRender, ctx)(context);
+  const {
+    url,
+    status = 302
+  } = context.redirection;
+
+  if (url) {
+    return {
+      content: url,
+      contentType: '',
+      statusCode: status,
+      redirect: true
+    };
+  }
+
+  return {
+    content: html,
+    contentType: _utils.mime.contentType('html')
+  };
+};
+
+exports.render = render;

@@ -1,0 +1,10 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.emptyDir = void 0;
+const compiled_1 = require("./compiled");
+const emptyDir = async (dir) => {
+    if (await compiled_1.fs.pathExists(dir)) {
+        await compiled_1.fs.emptyDir(dir);
+    }
+};
+exports.emptyDir = emptyDir;

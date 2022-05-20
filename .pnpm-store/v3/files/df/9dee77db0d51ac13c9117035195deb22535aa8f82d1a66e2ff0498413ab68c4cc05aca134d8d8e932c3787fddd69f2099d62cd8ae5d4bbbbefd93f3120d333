@@ -1,0 +1,31 @@
+import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
+
+var _LanguageName;
+
+import { i18n, localeKeys } from "../locale";
+export var Language;
+
+(function (Language) {
+  Language["TS"] = "ts";
+  Language["JS"] = "js";
+})(Language || (Language = {}));
+
+export var LanguageName = (_LanguageName = {}, _defineProperty(_LanguageName, Language.TS, function () {
+  return 'TS';
+}), _defineProperty(_LanguageName, Language.JS, function () {
+  return 'ES6+';
+}), _LanguageName);
+export var LanguageSchema = {
+  key: 'language',
+  type: ['string'],
+  label: function label() {
+    return i18n.t(localeKeys.language.self);
+  },
+  mutualExclusion: true,
+  items: Object.values(Language).map(function (language) {
+    return {
+      key: language,
+      label: LanguageName[language]
+    };
+  })
+};

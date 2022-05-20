@@ -1,0 +1,26 @@
+import { I18n } from '@modern-js/plugin-i18n';
+declare const i18n: I18n;
+declare const localeKeys: {
+  command: {
+    new: {
+      describe: string;
+      debug: string;
+      config: string;
+      plugin: string;
+      distTag: string;
+      registry: string;
+    };
+  };
+} | {
+  command: {
+    new: {
+      describe: string;
+      debug: string;
+      config: string;
+      plugin: string;
+      distTag: string;
+      registry: string;
+    };
+  };
+};
+export { i18n, localeKeys };

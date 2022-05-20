@@ -1,0 +1,96 @@
+function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest(); }
+
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+
+function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+
+function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+
+function _iterableToArrayLimit(arr, i) { var _i = arr == null ? null : typeof Symbol !== "undefined" && arr[Symbol.iterator] || arr["@@iterator"]; if (_i == null) return; var _arr = []; var _n = true; var _d = false; var _s, _e; try { for (_i = _i.call(arr); !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
+
+function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
+
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+import { createStore, model } from '..';
+var count1Model = model('count1').define({
+  state: {
+    value: 1
+  },
+  actions: {
+    add: function add(state) {
+      return _objectSpread(_objectSpread({}, state), {}, {
+        value: state.value + 1
+      });
+    }
+  }
+});
+var count2Model = model('count2').define({
+  state: {
+    value: 10
+  },
+  actions: {
+    add1: function add1(state) {
+      return _objectSpread(_objectSpread({}, state), {}, {
+        value: state.value + 1
+      });
+    }
+  }
+});
+describe('test selector', function () {
+  var store = createStore();
+  test('select state should works', function () {
+    var _store$use = store.use(count1Model, count2Model, function (state1, state2) {
+      return {
+        one: state1.value,
+        two: state2.value
+      };
+    }),
+        _store$use2 = _slicedToArray(_store$use, 1),
+        state = _store$use2[0];
+
+    expect(state).toEqual({
+      one: 1,
+      two: 10
+    });
+  });
+  test('select actions should works', function () {
+    var use = function use() {
+      return store.use(count1Model, count2Model, function (state1, state2) {
+        return {
+          one: state1.value,
+          two: state2.value
+        };
+      }, function (actions1, actions2) {
+        return {
+          oneAdd: actions1.add,
+          twoAdd: actions2.add1
+        };
+      });
+    };
+
+    var _use = use(),
+        _use2 = _slicedToArray(_use, 2),
+        state = _use2[0],
+        actions = _use2[1];
+
+    expect(state).toEqual({
+      one: 1,
+      two: 10
+    });
+    actions.oneAdd();
+    expect(use()[0]).toEqual({
+      one: 2,
+      two: 10
+    });
+    actions.twoAdd();
+    expect(use()[0]).toEqual({
+      one: 2,
+      two: 11
+    });
+  });
+});

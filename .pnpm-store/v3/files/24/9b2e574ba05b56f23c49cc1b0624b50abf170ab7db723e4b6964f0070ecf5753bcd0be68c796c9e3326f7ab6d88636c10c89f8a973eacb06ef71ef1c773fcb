@@ -1,0 +1,9 @@
+import { isBrowser } from '@modern-js/utils';
+import { createRequest as browser } from "./browser";
+import { createRequest as node } from "./node";
+
+var createRequest = function createRequest() {
+  return isBrowser() ? browser.apply(void 0, arguments) : node.apply(void 0, arguments);
+};
+
+export default createRequest;

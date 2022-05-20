@@ -1,0 +1,56 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.canUseNpm = canUseNpm;
+exports.canUseNvm = canUseNvm;
+exports.canUsePnpm = canUsePnpm;
+exports.canUseYarn = canUseYarn;
+
+var _utils = require("@modern-js/utils");
+
+async function canUseNvm() {
+  try {
+    await (0, _utils.execa)('nvm --version', {
+      env: process.env,
+      shell: true
+    });
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+async function canUseNpm() {
+  try {
+    await (0, _utils.execa)('npm', ['--version'], {
+      env: process.env
+    });
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+async function canUseYarn() {
+  try {
+    await (0, _utils.execa)('yarn', ['--version'], {
+      env: process.env
+    });
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+async function canUsePnpm() {
+  try {
+    await (0, _utils.execa)('pnpm', ['--version'], {
+      env: process.env
+    });
+    return true;
+  } catch (e) {
+    return false;
+  }
+}

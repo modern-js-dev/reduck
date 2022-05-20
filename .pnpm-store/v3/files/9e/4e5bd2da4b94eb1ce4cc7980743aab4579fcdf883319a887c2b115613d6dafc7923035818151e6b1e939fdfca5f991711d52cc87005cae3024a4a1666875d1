@@ -1,0 +1,15 @@
+export interface TransformOption {
+  filename: string;
+  baseUrl: string;
+  paths: Record<string, string[] | string>;
+}
+interface TransformDtsAliasOption {
+  filenames?: string[];
+  baseUrl: string;
+  paths: Record<string, string[] | string>;
+}
+export declare const transformDtsAlias: (option: TransformDtsAliasOption) => {
+  path: string;
+  content: string;
+}[];
+export {};

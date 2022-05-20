@@ -1,0 +1,12 @@
+import type { NormalizedConfig } from '@modern-js/core';
+export interface IValideOption {
+  modernConfig: NormalizedConfig;
+  tsconfigPath: string;
+}
+export declare const valideBeforeTask: ({
+  modernConfig,
+  tsconfigPath
+}: IValideOption) => void;
+export declare const modernConfigValid: (modernConfig: NormalizedConfig, option: {
+  tsconfigPath: string;
+}) => string | null;

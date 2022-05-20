@@ -1,0 +1,128 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.runBuildTask = exports.runAllBuildTask = void 0;
+
+var _os = _interopRequireDefault(require("os"));
+
+var _utils = require("@modern-js/utils");
+
+var _checkProjectChange = require("../../projects/check-project-change");
+
+var _error = require("../../log/error");
+
+var _multiTasksLog = require("../../log/multi-tasks-log");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+const createTask = (config, taskCmds = defaultBuildCmds, taskLogger) => {
+  const {
+    rootPath,
+    packageManager,
+    disableContentHash = false,
+    enableGitHash = false
+  } = config;
+
+  const task = async project => {
+    console.info('run ', project.name); // const taskTimeLog = timeLog.initTimeLog({ scope: '' });
+
+    if (!disableContentHash) {
+      const changed = await (0, _checkProjectChange.checkProjectChangeByContent)(project);
+
+      if (!changed) {
+        console.info(`${project.name} content not change, skip`);
+        return;
+      }
+    }
+
+    if (enableGitHash) {
+      const changed = await (0, _checkProjectChange.checkProjectChangeByGit)(project, rootPath);
+
+      if (!changed) {
+        console.info(`${project.name} not change, skip`);
+        return;
+      }
+
+      console.info(`${project.name} have changed in git history`);
+    }
+
+    const cmd = project.extra.scripts || {};
+
+    for (const taskCmd of taskCmds) {
+      if (cmd[taskCmd]) {
+        const prefix = `run ${project.name} ${taskCmd} script`; // timeLog.startTime(taskTimeLog, prefix);
+
+        _utils.signale.time(prefix);
+
+        try {
+          const childProcess = (0, _utils.execa)(packageManager, [taskCmd], {
+            cwd: project.extra.path,
+            stdio: ['pipe', 'pipe', 'pipe']
+          });
+          taskLogger.addLogProvider(project.name, {
+            stdout: childProcess.stdout,
+            stderr: childProcess.stderr,
+            logConfig: {
+              label: 'BUILD: '
+            }
+          });
+          await childProcess; // timeLog.endTime(taskTimeLog, prefix);
+
+          _utils.signale.timeEnd(prefix);
+        } catch (e) {
+          (0, _error.errorLog)(project.name, e.message);
+        }
+      } else {
+        console.info(`${project.name} not have ${taskCmd}, skip it.`);
+      }
+    }
+  };
+
+  return task;
+};
+
+const defaultBuildCmds = ['build'];
+
+const runBuildTask = async (projectName, operator, config, taskCmds = defaultBuildCmds) => {
+  const {
+    withSelf = true,
+    onlySelf = false,
+    disableWithDeps = false,
+    withDept = false
+  } = config;
+  const taskLogger = new _multiTasksLog.MultitasksLogger();
+  const task = createTask(config, taskCmds, taskLogger); // 优先级 onlySelf > withDept、disableWithDeps
+
+  if (onlySelf) {
+    await task(operator.getNodeData(projectName, {
+      checkExist: true
+    }));
+  } else if (!disableWithDeps && withDept) {
+    await operator.traverseDependenciesToProjectToDependent(projectName, task, {
+      withSelf,
+      runTaskConcurrency: _os.default.cpus().length
+    });
+  } else if (disableWithDeps && withDept) {
+    await operator.traverseProjectToDependent(projectName, task, {
+      withSelf,
+      runTaskConcurrency: _os.default.cpus().length
+    });
+  } else {
+    operator.traverseDependenciesToProject(projectName, task, {
+      withSelf,
+      runTaskConcurrency: _os.default.cpus().length
+    });
+  }
+};
+
+exports.runBuildTask = runBuildTask;
+
+const runAllBuildTask = async (operator, config, taskCmds = defaultBuildCmds) => {
+  const taskLogger = new _multiTasksLog.MultitasksLogger();
+  const task = createTask(config, taskCmds, taskLogger);
+  await operator.traverseAllNodes(task);
+};
+
+exports.runAllBuildTask = runAllBuildTask;

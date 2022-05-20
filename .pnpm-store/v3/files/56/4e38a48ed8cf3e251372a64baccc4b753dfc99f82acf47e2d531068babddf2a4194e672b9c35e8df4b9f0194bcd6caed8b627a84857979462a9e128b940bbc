@@ -1,0 +1,124 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.createDevTask = exports.createDependenciesTask = void 0;
+
+var _utils = require("@modern-js/utils");
+
+var _error = require("../../log/error");
+
+var timeLog = _interopRequireWildcard(require("../../log/time"));
+
+var _cmds = require("./cmds");
+
+function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
+
+function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+
+const getFinalTaskCmds = (taskCmds, project) => {
+  let finalTaskCmds = []; // case1: ["build"]
+  // case2: ["dev", "build"]
+  // case3: ["dev", () => []]
+  // default: ['dev', 'build']
+
+  if (taskCmds.length === 1) {
+    finalTaskCmds = [taskCmds[0]];
+  } else if (taskCmds.length === 2 && typeof taskCmds[0] === 'string' && typeof taskCmds[1] === 'string') {
+    finalTaskCmds = [taskCmds[1]];
+  } else if (taskCmds.length === 2 && typeof taskCmds[0] === 'string' && typeof taskCmds[1] === 'function') {
+    finalTaskCmds = taskCmds[1](project);
+  } else {
+    // 如果以上为满足，则默认使用build
+    finalTaskCmds = ['build'];
+  }
+
+  return finalTaskCmds;
+};
+
+const createDependenciesTask = (config, taskCmds = _cmds.defaultBuildWatchCmds, taskLogger) => {
+  const {
+    packageManager
+  } = config;
+  const timelogInstance = timeLog.initTimeLog();
+
+  const task = async project => {
+    const finalTaskCmds = getFinalTaskCmds(taskCmds, project);
+    const cmd = project.extra.scripts || {};
+
+    for (const taskCmd of finalTaskCmds) {
+      if (cmd[taskCmd]) {
+        const prefix = `run ${project.name} ${taskCmd} script`;
+        timeLog.startTime(timelogInstance, prefix);
+
+        try {
+          const childProcess = (0, _utils.execa)(packageManager, [taskCmd], {
+            cwd: project.extra.path,
+            stdio: ['pipe', 'pipe', 'pipe']
+          });
+          taskLogger.addLogProvider(project.name, {
+            stdout: childProcess.stdout,
+            stderr: childProcess.stderr,
+            logConfig: {
+              label: 'WATCH: '
+            }
+          });
+          await childProcess;
+        } catch (e) {
+          (0, _error.errorLog)(project.name, e);
+        }
+
+        timeLog.endTime(timelogInstance, prefix);
+      } else {
+        _utils.logger.info(`${project.name} not have ${taskCmd}, skip it.`);
+      }
+    }
+  };
+
+  return task;
+};
+
+exports.createDependenciesTask = createDependenciesTask;
+
+const createDevTask = (config, taskCmds = _cmds.defaultBuildWatchCmds, taskLogger) => {
+  const {
+    packageManager
+  } = config;
+
+  const task = async project => {
+    const devCmds = [taskCmds[0]];
+    const cmd = project.extra.scripts || {};
+
+    for (const taskCmd of devCmds) {
+      if (cmd[taskCmd]) {
+        // const prefix = `run ${project.name} ${taskCmd} script`;
+        // log.info(prefix);
+        try {
+          const childProcess = (0, _utils.execa)(packageManager, [taskCmd], {
+            cwd: project.extra.path,
+            stdio: 'pipe',
+            all: true
+          });
+          taskLogger.addLogProvider(project.name, {
+            stdout: childProcess.stdout,
+            stderr: childProcess.stderr,
+            logConfig: {
+              label: `${taskCmd.toUpperCase()}: `
+            }
+          });
+          const ret = await childProcess;
+          console.info(ret);
+        } catch (e) {
+          (0, _error.errorLog)(project.name, e);
+        }
+      } else {
+        _utils.logger.info(`${project.name} not have ${taskCmd}, skip it.`);
+      }
+    }
+  };
+
+  return task;
+};
+
+exports.createDevTask = createDevTask;

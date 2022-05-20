@@ -1,0 +1,15 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.EN_LOCALE = void 0;
+const EN_LOCALE = {
+  packageName: {
+    exit: 'package name `{value}` is already exists'
+  },
+  packagePath: {
+    exit: 'package path {value} is already exists'
+  }
+};
+exports.EN_LOCALE = EN_LOCALE;

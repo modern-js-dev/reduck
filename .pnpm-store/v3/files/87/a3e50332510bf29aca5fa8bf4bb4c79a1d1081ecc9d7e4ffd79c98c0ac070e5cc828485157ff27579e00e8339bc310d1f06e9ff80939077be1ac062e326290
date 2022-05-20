@@ -1,0 +1,28 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.readTsConfig = exports.existTsConfigFile = void 0;
+
+var _utils = require("@modern-js/utils");
+
+const readTsConfig = (tsconfigPath, noExistReturn = null) => {
+  // 如果不存在，则返回 noExistReturn
+  if (!_utils.fs.existsSync(tsconfigPath)) {
+    return noExistReturn;
+  }
+
+  const content = _utils.fs.readFileSync(tsconfigPath, 'utf-8');
+
+  return _utils.json5.parse(content);
+};
+
+exports.readTsConfig = readTsConfig;
+
+const existTsConfigFile = tsconfigAbsolutePath => {
+  const tsconfig = readTsConfig(tsconfigAbsolutePath);
+  return Boolean(tsconfig);
+};
+
+exports.existTsConfigFile = existTsConfigFile;

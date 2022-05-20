@@ -1,0 +1,13 @@
+export declare const findMonorepoRoot: (starFindPath: string) => string | undefined;
+export declare const getWorkspaceFile: (startFindPath: string) => string;
+export declare type PackageManagerType = 'pnpm' | 'yarn' | 'npm';
+export declare const packageManagerFlag: {
+  pnpm: string[];
+  yarn: (string | ((monorepoRootPath: string) => boolean))[];
+  npm: (() => boolean)[];
+};
+export declare const getPackageManager: (monorepoRootPath: string) => PackageManagerType;
+export declare const getMonorepoBaseData: (root?: string) => {
+  rootPath: string;
+  packageManager: PackageManagerType;
+};

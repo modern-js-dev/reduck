@@ -1,0 +1,102 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.cacheAddition = cacheAddition;
+exports.connectFactor = connectFactor;
+exports.fname = fname;
+exports.getTime = getTime;
+exports.maybeSync = maybeSync;
+exports.namespaceHash = namespaceHash;
+exports.valueFactory = valueFactory;
+exports.withCoalescedInvoke = withCoalescedInvoke;
+
+var _url = _interopRequireDefault(require("url"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function namespaceHash(namespace, hash) {
+  return `${namespace}/${hash}`;
+}
+
+function fname(lv) {
+  return `f${lv}`;
+}
+
+function connectFactor(...args) {
+  return args.join('-');
+}
+
+function valueFactory(obj) {
+  if (obj instanceof _url.default.URLSearchParams) {
+    return function (key) {
+      return obj.get(key);
+    };
+  } else {
+    return function (key) {
+      const value = obj[key];
+
+      if (Array.isArray(value)) {
+        return value.join(',');
+      }
+
+      return value;
+    };
+  }
+}
+
+function getTime([s, ns]) {
+  return Math.floor(s * 1e3 + ns / 1e6);
+}
+
+const RE_START_IN_HEAD = /<head>/;
+
+function cacheAddition(html, hash) {
+  const additionHtml = html.replace(RE_START_IN_HEAD, `<head><meta name="x-moden-spr" content="${hash}">`);
+  return additionHtml;
+}
+
+const globalInvokeCache = new Map();
+
+function withCoalescedInvoke(func) {
+  return async function (key, args) {
+    const entry = globalInvokeCache.get(key);
+
+    if (entry) {
+      return entry.then(res => ({
+        isOrigin: false,
+        value: res.value
+      }));
+    }
+
+    function __wrapper() {
+      return func(...args);
+    }
+
+    const future = __wrapper().then(res => {
+      globalInvokeCache.delete(key);
+      return {
+        isOrigin: true,
+        value: res
+      };
+    }).catch(err => {
+      globalInvokeCache.delete(key);
+      throw err;
+    });
+
+    globalInvokeCache.set(key, future);
+    return future;
+  };
+}
+
+function maybeSync(fn) {
+  return sync => {
+    if (sync) {
+      return fn();
+    } else {
+      fn();
+      return Promise.resolve();
+    }
+  };
+}

@@ -1,0 +1,224 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.useRuntimeContext = exports.createApp = exports.bootstrap = void 0;
+
+var _react = _interopRequireWildcard(require("react"));
+
+var _reactDom = _interopRequireDefault(require("react-dom"));
+
+var _hoistNonReactStatics = _interopRequireDefault(require("hoist-non-react-statics"));
+
+var _plugin = require("@modern-js/plugin");
+
+var _plugin2 = require("./plugin");
+
+var _runtimeContext = require("./runtime-context");
+
+var _loaderManager = require("./loader/loaderManager");
+
+var _jsxRuntime = require("react/jsx-runtime");
+
+const _excluded = ["context"];
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
+
+function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+
+function _objectWithoutProperties(source, excluded) { if (source == null) return {}; var target = _objectWithoutPropertiesLoose(source, excluded); var key, i; if (Object.getOwnPropertySymbols) { var sourceSymbolKeys = Object.getOwnPropertySymbols(source); for (i = 0; i < sourceSymbolKeys.length; i++) { key = sourceSymbolKeys[i]; if (excluded.indexOf(key) >= 0) continue; if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue; target[key] = source[key]; } } return target; }
+
+function _objectWithoutPropertiesLoose(source, excluded) { if (source == null) return {}; var target = {}; var sourceKeys = Object.keys(source); var key, i; for (i = 0; i < sourceKeys.length; i++) { key = sourceKeys[i]; if (excluded.indexOf(key) >= 0) continue; target[key] = source[key]; } return target; }
+
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+const runnerMap = new WeakMap();
+
+const createApp = ({
+  plugins
+}) => {
+  const appRuntime = _plugin2.runtime.clone();
+
+  appRuntime.usePlugin(...plugins);
+  return App => {
+    const runner = appRuntime.init({});
+    const container = (0, _plugin.createContainer)({
+      App: _plugin2.AppComponentContext.create(App)
+    });
+
+    const WrapperComponent = props => {
+      const element = /*#__PURE__*/_react.default.createElement(App || _react.default.Fragment, _objectSpread({}, props), props.children);
+
+      const context = (0, _react.useContext)(_runtimeContext.RuntimeReactContext);
+      return runner.provide({
+        element,
+        props: _objectSpread({}, props),
+        context
+      }, {
+        container,
+        onLast: ({
+          element
+        }) => element
+      });
+    };
+
+    if (App) {
+      (0, _hoistNonReactStatics.default)(WrapperComponent, App);
+    }
+
+    const HOCApp = runner.hoc({
+      App: WrapperComponent
+    }, {
+      container,
+      onLast: ({
+        App
+      }) => {
+        const WrapComponent = _ref => {
+          let {
+            context
+          } = _ref,
+              props = _objectWithoutProperties(_ref, _excluded);
+
+          let contextValue = context;
+
+          if (!contextValue) {
+            contextValue = {
+              loaderManager: (0, _loaderManager.createLoaderManager)({}),
+              runner
+            };
+            runner.init({
+              context: contextValue
+            }, {
+              onLast: ({
+                context: context1
+              }) => {
+                var _App$init;
+
+                return App === null || App === void 0 ? void 0 : (_App$init = App.init) === null || _App$init === void 0 ? void 0 : _App$init.call(App, context1);
+              }
+            });
+          }
+
+          return /*#__PURE__*/(0, _jsxRuntime.jsx)(_runtimeContext.RuntimeReactContext.Provider, {
+            value: contextValue,
+            children: /*#__PURE__*/(0, _jsxRuntime.jsx)(App, _objectSpread({}, props))
+          });
+        };
+
+        return (0, _hoistNonReactStatics.default)(WrapComponent, App);
+      }
+    });
+    runnerMap.set(HOCApp, runner);
+    return HOCApp;
+  };
+};
+
+exports.createApp = createApp;
+
+const bootstrap = async (BootApp, id) => {
+  let App = BootApp;
+  let runner = runnerMap.get(App); // ensure Component used is created by `createApp`
+
+  if (!runner) {
+    App = createApp({
+      plugins: []
+    })(App);
+    runner = runnerMap.get(App);
+  }
+
+  const context = {
+    loaderManager: (0, _loaderManager.createLoaderManager)({}),
+    runner,
+    isBrowser: true
+  };
+
+  const runInit = _context => runner.init({
+    context: _context
+  }, {
+    onLast: ({
+      context: context1
+    }) => {
+      var _App, _App$init2;
+
+      return (_App = App) === null || _App === void 0 ? void 0 : (_App$init2 = _App.init) === null || _App$init2 === void 0 ? void 0 : _App$init2.call(_App, context1);
+    }
+  });
+
+  if (typeof window !== 'undefined') {
+    var _ssrData$data;
+
+    const ssrData = window._SSR_DATA;
+    const loadersData = (ssrData === null || ssrData === void 0 ? void 0 : (_ssrData$data = ssrData.data) === null || _ssrData$data === void 0 ? void 0 : _ssrData$data.loadersData) || {};
+    const initialLoadersState = Object.keys(loadersData).reduce((res, key) => {
+      const loaderData = loadersData[key];
+
+      if (loaderData.loading !== false) {
+        return res;
+      }
+
+      res[key] = loaderData;
+      return res;
+    }, {});
+    Object.assign(context, _objectSpread({
+      loaderManager: (0, _loaderManager.createLoaderManager)(initialLoadersState, {
+        skipStatic: true
+      })
+    }, ssrData ? {
+      ssrContext: ssrData === null || ssrData === void 0 ? void 0 : ssrData.context
+    } : {}));
+    await runInit(context);
+    return runner.client({
+      App,
+      context,
+      rootElement: typeof id !== 'string' ? id : document.getElementById(id || 'root')
+    }, {
+      onLast: async ({
+        App,
+        rootElement
+      }) => {
+        _reactDom.default.render( /*#__PURE__*/_react.default.createElement(App, {
+          context
+        }), rootElement);
+      }
+    });
+  }
+
+  Object.assign(context, {
+    ssrContext: id,
+    isBrowser: false,
+    loaderManager: (0, _loaderManager.createLoaderManager)({}, {
+      skipNonStatic: id.staticGenerate,
+      // if not static generate, only non-static loader can exec on prod env
+      skipStatic: process.env.NODE_ENV === 'production' && !id.staticGenerate
+    })
+  });
+  await runInit(context);
+  return runner.server({
+    App,
+    context
+  });
+};
+
+exports.bootstrap = bootstrap;
+
+const useRuntimeContext = () => {
+  const context = (0, _react.useContext)(_runtimeContext.RuntimeReactContext);
+  const memoizedContext = (0, _react.useMemo)(() => context.runner.pickContext({
+    context,
+    pickedContext: {}
+  }, {
+    onLast: ({
+      pickedContext
+    }) => pickedContext
+  }), [context]);
+  return memoizedContext;
+};
+
+exports.useRuntimeContext = useRuntimeContext;

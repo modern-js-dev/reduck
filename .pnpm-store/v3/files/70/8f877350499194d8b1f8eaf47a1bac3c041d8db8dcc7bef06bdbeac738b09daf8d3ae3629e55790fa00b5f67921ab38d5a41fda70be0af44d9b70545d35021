@@ -1,0 +1,2 @@
+import type { IFinaleCompilerOptions, BabelOptions, ICompilerResult } from './type';
+export declare const build: (option: IFinaleCompilerOptions, babelConfig?: BabelOptions) => Promise<ICompilerResult>;

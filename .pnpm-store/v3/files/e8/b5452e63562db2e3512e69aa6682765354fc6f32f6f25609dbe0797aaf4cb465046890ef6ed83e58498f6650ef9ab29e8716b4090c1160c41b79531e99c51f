@@ -1,0 +1,37 @@
+import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
+
+var _PackageManagerName;
+
+import { i18n, localeKeys } from "../locale";
+export var PackageManager;
+
+(function (PackageManager) {
+  PackageManager["Pnpm"] = "pnpm";
+  PackageManager["Yarn"] = "yarn";
+  PackageManager["Npm"] = "npm";
+})(PackageManager || (PackageManager = {}));
+
+export var PackageManagerName = (_PackageManagerName = {}, _defineProperty(_PackageManagerName, PackageManager.Pnpm, function () {
+  return 'pnpm';
+}), _defineProperty(_PackageManagerName, PackageManager.Yarn, function () {
+  return 'Yarn';
+}), _defineProperty(_PackageManagerName, PackageManager.Npm, function () {
+  return 'npm';
+}), _PackageManagerName);
+export var PackageManagerSchema = {
+  key: 'packageManager',
+  type: ['string'],
+  label: function label() {
+    return i18n.t(localeKeys.packageManager.self);
+  },
+  mutualExclusion: true,
+  when: function when(_values, extra) {
+    return !(extra !== null && extra !== void 0 && extra.isMonorepoSubProject);
+  },
+  items: Object.values(PackageManager).map(function (packageManager) {
+    return {
+      key: packageManager,
+      label: PackageManagerName[packageManager]
+    };
+  })
+};

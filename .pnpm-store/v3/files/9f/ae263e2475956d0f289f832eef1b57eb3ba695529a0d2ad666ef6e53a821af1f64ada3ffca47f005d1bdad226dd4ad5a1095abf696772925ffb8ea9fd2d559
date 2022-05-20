@@ -1,0 +1,2 @@
+import { chalk } from '@modern-js/utils';
+export declare const devMenuTitle: chalk.Chalk;

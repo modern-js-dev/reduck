@@ -1,0 +1,7 @@
+import type { DagOperator } from '../dag/operator';
+export declare const hooks: {
+  afterMonorepoDeploy: import("@modern-js/plugin").AsyncWorkflow<{
+    operator: DagOperator;
+    deployProjectNames: string[];
+  }, void>;
+};

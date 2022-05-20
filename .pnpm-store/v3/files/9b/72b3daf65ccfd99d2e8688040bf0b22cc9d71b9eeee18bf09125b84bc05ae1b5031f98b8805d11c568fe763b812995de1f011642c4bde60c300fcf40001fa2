@@ -1,0 +1,17 @@
+import type { Plugin } from '@modern-js/runtime-core';
+import { RenderLevel, SSRServerContext } from './serverRender/type';
+declare module '@modern-js/runtime-core' {
+  interface RuntimeContext {
+    ssrContext: SSRServerContext;
+  }
+  interface TRuntimeContext {
+    request: SSRServerContext['request'];
+  }
+  interface SSRContainer {
+    renderLevel: RenderLevel;
+    context?: SSRServerContext;
+  }
+}
+declare const ssr: () => Plugin;
+export default ssr;
+export * from './react';

@@ -1,0 +1,1 @@
+const foo = /(?<foo>x)\k<foo>\1/;

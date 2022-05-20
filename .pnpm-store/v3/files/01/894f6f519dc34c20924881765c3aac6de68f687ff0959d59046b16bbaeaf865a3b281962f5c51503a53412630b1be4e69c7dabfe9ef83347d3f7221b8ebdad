@@ -1,0 +1,8 @@
+export declare const getAllAPIInfos: (appDir: string, prefix?: string) => {
+  handler: (...args: any) => any;
+  method: string;
+  routePath: string;
+  apiFile: string;
+  name: string;
+}[];
+export declare const isBFFProject: (pwd: string) => boolean;

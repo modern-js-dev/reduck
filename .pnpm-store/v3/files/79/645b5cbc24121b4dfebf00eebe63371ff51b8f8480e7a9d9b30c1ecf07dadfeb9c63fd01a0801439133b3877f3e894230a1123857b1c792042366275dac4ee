@@ -1,0 +1,109 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.loadPlugins = exports.getAppPlugins = void 0;
+const utils_1 = require("@modern-js/utils");
+const manager_1 = require("./manager");
+const debug = (0, utils_1.createDebugger)('load-plugins');
+/**
+ * Try to resolve plugin entry file path.
+ * @param name - Plugin name.
+ * @param appDirectory - Application root directory.
+ * @returns Resolved file path.
+ */
+const tryResolve = (name, appDirectory) => {
+    let filePath = '';
+    try {
+        filePath = require.resolve(name, { paths: [appDirectory] });
+        delete require.cache[filePath];
+    }
+    catch (err) {
+        if (err.code === 'MODULE_NOT_FOUND') {
+            throw new Error(`Can not find plugin ${name}.`);
+        }
+        throw err;
+    }
+    return filePath;
+};
+function getAppPlugins(appDirectory, oldPluginConfig, internalPlugins) {
+    const allPlugins = internalPlugins || utils_1.INTERNAL_PLUGINS;
+    const appPlugins = [
+        ...Object.keys(allPlugins)
+            .filter(name => {
+            const config = allPlugins[name];
+            if (config.forced === true) {
+                // 参考 packages/cli/core/src/cli.ts 文件
+                return true;
+            }
+            return (0, utils_1.isDepExists)(appDirectory, name);
+        })
+            .map(name => allPlugins[name]),
+        ...oldPluginConfig,
+    ];
+    return appPlugins;
+}
+exports.getAppPlugins = getAppPlugins;
+const resolveCliPlugin = (p, userConfig, appDirectory, transformPlugin) => {
+    const pkg = typeof p === 'string' ? p : p[0];
+    const pluginOptions = typeof p === 'string' ? undefined : p[1];
+    const path = tryResolve(pkg, appDirectory);
+    let module = (0, utils_1.compatRequire)(path);
+    if (transformPlugin) {
+        module = transformPlugin(module, userConfig, pluginOptions);
+    }
+    if (typeof module === 'function') {
+        const result = module(pluginOptions);
+        return (0, manager_1.createPlugin)(result.setup, result);
+    }
+    return module;
+};
+const isOldPluginConfig = (config) => Array.isArray(config) &&
+    config.some(item => {
+        if (typeof item === 'string' || Array.isArray(item)) {
+            return true;
+        }
+        return 'cli' in item || 'server' in item;
+    });
+/**
+ * Load internal plugins which in @modern-js scope and user's custom plugins.
+ * @param appDirectory - Application root directory.
+ * @param userConfig - Resolved user config.
+ * @param options.internalPlugins - Internal plugins.
+ * @param options.transformPlugin - transform plugin before using it. Used for compatible with legacy jupiter plugins.
+ * @returns Plugin Objects has been required.
+ */
+const loadPlugins = (appDirectory, userConfig, options = {}) => {
+    const pluginConfig = userConfig.plugins;
+    const plugins = getAppPlugins(appDirectory, isOldPluginConfig(pluginConfig) ? pluginConfig : [], options.internalPlugins);
+    const loadedPlugins = plugins.map(plugin => {
+        const _plugin = typeof plugin === 'string' || Array.isArray(plugin)
+            ? { cli: plugin }
+            : plugin;
+        const { cli, server } = _plugin;
+        const loadedPlugin = {};
+        if (cli) {
+            loadedPlugin.cli = resolveCliPlugin(cli, userConfig, appDirectory, options.transformPlugin);
+        }
+        // server plugins don't support to accept params
+        if (server && typeof server === 'string') {
+            loadedPlugin.server = server;
+            loadedPlugin.serverPkg = server;
+        }
+        debug(`resolve plugin %s: %s`, plugin, {
+            cli: loadedPlugin.cli,
+            server: loadedPlugin.server,
+        });
+        return loadedPlugin;
+    });
+    if (!isOldPluginConfig(pluginConfig)) {
+        const cliPlugins = Array.isArray(pluginConfig)
+            ? pluginConfig
+            : pluginConfig === null || pluginConfig === void 0 ? void 0 : pluginConfig.cli;
+        if (cliPlugins === null || cliPlugins === void 0 ? void 0 : cliPlugins.length) {
+            loadedPlugins.push(...cliPlugins.map(item => ({
+                cli: (0, manager_1.createPlugin)(item.setup, item),
+            })));
+        }
+    }
+    return loadedPlugins;
+};
+exports.loadPlugins = loadPlugins;

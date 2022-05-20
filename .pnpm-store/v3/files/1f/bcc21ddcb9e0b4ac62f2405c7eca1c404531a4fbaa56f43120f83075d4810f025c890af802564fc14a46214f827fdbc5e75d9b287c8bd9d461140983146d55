@@ -1,0 +1,11 @@
+import { transformStyle } from './build';
+import { BuildWatchEmitter } from './build-watch';
+import type { IBuildOption } from './types';
+export * from './types';
+export declare function styleCompiler(option: IBuildOption & {
+  watch?: false;
+}): ReturnType<typeof transformStyle>;
+export declare function styleCompiler(option: IBuildOption & {
+  watch: true;
+}): BuildWatchEmitter;
+export { BuildWatchEvent } from './build-watch';

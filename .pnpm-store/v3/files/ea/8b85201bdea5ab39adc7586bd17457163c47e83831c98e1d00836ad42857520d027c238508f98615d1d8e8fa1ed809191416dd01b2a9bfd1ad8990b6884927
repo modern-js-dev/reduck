@@ -1,0 +1,33 @@
+import { Plugin } from './plugin';
+export declare const initialRuntime: (plugins: Plugin[], manager?: import("@modern-js/plugin").Manager<{
+  hoc: import("@modern-js/plugin").Pipeline<{
+    App: import("react").ComponentType<any>;
+  }, import("react").ComponentType<any>>;
+  provide: import("@modern-js/plugin").Pipeline<{
+    element: JSX.Element;
+    readonly props: import("./plugin").AppProps;
+    readonly context: import("./runtime-context").RuntimeContext;
+  }, JSX.Element>;
+  client: import("@modern-js/plugin").AsyncPipeline<{
+    App: import("react").ComponentType<any>;
+    readonly context?: import("./runtime-context").RuntimeContext | undefined;
+    rootElement: HTMLElement;
+  }, void>;
+  server: import("@modern-js/plugin").AsyncPipeline<{
+    App: import("react").ComponentType<any>;
+    readonly context?: import("./runtime-context").RuntimeContext | undefined;
+  }, string>;
+  init: import("@modern-js/plugin").AsyncPipeline<{
+    context: import("./runtime-context").RuntimeContext;
+  }, unknown>;
+  pickContext: import("@modern-js/plugin").Pipeline<{
+    context: import("./runtime-context").RuntimeContext;
+    pickedContext: import("./runtime-context").TRuntimeContext;
+  }, import("./runtime-context").TRuntimeContext>;
+}, Record<string, never>>) => {
+  wrap: <P = Record<string, unknown>>(App: import("react").ComponentType<P>, config: import("./wrap").WrapOptions) => import("react").ComponentType<any>;
+  render: {
+    clientRender: (props: import("./render").RenderProps, rootElement: HTMLElement) => import("@modern-js/plugin").MaybeAsync<void>;
+    serverRender: (props: import("./render").RenderProps) => import("@modern-js/plugin").MaybeAsync<string>;
+  };
+};

@@ -1,0 +1,2 @@
+import type { Command } from '@modern-js/utils';
+export declare const newCli: (program: Command, locale?: string | undefined) => void;

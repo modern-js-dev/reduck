@@ -1,0 +1,10 @@
+import { ICompilerOptions, ICompilerResult, BabelOptions } from './type';
+import { BuildWatchEmitter } from './buildWatch';
+export declare function compiler(compilerOptions: ICompilerOptions & {
+  enableWatch: true;
+}, babelOptions?: BabelOptions): Promise<BuildWatchEmitter>;
+export declare function compiler(compilerOptions: ICompilerOptions & {
+  enableWatch?: false;
+}, babelOptions?: BabelOptions): Promise<ICompilerResult>;
+export * from './buildWatch';
+export * from './type';

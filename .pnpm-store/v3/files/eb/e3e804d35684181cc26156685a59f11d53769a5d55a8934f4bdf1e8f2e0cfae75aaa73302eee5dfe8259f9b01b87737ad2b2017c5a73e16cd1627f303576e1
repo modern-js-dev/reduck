@@ -1,0 +1,64 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.prettyInstructions = exports.isSingleEntry = void 0;
+const os_1 = __importDefault(require("os"));
+const compiled_1 = require("./compiled");
+const is_1 = require("./is");
+// TODO: remove hard code 'main'
+const isSingleEntry = (entrypoints) => entrypoints.length === 1 && entrypoints[0].entryName === 'main';
+exports.isSingleEntry = isSingleEntry;
+const normalizeUrl = (url) => url.replace(/([^:]\/)\/+/g, '$1');
+const getAddressUrls = (protocol = 'http', port) => {
+    const interfaces = os_1.default.networkInterfaces();
+    const ipv4Interfaces = [];
+    Object.keys(interfaces).forEach(key => {
+        interfaces[key].forEach(detail => {
+            if (detail.family === 'IPv4') {
+                ipv4Interfaces.push(detail);
+            }
+        });
+    });
+    return ipv4Interfaces.reduce((memo, detail) => {
+        let type = 'Network:  ';
+        let url = `${protocol}://${detail.address}:${port}`;
+        if (detail.address.includes(`localhost`)) {
+            type = 'Local:  ';
+            url = `${protocol}://localhost:${port}`;
+        }
+        memo.push({ type, url });
+        return memo;
+    }, []);
+};
+const prettyInstructions = (appContext, config) => {
+    const { entrypoints, serverRoutes, port, apiOnly, checkedEntries } = appContext;
+    const urls = getAddressUrls(config.dev.https && (0, is_1.isDev)() ? 'https' : 'http', port);
+    const routes = !apiOnly
+        ? serverRoutes.filter(route => route.entryName)
+        : serverRoutes;
+    let message = 'App running at:\n\n';
+    if ((0, exports.isSingleEntry)(entrypoints) || apiOnly) {
+        message += urls
+            .map(({ type, url }) => `  ${compiled_1.chalk.bold(`> ${type.padEnd(10)}`)}${compiled_1.chalk.cyanBright(normalizeUrl(`${url}/${routes[0].urlPath}`))}\n`)
+            .join('');
+    }
+    else {
+        const maxNameLength = Math.max(...routes.map(r => r.entryName.length));
+        urls.forEach(({ type, url }) => {
+            message += `  ${compiled_1.chalk.bold(`> ${type}`)}\n`;
+            routes.forEach(({ entryName, urlPath, isSSR }) => {
+                if (!checkedEntries.includes(entryName)) {
+                    return;
+                }
+                message += `    ${compiled_1.chalk.yellowBright(isSSR ? 'λ' : '○')}  ${compiled_1.chalk.yellowBright(entryName.padEnd(maxNameLength + 8))}${compiled_1.chalk.cyanBright(normalizeUrl(`${url}/${urlPath}`))}\n`;
+            });
+        });
+        message += '\n';
+        message += compiled_1.chalk.cyanBright('  λ (Server) server-side renders at runtime\n');
+        message += compiled_1.chalk.cyanBright('  ○ (Static) client-side renders as static HTML\n');
+    }
+    return message;
+};
+exports.prettyInstructions = prettyInstructions;

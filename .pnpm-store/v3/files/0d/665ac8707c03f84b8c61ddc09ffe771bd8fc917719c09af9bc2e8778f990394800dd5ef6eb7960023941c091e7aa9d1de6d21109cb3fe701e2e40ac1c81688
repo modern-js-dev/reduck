@@ -1,0 +1,72 @@
+import { ToThreads, ToRunners, AsyncSetup, PluginOptions, AsyncWorkflow, AsyncWaterfall, ParallelWorkflow } from '@modern-js/plugin';
+import type { Hooks } from '@modern-js/types';
+import type { Command } from './utils/commander';
+import type { NormalizedConfig } from './config/mergeConfig';
+import type { UserConfig } from './config';
+import { pluginAPI } from './pluginAPI';
+export declare type HooksRunner = ToRunners<{
+    config: ParallelWorkflow<void, UserConfig>;
+    resolvedConfig: AsyncWaterfall<{
+        resolved: NormalizedConfig;
+    }>;
+    validateSchema: ParallelWorkflow<void>;
+    prepare: AsyncWorkflow<void, void>;
+    commands: AsyncWorkflow<{
+        program: Command;
+    }, void>;
+    watchFiles: ParallelWorkflow<void>;
+    fileChange: AsyncWorkflow<{
+        filename: string;
+        eventType: 'add' | 'change' | 'unlink';
+    }, void>;
+    beforeExit: AsyncWorkflow<void, void>;
+    beforeRestart: AsyncWorkflow<void, void>;
+}>;
+declare const baseHooks: {
+    config: ParallelWorkflow<void, UserConfig>;
+    resolvedConfig: AsyncWaterfall<{
+        resolved: NormalizedConfig;
+    }>;
+    validateSchema: ParallelWorkflow<void, unknown>;
+    prepare: AsyncWorkflow<void, void>;
+    commands: AsyncWorkflow<{
+        program: Command;
+    }, void>;
+    watchFiles: ParallelWorkflow<void, unknown>;
+    fileChange: AsyncWorkflow<{
+        filename: string;
+        eventType: 'add' | 'change' | 'unlink';
+    }, void>;
+    beforeExit: AsyncWorkflow<void, void>;
+    beforeRestart: AsyncWorkflow<void, void>;
+};
+/** All hooks of cli plugin. */
+export declare type CliHooks = typeof baseHooks & Hooks;
+/** All hook callbacks of cli plugin. */
+export declare type CliHookCallbacks = ToThreads<CliHooks>;
+export declare const manager: import("@modern-js/plugin").AsyncManager<CliHooks, {
+    setAppContext: (value: import("@modern-js/types").IAppContext) => void;
+    useAppContext: () => import("@modern-js/types").IAppContext;
+    useConfigContext: () => UserConfig;
+    useResolvedConfigContext: () => NormalizedConfig;
+}>;
+/** Plugin options of a cli plugin. */
+export declare type CliPlugin = PluginOptions<CliHooks, AsyncSetup<CliHooks, typeof pluginAPI>>;
+export declare const createPlugin: (setup?: AsyncSetup<CliHooks, {
+    setAppContext: (value: import("@modern-js/types").IAppContext) => void;
+    useAppContext: () => import("@modern-js/types").IAppContext;
+    useConfigContext: () => UserConfig;
+    useResolvedConfigContext: () => NormalizedConfig;
+}> | undefined, options?: PluginOptions<CliHooks, AsyncSetup<CliHooks, {
+    setAppContext: (value: import("@modern-js/types").IAppContext) => void;
+    useAppContext: () => import("@modern-js/types").IAppContext;
+    useConfigContext: () => UserConfig;
+    useResolvedConfigContext: () => NormalizedConfig;
+}>> | undefined) => import("@modern-js/plugin").AsyncPlugin<CliHooks, {
+    setAppContext: (value: import("@modern-js/types").IAppContext) => void;
+    useAppContext: () => import("@modern-js/types").IAppContext;
+    useConfigContext: () => UserConfig;
+    useResolvedConfigContext: () => NormalizedConfig;
+}>, registerHook: (newHooks: Partial<CliHooks>) => void, mountHook: () => ToRunners<CliHooks>;
+export declare const usePlugins: (plugins: string[]) => void;
+export {};

@@ -1,0 +1,51 @@
+import _objectSpread from "@babel/runtime/helpers/esm/objectSpread2";
+import path from 'path';
+import { getAllAPIFiles, getMethod, getLambdaDir, extractModuleInfoFromFilenames } from '@modern-js/bff-utils';
+import { chalk } from '@modern-js/utils';
+export var getAllAPIInfos = function getAllAPIInfos(appDir) {
+  var prefix = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '/api';
+  var lambdaDir = getLambdaDir(path.join(appDir, './api'));
+  var filenames = getAllAPIFiles(lambdaDir);
+  var moduleInfos = extractModuleInfoFromFilenames(lambdaDir, filenames);
+  var apiInfos = [];
+  moduleInfos.forEach(function (_ref) {
+    var name = _ref.name,
+        module = _ref.module,
+        filename = _ref.filename;
+    Object.keys(module).forEach(function (key) {
+      var handler = module[key];
+      var method = getMethod(key);
+
+      if (typeof handler === 'function') {
+        apiInfos.push({
+          handler: handler,
+          method: method,
+          name: key,
+          routePath: "".concat(prefix).concat(name),
+          apiFile: filename
+        });
+      }
+    });
+  });
+  return apiInfos;
+};
+export var isBFFProject = function isBFFProject(pwd) {
+  try {
+    // eslint-disable-next-line import/no-dynamic-require,@typescript-eslint/no-require-imports,@typescript-eslint/no-var-requires
+    var packageJson = require(path.join(pwd, './package.json'));
+
+    var dependencies = packageJson.dependencies,
+        devDependencies = packageJson.devDependencies;
+    var isBFF = Object.keys(_objectSpread(_objectSpread({}, dependencies), devDependencies)).some(function (dependency) {
+      return dependency.includes('plugin-bff');
+    });
+    var isMWA = Object.keys(devDependencies).some(function (devDependency) {
+      return devDependency.includes('app-tools');
+    });
+    return isMWA && isBFF;
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.log(chalk.red(error));
+    return false;
+  }
+};

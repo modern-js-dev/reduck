@@ -1,0 +1,18 @@
+import _objectSpread from "@babel/runtime/helpers/esm/objectSpread2";
+import { PackageManager, PackageManagerSchema } from "../common";
+
+var MonorepoPackageManagerSchema = _objectSpread(_objectSpread({}, PackageManagerSchema), {}, {
+  items: PackageManagerSchema.items.filter(function (item) {
+    return item.key !== PackageManager.Npm;
+  })
+});
+
+export var MonorepoSchemas = [MonorepoPackageManagerSchema];
+export var MonorepoSchema = {
+  key: 'monorepo',
+  isObject: true,
+  items: MonorepoSchemas
+};
+export var MonorepoDefaultConfig = {
+  packageManager: PackageManager.Pnpm
+};

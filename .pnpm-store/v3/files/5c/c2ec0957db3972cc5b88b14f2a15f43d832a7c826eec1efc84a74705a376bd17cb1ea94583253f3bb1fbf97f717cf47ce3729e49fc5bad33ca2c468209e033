@@ -1,0 +1,109 @@
+import _createForOfIteratorHelper from "@babel/runtime/helpers/esm/createForOfIteratorHelper";
+import _toConsumableArray from "@babel/runtime/helpers/esm/toConsumableArray";
+export var createBabelPresetChain = function createBabelPresetChain() {
+  var presets = [];
+  var blacks = [];
+
+  var preset = function preset(name) {
+    var babelExist = presets.find(function (plugin) {
+      return plugin.name === name;
+    });
+    var isExist = Boolean(babelExist);
+    var preset = babelExist || {
+      name: name,
+      options: []
+    };
+
+    var tap = function tap(options) {
+      preset.options = options;
+      set();
+    };
+
+    var options = function options() {
+      return preset.options;
+    };
+
+    var del = function del() {
+      if (isExist) {
+        presets = presets.filter(function (preset) {
+          return !preset.name.includes(name);
+        });
+      }
+    };
+
+    var ban = function ban() {
+      if (!blacks.includes(name)) {
+        blacks.push(name);
+      }
+
+      del();
+    };
+
+    var set = function set() {
+      if (blacks.includes(name)) {
+        throw new Error("Preset: ".concat(name, " has been banned!, You can't set it."));
+      } // merge preset with replacing
+      // see https://babeljs.io/docs/en/configuration#how-babel-merges-config-items
+
+
+      if (!isExist) {
+        presets.push(preset);
+      }
+    };
+
+    var use = function use(path, options) {
+      preset.path = path;
+      preset.options = options || [];
+      set();
+    };
+
+    return {
+      tap: tap,
+      "delete": del,
+      ban: ban,
+      options: options,
+      filter: presets.filter,
+      use: use
+    };
+  };
+
+  var toJSON = function toJSON() {
+    return presets.map(function (preset) {
+      return preset.options ? [preset.path || preset.name].concat(_toConsumableArray(preset.options)) : preset.path || preset.name;
+    });
+  }; // merge preset with replacing
+  // see https://babeljs.io/docs/en/configuration#how-babel-merges-config-items
+
+
+  var merge = function merge(other) {
+    var _iterator = _createForOfIteratorHelper(other.presets),
+        _step;
+
+    try {
+      for (_iterator.s(); !(_step = _iterator.n()).done;) {
+        var _preset = _step.value;
+
+        if (_preset.path) {
+          chain.preset(_preset.name).use(_preset.path, _preset.options);
+        } else {
+          chain.preset(_preset.name).tap(_preset.options);
+        }
+      }
+    } catch (err) {
+      _iterator.e(err);
+    } finally {
+      _iterator.f();
+    }
+
+    return chain;
+  };
+
+  var chain = {
+    preset: preset,
+    presets: presets,
+    blacks: blacks,
+    toJSON: toJSON,
+    merge: merge
+  };
+  return chain;
+};

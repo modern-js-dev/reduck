@@ -1,0 +1,6 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.shouldUseSourceMap = void 0;
+const utils_1 = require("@modern-js/utils");
+const shouldUseSourceMap = (config) => (0, utils_1.isProd)() && !config.output.disableSourceMap;
+exports.shouldUseSourceMap = shouldUseSourceMap;

@@ -1,0 +1,100 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.routerPlugin = void 0;
+
+var _react = _interopRequireWildcard(require("react"));
+
+var _history = require("history");
+
+var _reactRouterDom = require("react-router-dom");
+
+var _runtimeCore = require("@modern-js/runtime-core");
+
+var _hoistNonReactStatics = _interopRequireDefault(require("hoist-non-react-statics"));
+
+var _utils = require("./utils");
+
+var _jsxRuntime = require("react/jsx-runtime");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
+
+function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+// todo: check
+const isBrowser = () => typeof window !== 'undefined';
+
+const routerPlugin = ({
+  serverBase: _serverBase = [],
+  history: customHistory,
+  supportHtml5History: _supportHtml5History = true,
+  routesConfig,
+  historyOptions: _historyOptions = {}
+}) => {
+  const isBrow = isBrowser();
+
+  const select = pathname => _serverBase.find(baseUrl => pathname.search(baseUrl) === 0) || '/';
+
+  return {
+    name: '@modern-js/plugin-router',
+    setup: () => {
+      return {
+        hoc: ({
+          App
+        }, next) => {
+          const getRouteApp = () => {
+            if (isBrow) {
+              var _window$_SERVER_DATA;
+
+              const baseUrl = ((_window$_SERVER_DATA = window._SERVER_DATA) === null || _window$_SERVER_DATA === void 0 ? void 0 : _window$_SERVER_DATA.router.baseUrl) || select(location.pathname);
+              _historyOptions.basename = baseUrl === '/' ? (0, _utils.urlJoin)(baseUrl, _historyOptions.basename) : baseUrl;
+              const history = customHistory || (_supportHtml5History ? (0, _history.createBrowserHistory)(_historyOptions) : (0, _history.createHashHistory)(_historyOptions));
+              return props => /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactRouterDom.Router, {
+                history: history,
+                children: /*#__PURE__*/(0, _jsxRuntime.jsx)(App, _objectSpread(_objectSpread({}, props), {}, {
+                  children: routesConfig ? (0, _utils.renderRoutes)(routesConfig, props) : null
+                }))
+              });
+            }
+
+            return props => {
+              const runtimeContext = (0, _react.useContext)(_runtimeCore.RuntimeReactContext);
+              const {
+                ssrContext
+              } = runtimeContext;
+              const location = (0, _utils.getLocation)(ssrContext);
+              const routerContext = (ssrContext === null || ssrContext === void 0 ? void 0 : ssrContext.redirection) || {};
+              const request = ssrContext === null || ssrContext === void 0 ? void 0 : ssrContext.request;
+              const baseUrl = request === null || request === void 0 ? void 0 : request.baseUrl;
+              const basename = baseUrl === '/' ? (0, _utils.urlJoin)(baseUrl, _historyOptions.basename) : baseUrl;
+              return /*#__PURE__*/(0, _jsxRuntime.jsx)(_reactRouterDom.StaticRouter, {
+                basename: basename === '/' ? '' : basename,
+                location: location,
+                context: routerContext,
+                children: /*#__PURE__*/(0, _jsxRuntime.jsx)(App, _objectSpread(_objectSpread({}, props), {}, {
+                  children: routesConfig ? (0, _utils.renderRoutes)(routesConfig, props) : null
+                }))
+              });
+            };
+          };
+
+          return next({
+            App: App ? (0, _hoistNonReactStatics.default)(getRouteApp(), App) : getRouteApp()
+          });
+        }
+      };
+    }
+  };
+};
+
+exports.routerPlugin = routerPlugin;

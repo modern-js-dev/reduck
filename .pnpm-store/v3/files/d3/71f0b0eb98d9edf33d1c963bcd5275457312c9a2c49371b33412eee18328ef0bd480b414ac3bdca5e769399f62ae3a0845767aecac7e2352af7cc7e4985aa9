@@ -1,0 +1,80 @@
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+import { createStore, model } from '@modern-js-reduck/store';
+import logger from 'redux-logger';
+import { plugin } from '..';
+const todoModel = model('todo').define((_, {
+  use
+}) => ({
+  state: {
+    items: []
+  },
+  actions: {
+    load: {
+      fulfilled: (state, payload) => _objectSpread(_objectSpread({}, state), {}, {
+        items: payload
+      })
+    },
+    loadWithParams: {
+      fulfilled: (state, payload) => _objectSpread(_objectSpread({}, state), {}, {
+        items: payload
+      })
+    }
+  },
+  effects: {
+    async load() {
+      return Promise.resolve(['1']);
+    },
+
+    async loadWithParams(a) {
+      return Promise.resolve([a]);
+    },
+
+    loadThunk() {
+      const actions = use(todoModel)[1];
+      return () => {
+        actions.load.fulfilled(['2']);
+      };
+    }
+
+  }
+}));
+describe('reduck effects plugin', () => {
+  test('promise middleware', async () => {
+    const store = createStore({
+      plugins: [plugin],
+      middlewares: [logger]
+    });
+    const [, actions] = store.use(todoModel);
+    await actions.load();
+    expect(store.use(todoModel)[0]).toEqual({
+      items: ['1']
+    });
+  });
+  test('promise middleware params', async () => {
+    const store = createStore({
+      plugins: [plugin],
+      middlewares: [logger]
+    });
+    const [, actions] = store.use(todoModel);
+    await actions.loadWithParams('dddd');
+    expect(store.use(todoModel)[0]).toEqual({
+      items: ['dddd']
+    });
+  });
+  test('thunk middleware', () => {
+    const store = createStore({
+      plugins: [plugin],
+      middlewares: [logger]
+    });
+    const [, actions] = store.use(todoModel);
+    actions.loadThunk();
+    expect(store.use(todoModel)[0]).toEqual({
+      items: ['2']
+    });
+  });
+});

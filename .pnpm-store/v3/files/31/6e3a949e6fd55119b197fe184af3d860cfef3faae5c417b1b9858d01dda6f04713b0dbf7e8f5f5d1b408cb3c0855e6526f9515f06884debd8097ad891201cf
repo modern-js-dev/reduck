@@ -1,0 +1,34 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.canUsePnpm = exports.canUseYarn = exports.canUseNpm = void 0;
+const compiled_1 = require("./compiled");
+async function canUseNpm() {
+    try {
+        await (0, compiled_1.execa)('npm', ['--version'], { env: process.env });
+        return true;
+    }
+    catch (e) {
+        return false;
+    }
+}
+exports.canUseNpm = canUseNpm;
+async function canUseYarn() {
+    try {
+        await (0, compiled_1.execa)('yarn', ['--version'], { env: process.env });
+        return true;
+    }
+    catch (e) {
+        return false;
+    }
+}
+exports.canUseYarn = canUseYarn;
+async function canUsePnpm() {
+    try {
+        await (0, compiled_1.execa)('pnpm', ['--version'], { env: process.env });
+        return true;
+    }
+    catch (e) {
+        return false;
+    }
+}
+exports.canUsePnpm = canUsePnpm;

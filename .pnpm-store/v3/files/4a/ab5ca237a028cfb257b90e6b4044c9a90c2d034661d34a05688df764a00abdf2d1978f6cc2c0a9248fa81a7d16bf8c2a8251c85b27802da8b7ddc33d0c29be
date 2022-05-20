@@ -1,0 +1,17 @@
+import type { PluginAPI } from '@modern-js/core';
+import type { Platform } from '../types';
+export interface IBuildOption {
+  watch: boolean;
+  tsconfig: string;
+  platform: boolean | Exclude<Platform, 'all'>;
+  styleOnly: boolean;
+  tsc: boolean;
+  clear: boolean;
+}
+export declare const build: (api: PluginAPI, {
+  watch,
+  tsconfig: tsconfigName,
+  tsc,
+  clear,
+  platform
+}: IBuildOption) => Promise<void>;

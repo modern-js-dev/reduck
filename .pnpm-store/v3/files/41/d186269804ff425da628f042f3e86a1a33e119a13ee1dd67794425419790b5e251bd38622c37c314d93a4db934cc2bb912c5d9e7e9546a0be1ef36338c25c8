@@ -1,0 +1,16 @@
+export declare const deploy: {
+    type: string;
+    properties: {
+        domain: {
+            type: string[];
+        };
+        domainByEntries: {
+            type: string;
+            patternProperties: {
+                "^[a-zA-Z0-9_-]+$": {
+                    type: string[];
+                };
+            };
+        };
+    };
+};

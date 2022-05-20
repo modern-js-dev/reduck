@@ -1,0 +1,31 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.patchConfig = exports.getJestUtils = exports.DEFAULT_RESOLVER_PATH = void 0;
+
+var _patches = require("./patches");
+
+var _testConfigOperator = require("./testConfigOperator");
+
+/**
+ * Parse jest config
+ */
+const getJestUtils = testConfig => {
+  const testOperator = new _testConfigOperator.TestConfigOperator(testConfig);
+  return testOperator;
+};
+
+exports.getJestUtils = getJestUtils;
+
+const patchConfig = async testOperator => {
+  await (0, _patches.applyPatches)(testOperator);
+  return testOperator.jestConfig;
+};
+
+exports.patchConfig = patchConfig;
+
+const DEFAULT_RESOLVER_PATH = require.resolve("./resolver");
+
+exports.DEFAULT_RESOLVER_PATH = DEFAULT_RESOLVER_PATH;

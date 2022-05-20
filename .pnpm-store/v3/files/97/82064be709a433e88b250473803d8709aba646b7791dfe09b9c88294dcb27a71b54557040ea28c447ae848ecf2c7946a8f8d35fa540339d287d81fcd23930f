@@ -1,0 +1,64 @@
+import { INTERNAL_PLUGINS } from '@modern-js/utils';
+import type { Hooks } from '@modern-js/types';
+import type { ErrorObject } from '../compiled/ajv';
+import { TransformPlugin } from './loadPlugins';
+import { IAppContext, initAppContext } from './context';
+import type { NormalizedConfig } from './config/mergeConfig';
+export type { Hooks };
+export * from './config';
+export * from '@modern-js/plugin';
+export * from '@modern-js/plugin/node';
+export { manager, mountHook, usePlugins, createPlugin, registerHook, } from './manager';
+export type { CliHooks, CliPlugin, CliHookCallbacks } from './manager';
+export { AppContext, ConfigContext, ResolvedConfigContext, useAppContext, useConfigContext, useResolvedConfigContext, } from './pluginAPI';
+export type { PluginAPI } from './pluginAPI';
+export type { NormalizedConfig, IAppContext };
+declare const initAppDir: (cwd?: string | undefined) => Promise<string>;
+export interface CoreOptions {
+    configFile?: string;
+    serverConfigFile?: string;
+    packageJsonConfig?: string;
+    plugins?: typeof INTERNAL_PLUGINS;
+    transformPlugin?: TransformPlugin;
+    onSchemaError?: (error: ErrorObject) => void;
+    options?: {
+        metaName?: string;
+        srcDir?: string;
+        distDir?: string;
+        sharedDir?: string;
+    };
+}
+export declare const mergeOptions: (options?: CoreOptions | undefined) => {
+    configFile?: string | undefined;
+    serverConfigFile: string;
+    packageJsonConfig?: string | undefined;
+    plugins?: {
+        [name: string]: {
+            cli?: string | undefined;
+            server?: string | undefined;
+        };
+    } | undefined;
+    transformPlugin?: TransformPlugin | undefined;
+    onSchemaError?: ((error: ErrorObject) => void) | undefined;
+    options?: {
+        metaName?: string | undefined;
+        srcDir?: string | undefined;
+        distDir?: string | undefined;
+        sharedDir?: string | undefined;
+    } | undefined;
+};
+export declare const cli: {
+    init: (argv?: string[], options?: CoreOptions | undefined) => Promise<{
+        loadedConfig: import("./config").LoadedConfig;
+        appContext: IAppContext;
+        resolved: NormalizedConfig;
+    }>;
+    run: (argv: string[], options?: CoreOptions | undefined) => Promise<void>;
+    restart: () => Promise<void>;
+};
+export { initAppDir, initAppContext };
+declare module '@modern-js/utils/compiled/commander' {
+    interface Command {
+        commandsMap: Map<string, Command>;
+    }
+}

@@ -1,0 +1,37 @@
+{
+  "name": "babel-plugin-transform-modern-regexp",
+  "version": "0.0.6",
+  "license": "MIT",
+  "description": "Enables modern RegExp features in JavaScript",
+  "repository": "DmitrySoshnikov/babel-plugin-transform-modern-regexp",
+  "homepage": "https://github.com/DmitrySoshnikov/babel-plugin-transform-modern-regexp",
+  "bugs": "https://github.com/DmitrySoshnikov/babel-plugin-transform-modern-regexp/issues",
+  "scripts": {
+    "test": "jest"
+  },
+  "keywords": [
+    "regexp",
+    "es2018",
+    "modern",
+    "xflag",
+    "lookbehind",
+    "babel"
+  ],
+  "author": "Dmitry Soshnikov",
+  "engines": {
+    "node": ">=6"
+  },
+  "dependencies": {
+    "regexp-tree": "^0.0.85"
+  },
+  "devDependencies": {
+    "babel-core": "^6.26.3",
+    "jest-cli": "^19.0.2"
+  },
+  "jest": {
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "fixtures"
+    ]
+  }
+}

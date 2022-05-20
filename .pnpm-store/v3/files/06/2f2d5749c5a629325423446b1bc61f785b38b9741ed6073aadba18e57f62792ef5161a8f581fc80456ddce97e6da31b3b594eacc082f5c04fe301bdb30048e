@@ -1,0 +1,41 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+var _exportNames = {
+  renderApp: true,
+  testBff: true
+};
+Object.defineProperty(exports, "renderApp", {
+  enumerable: true,
+  get: function () {
+    return _customRender.default;
+  }
+});
+Object.defineProperty(exports, "testBff", {
+  enumerable: true,
+  get: function () {
+    return _testingPluginBff.testBff;
+  }
+});
+
+var _customRender = _interopRequireDefault(require("./customRender"));
+
+var _react = require("@testing-library/react");
+
+Object.keys(_react).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;
+  if (key in exports && exports[key] === _react[key]) return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function () {
+      return _react[key];
+    }
+  });
+});
+
+var _testingPluginBff = require("@modern-js/testing-plugin-bff");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }

@@ -1,0 +1,234 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Server = void 0;
+
+var _path = _interopRequireDefault(require("path"));
+
+var _serverCore = require("@modern-js/server-core");
+
+var _utils = require("@modern-js/utils");
+
+var _metrics = require("../libs/metrics");
+
+var _loadConfig = require("../libs/loadConfig");
+
+var _utils2 = require("../utils");
+
+var _modernServerSplit = require("./modern-server-split");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+class Server {
+  constructor(options) {
+    _defineProperty(this, "options", void 0);
+
+    _defineProperty(this, "serverImpl", _modernServerSplit.createProdServer);
+
+    _defineProperty(this, "server", void 0);
+
+    _defineProperty(this, "app", void 0);
+
+    _defineProperty(this, "runner", void 0);
+
+    _defineProperty(this, "serverConfig", void 0);
+
+    options.logger = options.logger || new _utils.Logger({
+      level: 'warn'
+    });
+    options.metrics = options.metrics || _metrics.metrics;
+    this.options = options;
+    this.serverConfig = {};
+  }
+  /**
+   * 初始化顺序
+   * - 获取 server runtime config
+   * - 设置 context
+   * - 创建 hooksRunner
+   * - 合并插件，内置插件和 serverConfig 中配置的插件
+   * - 执行 config hook
+   * - 获取最终的配置
+   * - 设置配置到 context
+   * - 初始化 server
+   * - 执行 prepare hook
+   * - 执行 server init
+   */
+
+
+  async init() {
+    const {
+      options
+    } = this;
+    this.initServerConfig(options);
+    await this.injectContext(this.runner, options); // initialize server runner
+
+    this.runner = await this.createHookRunner(); // init config and execute config hook
+
+    await this.initConfig(this.runner, options);
+    await this.injectContext(this.runner, options); // initialize server
+
+    this.server = this.serverImpl(options);
+    await this.runPrepareHook(this.runner); // create http-server
+
+    this.app = await this.server.createHTTPServer(this.getRequestHandler()); // runner can only be used after server init
+
+    await this.server.onInit(this.runner);
+    return this;
+  }
+  /**
+   * Execute config hooks
+   * @param runner
+   * @param options
+   */
+
+
+  runConfigHook(runner, serverConfig) {
+    const newServerConfig = runner.config(serverConfig || {});
+    return newServerConfig;
+  }
+
+  async runPrepareHook(runner) {
+    runner.prepare();
+  }
+
+  initServerConfig(options) {
+    var _options$config$outpu;
+
+    const {
+      pwd,
+      serverConfigFile
+    } = options;
+
+    const distDirectory = _path.default.join(pwd, ((_options$config$outpu = options.config.output) === null || _options$config$outpu === void 0 ? void 0 : _options$config$outpu.path) || 'dist');
+
+    const serverConfigPath = (0, _loadConfig.getServerConfigPath)(distDirectory, serverConfigFile);
+    const serverConfig = (0, _loadConfig.requireConfig)(serverConfigPath);
+    this.serverConfig = serverConfig;
+  }
+  /**
+   *
+   * merge cliConfig and serverConfig
+   */
+
+
+  async initConfig(runner, options) {
+    var _config$output;
+
+    const {
+      pwd,
+      config
+    } = options;
+    const {
+      serverConfig
+    } = this;
+    const finalServerConfig = this.runConfigHook(runner, serverConfig);
+
+    const resolvedConfigPath = _path.default.join(pwd, (config === null || config === void 0 ? void 0 : (_config$output = config.output) === null || _config$output === void 0 ? void 0 : _config$output.path) || 'dist', _utils.OUTPUT_CONFIG_FILE);
+
+    options.config = (0, _loadConfig.loadConfig)({
+      cliConfig: config,
+      serverConfig: finalServerConfig,
+      resolvedConfigPath
+    });
+  }
+
+  async close() {
+    await this.server.onClose();
+    await new Promise(resolve => this.app.close(() => {
+      resolve();
+    }));
+  }
+
+  listen(port = 8080, listener) {
+    this.app.listen(process.env.PORT || port, () => {
+      if (listener) {
+        listener();
+      }
+
+      this.server.onListening(this.app);
+    });
+  }
+
+  getRequestHandler() {
+    return (req, res, next) => {
+      const requestHandler = this.server.getRequestHandler();
+      return requestHandler(req, res, next);
+    };
+  }
+
+  async createHookRunner() {
+    // clear server manager every create time
+    _serverCore.serverManager.clear();
+
+    const {
+      options
+    } = this; // TODO: 确认下这里是不是可以不从 options 中取插件，而是从 config 中取和过滤
+
+    const {
+      plugins = [],
+      pwd,
+      config
+    } = options;
+    const serverPlugins = this.serverConfig.plugins || []; // server app context for serve plugin
+
+    const loadedPlugins = (0, _serverCore.loadPlugins)(plugins.concat(serverPlugins), pwd);
+    (0, _utils2.debug)('plugins', config.plugins, loadedPlugins);
+    loadedPlugins.forEach(p => {
+      _serverCore.serverManager.usePlugin(p);
+    }); // create runner
+
+    const hooksRunner = await _serverCore.serverManager.init({});
+    return hooksRunner;
+  }
+
+  async injectContext(runner, options) {
+    const appContext = this.initAppContext();
+    const {
+      config,
+      pwd
+    } = options;
+
+    _serverCore.serverManager.run(() => {
+      var _config$output2;
+
+      _serverCore.ConfigContext.set(config);
+
+      _serverCore.AppContext.set(_objectSpread(_objectSpread({}, appContext), {}, {
+        distDirectory: _path.default.join(pwd, ((_config$output2 = config.output) === null || _config$output2 === void 0 ? void 0 : _config$output2.path) || 'dist')
+      }));
+    });
+  }
+
+  initAppContext() {
+    var _config$output3;
+
+    const {
+      options
+    } = this;
+    const {
+      pwd: appDirectory,
+      plugins = [],
+      config
+    } = options;
+    const serverPlugins = plugins.map(p => ({
+      server: p
+    }));
+    return {
+      appDirectory,
+      distDirectory: _path.default.join(appDirectory, ((_config$output3 = config.output) === null || _config$output3 === void 0 ? void 0 : _config$output3.path) || 'dist'),
+      sharedDirectory: _path.default.resolve(appDirectory, _utils.SHARED_DIR),
+      plugins: serverPlugins
+    };
+  }
+
+}
+
+exports.Server = Server;

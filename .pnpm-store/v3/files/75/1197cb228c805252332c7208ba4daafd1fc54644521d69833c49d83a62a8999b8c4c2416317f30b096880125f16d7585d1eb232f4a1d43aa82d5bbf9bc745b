@@ -1,0 +1,21 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.findExists = void 0;
+const fs_1 = __importDefault(require("fs"));
+/**
+ * Find first already exists file.
+ * @param files - Absolute file paths with extension.
+ * @returns The file path if exists, or false if no file exists.
+ */
+const findExists = (files) => {
+    for (const file of files) {
+        if (fs_1.default.existsSync(file) && fs_1.default.statSync(file).isFile()) {
+            return file;
+        }
+    }
+    return false;
+};
+exports.findExists = findExists;

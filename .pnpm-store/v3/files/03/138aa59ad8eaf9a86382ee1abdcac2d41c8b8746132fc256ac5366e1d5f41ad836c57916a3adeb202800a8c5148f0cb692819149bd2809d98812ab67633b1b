@@ -1,0 +1,46 @@
+/**
+ * modified from https://github.com/farrow-js/farrow/tree/master/packages/farrow-pipeline
+ * license at https://github.com/farrow-js/farrow/blob/master/LICENSE
+ */
+import { asyncHooks } from "./asyncHooksInterface";
+export var createHooks = function createHooks(defaultHooks) {
+  var currentHooks = {};
+  var hooks = {};
+
+  var _loop = function _loop(key) {
+    // eslint-disable-next-line @typescript-eslint/no-loop-func
+    var f = function f() {
+      var _asyncHooks$get;
+
+      var hooks = currentHooks === defaultHooks ? (_asyncHooks$get = asyncHooks === null || asyncHooks === void 0 ? void 0 : asyncHooks.get()) !== null && _asyncHooks$get !== void 0 ? _asyncHooks$get : defaultHooks : currentHooks;
+      var handler = hooks[key];
+
+      if (typeof handler !== 'function') {
+        handler = defaultHooks[key];
+      }
+
+      return handler.apply(void 0, arguments);
+    };
+
+    hooks[key] = f;
+  };
+
+  for (var key in defaultHooks) {
+    _loop(key);
+  }
+
+  var run = function run(f, implementations) {
+    try {
+      currentHooks = implementations || defaultHooks;
+      asyncHooks === null || asyncHooks === void 0 ? void 0 : asyncHooks.set(currentHooks);
+      return f();
+    } finally {
+      currentHooks = defaultHooks;
+    }
+  };
+
+  return {
+    run: run,
+    hooks: hooks
+  };
+};

@@ -1,0 +1,13 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+Object.defineProperty(exports, "getFiles", {
+  enumerable: true,
+  get: function () {
+    return _file.getFiles;
+  }
+});
+
+var _file = require("./file");

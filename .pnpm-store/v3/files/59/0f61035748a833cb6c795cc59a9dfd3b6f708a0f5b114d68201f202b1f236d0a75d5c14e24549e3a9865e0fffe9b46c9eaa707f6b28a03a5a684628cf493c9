@@ -1,0 +1,9 @@
+import { GeneratorCore } from '@modern-js/codesmith';
+export * from './utils';
+export declare class NpmAPI {
+  protected readonly generatorCore: GeneratorCore;
+  constructor(generatorCore: GeneratorCore);
+  npmInstall(cwd?: string): Promise<import("@modern-js/utils/compiled/execa").ExecaReturnValue<string>>;
+  yarnInstall(cwd?: string): Promise<import("@modern-js/utils/compiled/execa").ExecaReturnValue<string>>;
+  pnpmInstall(cwd?: string): Promise<import("@modern-js/utils/compiled/execa").ExecaReturnValue<string>>;
+}

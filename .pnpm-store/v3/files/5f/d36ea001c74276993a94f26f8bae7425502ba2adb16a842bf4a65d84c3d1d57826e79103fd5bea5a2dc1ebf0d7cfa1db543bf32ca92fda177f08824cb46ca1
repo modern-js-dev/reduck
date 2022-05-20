@@ -1,0 +1,36 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.source = void 0;
+const utils_1 = require("@modern-js/utils");
+exports.source = {
+    type: 'object',
+    additionalProperties: false,
+    properties: {
+        entries: {
+            type: 'object',
+            patternProperties: {
+                [utils_1.ENTRY_NAME_PATTERN]: {
+                    if: { type: 'object' },
+                    then: {
+                        required: ['entry'],
+                        properties: {
+                            entry: { type: ['string', 'array'] },
+                            disableMount: { type: 'boolean' },
+                            enableFileSystemRoutes: { type: 'boolean' },
+                        },
+                        additionalProperties: false,
+                    },
+                    else: { type: ['string', 'array'] },
+                },
+            },
+        },
+        alias: { typeof: ['object', 'function'] },
+        disableDefaultEntries: { type: 'boolean' },
+        envVars: { type: 'array' },
+        globalVars: { type: 'object' },
+        moduleScopes: { instanceof: ['Array', 'Function'] },
+        entriesDir: { type: 'string' },
+        configDir: { type: 'string' },
+        include: { type: ['array'] },
+    },
+};

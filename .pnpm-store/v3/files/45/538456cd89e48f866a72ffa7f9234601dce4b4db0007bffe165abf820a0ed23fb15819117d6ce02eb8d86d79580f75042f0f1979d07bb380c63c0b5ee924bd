@@ -1,0 +1,249 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.AppAPI = void 0;
+Object.defineProperty(exports, "forEach", {
+  enumerable: true,
+  get: function () {
+    return _easyFormCli.forEach;
+  }
+});
+Object.defineProperty(exports, "transformSchema", {
+  enumerable: true,
+  get: function () {
+    return _transformSchema.transformSchema;
+  }
+});
+
+var _merge2 = _interopRequireDefault(require("lodash/merge"));
+
+var _utils = require("@modern-js/utils");
+
+var _commentJson = require("comment-json");
+
+var _codesmithApiNpm = require("@modern-js/codesmith-api-npm");
+
+var _codesmithApiGit = require("@modern-js/codesmith-api-git");
+
+var _codesmithApiHandlebars = require("@modern-js/codesmith-api-handlebars");
+
+var _easyFormCli = require("@modern-js/easy-form-cli");
+
+var _transformSchema = require("./utils/transformSchema");
+
+var handlers = _interopRequireWildcard(require("./handlers"));
+
+var _locale = require("./locale");
+
+function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
+
+function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+(0, _easyFormCli.setCliQuestionsHandlers)(handlers);
+
+class AppAPI {
+  constructor(generatorContext, generatorCore) {
+    this.i18n = _locale.i18n;
+    this.generatorCore = void 0;
+    this.generatorContext = void 0;
+    this.npmApi = void 0;
+    this.gitApi = void 0;
+    this.handlebarsAPI = void 0;
+    this.generatorCore = generatorCore;
+    this.generatorContext = generatorContext;
+    this.npmApi = new _codesmithApiNpm.NpmAPI(generatorCore);
+    this.gitApi = new _codesmithApiGit.GitAPI(generatorCore, generatorContext);
+    this.handlebarsAPI = new _codesmithApiHandlebars.HandlebarsAPI(this.generatorCore);
+  }
+
+  async checkEnvironment() {
+    if (_utils.semver.lt(process.versions.node, '12.17.0')) {
+      this.generatorCore.logger.warn(_locale.i18n.t(_locale.localeKeys.environment.node_version));
+      return false;
+    }
+
+    if (!(await (0, _codesmithApiNpm.canUseYarn)()) && !(await (0, _codesmithApiNpm.canUsePnpm)()) && !(await (0, _codesmithApiNpm.canUseNpm)())) {
+      this.generatorCore.logger.debug("can't use yarn or pnpm or npm");
+      this.generatorCore.logger.warn(_locale.i18n.t(_locale.localeKeys.environment.yarn_pnpm_npm));
+      return false;
+    }
+
+    return true;
+  } // support custom install command
+
+
+  async runInstall(command) {
+    const {
+      config: {
+        packageManager,
+        noNeedInstall
+      }
+    } = this.generatorContext;
+
+    if (noNeedInstall || process.env.NoNeedInstall === 'true') {
+      return;
+    } // const spinner = ora('Install...').start();
+    // spinner.color = 'yellow';
+    // try {
+
+
+    let intallPromise;
+
+    if (command) {
+      intallPromise = (0, _utils.execa)(command);
+    } else if (packageManager === 'pnpm') {
+      intallPromise = this.npmApi.pnpmInstall();
+    } else if (packageManager === 'yarn') {
+      intallPromise = this.npmApi.yarnInstall();
+    } else {
+      intallPromise = this.npmApi.npmInstall();
+    }
+
+    try {
+      await intallPromise;
+      this.generatorCore.logger.info(_locale.i18n.t(_locale.localeKeys.install.success));
+    } catch (e) {
+      this.generatorCore.logger.warn(_locale.i18n.t(_locale.localeKeys.install.failed, {
+        command: command || `${packageManager} install`
+      }));
+    } // spinner.stop();
+    // } catch (e) {
+    //   // spinner.stop();
+    //   throw e;
+    // }
+
+  } // custom install func
+
+
+  async runGitAndInstall(commitMessage, installFunc) {
+    const {
+      config: {
+        isMonorepoSubProject = false
+      }
+    } = this.generatorContext;
+    const inGitRepo = isMonorepoSubProject || (await this.gitApi.isInGitRepo());
+
+    if (!inGitRepo) {
+      await this.gitApi.initGitRepo();
+    }
+
+    try {
+      if (installFunc) {
+        await installFunc();
+      } else {
+        await this.runInstall();
+      }
+    } catch (e) {
+      this.generatorCore.logger.debug('Dependencies install failed', e);
+      this.generatorCore.logger.warn(_locale.i18n.t(_locale.localeKeys.install.failed_no_command));
+    }
+
+    try {
+      if (!isMonorepoSubProject) {
+        await this.gitApi.addAndCommit(commitMessage || 'feat: init');
+        this.generatorCore.logger.info(_locale.i18n.t(_locale.localeKeys.git.success));
+      }
+    } catch (e) {
+      this.generatorCore.logger.debug('Git repository create failed', e);
+      this.generatorCore.logger.warn(_locale.i18n.t(_locale.localeKeys.git.failed));
+    }
+  }
+
+  async forgeTemplate(templatePattern, filter, rename, parameters) {
+    try {
+      const {
+        material
+      } = this.generatorContext.current;
+      const resourceMap = await material.find(templatePattern, {
+        nodir: true,
+        dot: true
+      });
+
+      if (resourceMap) {
+        await Promise.all(Object.keys(resourceMap).filter(resourceKey => filter ? filter(resourceKey) : true).map(async resourceKey => {
+          this.generatorCore.logger.debug(`[renderDir] resourceKey=${resourceKey}`);
+          const target = rename ? rename(resourceKey) : resourceKey.replace(`templates/`, '').replace('.handlebars', '');
+          await this.handlebarsAPI.renderTemplate(material.get(resourceKey), target, _objectSpread(_objectSpread({}, this.generatorContext.data || {}), parameters || {}));
+        }));
+      }
+    } catch (e) {
+      this.generatorCore.logger.debug('base forging failed:', e);
+      this.generatorCore.logger.warn(_locale.i18n.t(_locale.localeKeys.templated.failed));
+      throw new Error('base forging failed');
+    }
+  }
+
+  async updateWorkspace(folder, workspaceName = 'monorepo.code-workspace') {
+    const {
+      filePath
+    } = this.generatorContext.materials.default.get(workspaceName);
+
+    if (!_utils.fs.existsSync(filePath)) {
+      return;
+    }
+
+    const content = await _utils.fs.readFile(filePath);
+    const workspace = (0, _commentJson.parse)(content.toString());
+    workspace.folders = [folder, ...(workspace.folders || [])];
+    const indent = 2;
+    await _utils.fs.writeFile(filePath, (0, _commentJson.stringify)(workspace, null, indent), {
+      encoding: 'utf-8'
+    });
+  }
+
+  showSuccessInfo(successInfo) {
+    this.generatorCore.logger.info(successInfo || _locale.i18n.t(_locale.localeKeys.success.info));
+  }
+
+  async runSubGenerator(subGenerator, relativePwdPath, config) {
+    try {
+      await this.generatorCore.runSubGenerator(subGenerator, relativePwdPath, config);
+    } catch (e) {
+      this.generatorCore.logger.warn(_locale.i18n.t(_locale.localeKeys.generator.failed));
+      this.generatorCore.logger.debug(_locale.i18n.t(_locale.localeKeys.generator.failed), e);
+      throw new Error('run sub generator failed');
+    }
+  }
+  /**
+   * questions input
+   * @param schema Questions schema
+   * @param configValue Default config. When the question's key is in configValue, it will not show.
+   * @param validateMap Question validate function map
+   * @param initValue Initial value. Even the question's key is in initValue, it alse show in question list.
+   * @returns
+   */
+
+
+  async getInputBySchema(schema, configValue = {}, validateMap = {}, initValue = {}) {
+    (0, _transformSchema.transformSchema)(schema, configValue, validateMap);
+    const reader = new _easyFormCli.CliReader({
+      schema: (0, _easyFormCli.setInitValues)(schema, initValue),
+      extra: configValue
+    });
+    return new Promise((resolve, reject) => {
+      reader.startQuestion({
+        onComplete: answers => {
+          const inputData = (0, _merge2.default)(answers, configValue);
+          this.generatorContext.config = (0, _merge2.default)(this.generatorContext.config, inputData);
+          resolve(inputData);
+        },
+        onError: error => {
+          reject(error);
+        }
+      });
+    });
+  }
+
+}
+
+exports.AppAPI = AppAPI;

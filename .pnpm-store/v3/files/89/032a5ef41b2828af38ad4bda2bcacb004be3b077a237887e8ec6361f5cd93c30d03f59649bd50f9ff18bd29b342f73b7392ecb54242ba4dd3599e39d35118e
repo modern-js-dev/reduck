@@ -1,0 +1,17 @@
+/* eslint-disable eslint-comments/disable-enable-pair */
+import supertest from 'supertest';
+
+function request(...args) {
+  const [fn, ...extraArgs] = args;
+
+  if (!fn) {
+    return supertest(global.app);
+  }
+
+  fn.returnHttp = true;
+  const res = fn(...extraArgs);
+  fn.returnHttp = false;
+  return res;
+}
+
+export { request };

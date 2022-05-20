@@ -1,0 +1,57 @@
+import _createForOfIteratorHelper from "@babel/runtime/helpers/esm/createForOfIteratorHelper";
+import { HMR_SOCK_PATH } from '@modern-js/utils/constants';
+export function createSocketUrl(resourceQuery) {
+  // ?host=localhost&port=8080&path=modern_js_hmr_ws
+  var searchParams = resourceQuery.substr(1).split('&');
+  var options = {};
+
+  var _iterator = _createForOfIteratorHelper(searchParams),
+      _step;
+
+  try {
+    for (_iterator.s(); !(_step = _iterator.n()).done;) {
+      var pair = _step.value;
+      var ary = pair.split('=');
+      options[ary[0]] = decodeURIComponent(ary[1]);
+    }
+  } catch (err) {
+    _iterator.e(err);
+  } finally {
+    _iterator.f();
+  }
+
+  var currentLocation = self.location;
+  return getSocketUrl(options, currentLocation);
+}
+export function formatURL(_ref) {
+  var port = _ref.port,
+      protocol = _ref.protocol,
+      hostname = _ref.hostname,
+      pathname = _ref.pathname;
+
+  if (window.URL) {
+    var url = new URL('http://localhost');
+    url.port = port;
+    url.hostname = hostname;
+    url.protocol = protocol;
+    url.pathname = pathname;
+    return url.toString();
+  } // compatible with IE11
+
+
+  var colon = protocol.indexOf(':') === -1 ? ':' : '';
+  return "".concat(protocol).concat(colon, "//").concat(hostname, ":").concat(port).concat(pathname);
+}
+
+function getSocketUrl(urlParts, location) {
+  var host = urlParts.host,
+      port = urlParts.port,
+      path = urlParts.path,
+      protocol = urlParts.protocol;
+  return formatURL({
+    protocol: protocol || location.protocol === 'https:' ? 'wss' : 'ws',
+    hostname: host || location.hostname,
+    port: port || location.port,
+    pathname: path || HMR_SOCK_PATH
+  });
+}

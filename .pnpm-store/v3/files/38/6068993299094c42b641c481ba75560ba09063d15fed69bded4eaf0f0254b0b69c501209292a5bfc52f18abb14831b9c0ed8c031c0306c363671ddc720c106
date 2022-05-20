@@ -1,0 +1,51 @@
+import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
+
+var _MWAActionTypesMap, _MWAActionFunctionsDe, _MWAActionFunctionsDe2, _ActionType$Element, _ActionType$Function, _MWANewActionGenerato;
+
+import { ActionElement, ActionFunction, ActionRefactor, ActionType, ActionTypeText, ActionTypeTextMap } from "../common";
+import { i18n, localeKeys } from "../../locale";
+export var MWAActionTypes = [ActionType.Element, ActionType.Function // ActionType.Refactor,
+];
+export var MWAActionFunctions = [ActionFunction.UnBundle, ActionFunction.TailwindCSS, ActionFunction.Less, ActionFunction.Sass, ActionFunction.BFF, ActionFunction.SSG, ActionFunction.MicroFrontend, ActionFunction.Electron, // ActionFunction.I18n,
+ActionFunction.Test, ActionFunction.Storybook, // ActionFunction.E2ETest,
+// ActionFunction.Doc,
+ActionFunction.Polyfill, ActionFunction.Deploy, ActionFunction.Proxy];
+export var MWAActionElements = [ActionElement.Entry, ActionElement.Server];
+export var MWAActionReactors = [ActionRefactor.BFFToApp];
+export var MWAActionTypesMap = (_MWAActionTypesMap = {}, _defineProperty(_MWAActionTypesMap, ActionType.Element, MWAActionElements), _defineProperty(_MWAActionTypesMap, ActionType.Function, MWAActionFunctions), _defineProperty(_MWAActionTypesMap, ActionType.Refactor, MWAActionReactors), _MWAActionTypesMap);
+export var MWASpecialSchemaMap = _defineProperty({}, ActionFunction.Storybook, {
+  key: ActionFunction.Storybook,
+  label: function label() {
+    return i18n.t(localeKeys.action["function"].mwa_storybook);
+  }
+});
+export var MWANewActionSchema = {
+  key: 'mwa_new_action',
+  isObject: true,
+  items: [{
+    key: 'actionType',
+    label: function label() {
+      return i18n.t(localeKeys.action.self);
+    },
+    type: ['string'],
+    mutualExclusion: true,
+    items: MWAActionTypes.map(function (type) {
+      return {
+        key: type,
+        label: ActionTypeText[type],
+        type: ['string'],
+        mutualExclusion: true,
+        items: MWAActionTypesMap[type].map(function (item) {
+          return MWASpecialSchemaMap[item] || {
+            key: item,
+            label: ActionTypeTextMap[type][item]
+          };
+        })
+      };
+    })
+  }]
+};
+export var MWAActionFunctionsDevDependencies = (_MWAActionFunctionsDe = {}, _defineProperty(_MWAActionFunctionsDe, ActionFunction.UnBundle, '@modern-js/plugin-unbundle'), _defineProperty(_MWAActionFunctionsDe, ActionFunction.TailwindCSS, '@modern-js/plugin-tailwindcss'), _defineProperty(_MWAActionFunctionsDe, ActionFunction.Test, '@modern-js/plugin-testing'), _defineProperty(_MWAActionFunctionsDe, ActionFunction.E2ETest, '@modern-js/plugin-e2e'), _defineProperty(_MWAActionFunctionsDe, ActionFunction.Doc, '@modern-js/plugin-docsite'), _defineProperty(_MWAActionFunctionsDe, ActionFunction.Electron, '@modern-js/plugin-electron'), _defineProperty(_MWAActionFunctionsDe, ActionFunction.Storybook, '@modern-js/plugin-storybook'), _defineProperty(_MWAActionFunctionsDe, ActionFunction.Proxy, '@modern-js/plugin-proxy'), _MWAActionFunctionsDe);
+export var MWAActionFunctionsDependencies = (_MWAActionFunctionsDe2 = {}, _defineProperty(_MWAActionFunctionsDe2, ActionFunction.Less, '@modern-js/plugin-less'), _defineProperty(_MWAActionFunctionsDe2, ActionFunction.Sass, '@modern-js/plugin-sass'), _defineProperty(_MWAActionFunctionsDe2, ActionFunction.BFF, '@modern-js/plugin-bff'), _defineProperty(_MWAActionFunctionsDe2, ActionFunction.MicroFrontend, '@modern-js/plugin-garfish'), _defineProperty(_MWAActionFunctionsDe2, ActionFunction.I18n, '@modern-js/plugin-i18n'), _defineProperty(_MWAActionFunctionsDe2, ActionFunction.SSG, '@modern-js/plugin-ssg'), _defineProperty(_MWAActionFunctionsDe2, ActionFunction.Polyfill, '@modern-js/plugin-polyfill'), _defineProperty(_MWAActionFunctionsDe2, ActionFunction.TailwindCSS, 'tailwindcss'), _MWAActionFunctionsDe2);
+export var MWAActionFunctionsAppendTypeContent = _defineProperty({}, ActionFunction.MicroFrontend, "/// <reference types='@modern-js/plugin-garfish/types' />");
+export var MWANewActionGenerators = (_MWANewActionGenerato = {}, _defineProperty(_MWANewActionGenerato, ActionType.Element, (_ActionType$Element = {}, _defineProperty(_ActionType$Element, ActionElement.Entry, '@modern-js/entry-generator'), _defineProperty(_ActionType$Element, ActionElement.Server, '@modern-js/server-generator'), _ActionType$Element)), _defineProperty(_MWANewActionGenerato, ActionType.Function, (_ActionType$Function = {}, _defineProperty(_ActionType$Function, ActionFunction.UnBundle, '@modern-js/unbundle-generator'), _defineProperty(_ActionType$Function, ActionFunction.TailwindCSS, '@modern-js/tailwindcss-generator'), _defineProperty(_ActionType$Function, ActionFunction.Less, '@modern-js/dependence-generator'), _defineProperty(_ActionType$Function, ActionFunction.Sass, '@modern-js/dependence-generator'), _defineProperty(_ActionType$Function, ActionFunction.BFF, '@modern-js/bff-generator'), _defineProperty(_ActionType$Function, ActionFunction.MicroFrontend, '@modern-js/dependence-generator'), _defineProperty(_ActionType$Function, ActionFunction.Electron, '@modern-js/electron-generator'), _defineProperty(_ActionType$Function, ActionFunction.I18n, '@modern-js/dependence-generator'), _defineProperty(_ActionType$Function, ActionFunction.Test, '@modern-js/test-generator'), _defineProperty(_ActionType$Function, ActionFunction.E2ETest, '@modern-js/dependence-generator'), _defineProperty(_ActionType$Function, ActionFunction.Doc, '@modern-js/dependence-generator'), _defineProperty(_ActionType$Function, ActionFunction.Storybook, '@modern-js/dependence-generator'), _defineProperty(_ActionType$Function, ActionFunction.SSG, '@modern-js/ssg-generator'), _defineProperty(_ActionType$Function, ActionFunction.Polyfill, '@modern-js/dependence-generator'), _defineProperty(_ActionType$Function, ActionFunction.Deploy, '@modern-js/cloud-deploy-generator'), _defineProperty(_ActionType$Function, ActionFunction.Proxy, '@modern-js/dependence-generator'), _ActionType$Function)), _defineProperty(_MWANewActionGenerato, ActionType.Refactor, _defineProperty({}, ActionRefactor.BFFToApp, '@modern-js/bff-refactor-generator')), _MWANewActionGenerato);

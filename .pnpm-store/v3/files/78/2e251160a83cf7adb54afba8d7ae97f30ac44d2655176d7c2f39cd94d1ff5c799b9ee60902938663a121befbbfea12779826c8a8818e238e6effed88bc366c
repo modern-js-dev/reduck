@@ -1,0 +1,79 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Logger = void 0;
+
+var _utils = require("@modern-js/utils");
+
+var _constants = require("./constants");
+
+// eslint-disable-next-line eslint-comments/disable-enable-pair
+
+/* eslint-disable no-console */
+class Logger {
+  constructor(level = _constants.LoggerLevel.Info) {
+    this.level = _constants.LoggerLevel.Info;
+    this.level = level;
+  }
+
+  get currentLevelIndex() {
+    return _constants.LevelPriority.indexOf(this.level);
+  }
+
+  getLevalIndex(level) {
+    return _constants.LevelPriority.indexOf(level);
+  }
+
+  error(...meta) {
+    if (this.currentLevelIndex < this.getLevalIndex(_constants.LoggerLevel.Error)) {
+      return;
+    }
+
+    console.log(_utils.chalk.red('[ERROR]'), ...meta);
+  }
+
+  warn(...meta) {
+    if (this.currentLevelIndex < this.getLevalIndex(_constants.LoggerLevel.Warn)) {
+      return;
+    }
+
+    console.log(_utils.chalk.yellow('[WARN]'), ...meta);
+  }
+
+  info(...meta) {
+    if (this.currentLevelIndex < this.getLevalIndex(_constants.LoggerLevel.Info)) {
+      return;
+    }
+
+    console.log(_utils.chalk.green('[INFO]'), ...meta);
+  }
+
+  debug(...meta) {
+    if (this.currentLevelIndex < this.getLevalIndex(_constants.LoggerLevel.Debug)) {
+      return;
+    }
+
+    console.log(_utils.chalk.blue('[DEBUG]'), ...meta);
+  }
+
+  verbose(...meta) {
+    if (this.currentLevelIndex < this.getLevalIndex(_constants.LoggerLevel.Verbose)) {
+      return;
+    }
+
+    console.log('[VERBOSE]', ...meta);
+  }
+
+  stream(...meta) {
+    if (this.currentLevelIndex < this.getLevalIndex(_constants.LoggerLevel.Stream)) {
+      return;
+    }
+
+    console.log('[STREAM]', ...meta);
+  }
+
+}
+
+exports.Logger = Logger;

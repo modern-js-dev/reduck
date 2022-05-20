@@ -1,0 +1,26 @@
+export declare const EN_LOCALE: {
+  command: {
+    change: {
+      describe: string;
+      empty: string;
+      open: string;
+      no_packages: string;
+    };
+    bump: {
+      describe: string;
+      canary: string;
+      preid: string;
+      snapshot: string;
+      ignore: string;
+    };
+    pre: {
+      describe: string;
+    };
+    release: {
+      describe: string;
+      tag: string;
+      ignore_scripts: string;
+      no_git_checks: string;
+    };
+  };
+};

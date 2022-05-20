@@ -1,0 +1,43 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.buildWatch = void 0;
+
+var _monorepo = require("../parse-config/monorepo");
+
+var _dev = require("../features/dev");
+
+var _getProjects = require("../projects/get-projects");
+
+var _dag = require("../dag");
+
+const buildWatch = async (targetProjectName, option, api) => {
+  const {
+    appDirectory
+  } = api.useAppContext();
+  const {
+    onlySelf = false,
+    init = false
+  } = option;
+  const projects = await (0, _getProjects.getProjects)({
+    packagesMatchs: {
+      enableAutoFinder: true
+    }
+  }, appDirectory);
+  const operator = (0, _dag.initDAG)(projects);
+  operator.checkCircle();
+  const {
+    rootPath,
+    packageManager
+  } = (0, _monorepo.getMonorepoBaseData)(process.cwd());
+  await (0, _dev.runBuildWatchTask)(targetProjectName, operator, {
+    rootPath,
+    packageManager,
+    onlySelf,
+    needInit: init
+  });
+};
+
+exports.buildWatch = buildWatch;

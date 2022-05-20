@@ -1,0 +1,44 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _plugin = require("./plugin");
+
+Object.keys(_plugin).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  if (key in exports && exports[key] === _plugin[key]) return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function () {
+      return _plugin[key];
+    }
+  });
+});
+
+var _plugin2 = require("@modern-js/plugin");
+
+Object.keys(_plugin2).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  if (key in exports && exports[key] === _plugin2[key]) return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function () {
+      return _plugin2[key];
+    }
+  });
+});
+
+var _loadPlugins = require("./loadPlugins");
+
+Object.keys(_loadPlugins).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  if (key in exports && exports[key] === _loadPlugins[key]) return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function () {
+      return _loadPlugins[key];
+    }
+  });
+});

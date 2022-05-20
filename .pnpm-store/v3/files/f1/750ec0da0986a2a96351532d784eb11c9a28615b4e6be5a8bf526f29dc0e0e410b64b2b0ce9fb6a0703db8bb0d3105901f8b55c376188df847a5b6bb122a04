@@ -1,0 +1,7 @@
+import { createBabelChain } from '@modern-js/babel-chain';
+export const getBuildInPlugins = opts => {
+  const chain = createBabelChain();
+  chain.plugin('@modern-js/babel-plugin-import-check').use(require.resolve("./import-check"), [opts]);
+  chain.plugin('@modern-js/babel-plugin-import-path').use(require.resolve("./import-path"), [opts]);
+  return chain;
+};

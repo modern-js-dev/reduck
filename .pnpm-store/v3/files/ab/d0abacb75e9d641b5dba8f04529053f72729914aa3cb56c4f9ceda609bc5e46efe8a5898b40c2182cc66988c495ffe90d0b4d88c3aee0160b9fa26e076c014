@@ -1,0 +1,20 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.devCli = void 0;
+
+var _utils = require("@modern-js/utils");
+
+const local = _utils.Import.lazy('../locale', require);
+
+const commands = _utils.Import.lazy('../commands', require);
+
+const devCli = (program, api) => {
+  program.command('dev [subCmd]').usage('[options]').description(local.i18n.t(local.localeKeys.command.dev.describe)).option('--tsconfig [tsconfig]', local.i18n.t(local.localeKeys.command.build.tsconfig), './tsconfig.json').action(async (subCmd, params) => {
+    await commands.dev(api, params, subCmd);
+  });
+};
+
+exports.devCli = devCli;

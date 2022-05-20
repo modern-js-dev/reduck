@@ -1,0 +1,12 @@
+const metrics = {
+  gauges() {// no impl
+  },
+
+  emitCounter() {// no impl
+  },
+
+  emitTimer() {// no impl
+  }
+
+};
+export { metrics };

@@ -1,0 +1,93 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.enable = exports.disable = void 0;
+
+var _async_hooks = _interopRequireDefault(require("async_hooks"));
+
+var asyncHooksInterface = _interopRequireWildcard(require("./asyncHooksInterface"));
+
+function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
+
+function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/**
+ * modified from https://github.com/farrow-js/farrow/tree/master/packages/farrow-pipeline
+ * license at https://github.com/farrow-js/farrow/blob/master/LICENSE
+ */
+const createAsyncHooks = () => {
+  const store = new Map(); // eslint-disable-next-line node/no-unsupported-features/node-builtins
+
+  const hooks = _async_hooks.default.createHook({
+    init: (asyncId, _, triggerAsyncId) => {
+      if (store.has(triggerAsyncId)) {
+        const value = store.get(triggerAsyncId);
+
+        if (value) {
+          store.set(asyncId, value);
+        }
+      }
+    },
+    destroy: asyncId => {
+      if (store.has(asyncId)) {
+        store.delete(asyncId);
+      }
+    }
+  });
+
+  const set = value => {
+    store.set(_async_hooks.default.executionAsyncId(), value);
+  };
+
+  const get = () => {
+    return store.get(_async_hooks.default.executionAsyncId());
+  };
+
+  const clear = () => {
+    store.clear();
+  };
+
+  const enable = () => {
+    hooks.enable();
+  };
+
+  const disable = () => {
+    hooks.disable();
+    store.clear();
+  };
+
+  const entries = () => {
+    return store.entries();
+  };
+
+  return {
+    enable,
+    disable,
+    set,
+    get,
+    clear,
+    entries
+  };
+};
+
+const enable = () => {
+  const hooks = createAsyncHooks();
+  disable();
+  asyncHooksInterface.impl(hooks);
+  hooks.enable();
+};
+
+exports.enable = enable;
+
+const disable = () => {
+  var _asyncHooksInterface$;
+
+  (_asyncHooksInterface$ = asyncHooksInterface.asyncHooks) === null || _asyncHooksInterface$ === void 0 ? void 0 : _asyncHooksInterface$.disable();
+  asyncHooksInterface.reset();
+};
+
+exports.disable = disable;

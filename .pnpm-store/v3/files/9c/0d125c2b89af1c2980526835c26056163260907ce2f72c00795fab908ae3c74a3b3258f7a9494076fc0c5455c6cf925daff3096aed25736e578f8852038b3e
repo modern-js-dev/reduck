@@ -1,0 +1,9 @@
+import { IProjectNode } from '../projects/get-projects';
+export declare class EdgeManager {
+  private _dependencyEdgeHash;
+  constructor();
+  reduceOneEdge(project: IProjectNode): void;
+  reduceEdges(project: IProjectNode, edges: number): void;
+  getEdge(project: IProjectNode): number;
+  setEdge(project: IProjectNode): void;
+}

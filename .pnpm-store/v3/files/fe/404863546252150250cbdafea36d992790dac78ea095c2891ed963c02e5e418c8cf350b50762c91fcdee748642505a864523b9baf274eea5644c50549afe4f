@@ -1,0 +1,19 @@
+import type { NormalizedConfig } from '@modern-js/core';
+export declare const debug: any;
+export declare const mergeExtension: (users: any[]) => {
+  middleware: any[];
+};
+export declare const noop: () => void;
+export declare const createErrorDocument: (status: number, text: string) => string;
+export declare type CollectMiddlewaresResult = {
+  web: any[];
+  api: any[];
+};
+export declare const createMiddlewareCollecter: () => {
+  getMiddlewares: () => CollectMiddlewaresResult;
+  addWebMiddleware: (input: any) => void;
+  addAPIMiddleware: (input: any) => void;
+};
+export declare const toPath: (reg: string, params: Record<string, any>) => string;
+export declare const getStaticReg: (output?: NormalizedConfig['output']) => RegExp;
+export declare const prepareFavicons: (favicon: string | undefined, faviconByEntries?: Record<string, string | undefined> | undefined) => string[];

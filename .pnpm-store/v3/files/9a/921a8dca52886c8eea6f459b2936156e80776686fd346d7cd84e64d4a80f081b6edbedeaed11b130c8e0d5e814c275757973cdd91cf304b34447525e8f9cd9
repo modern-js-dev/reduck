@@ -1,0 +1,9 @@
+/**
+ * modified from https://github.com/farrow-js/farrow/tree/master/packages/farrow-pipeline
+ * license at https://github.com/farrow-js/farrow/blob/master/LICENSE
+ */
+import { Hooks, AnyFn } from './asyncHooksInterface';
+export declare const createHooks: <HS extends Hooks>(defaultHooks: HS) => {
+  run: <F extends AnyFn>(f: F, implementations: HS) => ReturnType<F>;
+  hooks: HS;
+};

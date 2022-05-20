@@ -1,0 +1,15 @@
+import { IProjectNode } from '../../projects/get-projects';
+import { IBuildWatchConfig } from '.';
+export declare class WatchedProjectsState {
+  private readonly _config;
+  private readonly _fromNodes;
+  private _watchProjects;
+  private readonly _projectsFileMap;
+  constructor(fromNodes: IProjectNode[], config: IBuildWatchConfig);
+  private _initState;
+  getChangedProject(changedFilPath: string): IProjectNode | undefined;
+  getWatchedProjectsPath(): string[];
+  updateState(): void;
+  get watchProjects(): Record<string, IProjectNode>;
+  get watchProjectsName(): string[];
+}

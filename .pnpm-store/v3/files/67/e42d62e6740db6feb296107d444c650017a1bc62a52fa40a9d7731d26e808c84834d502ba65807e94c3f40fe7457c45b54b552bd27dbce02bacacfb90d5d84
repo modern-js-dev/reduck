@@ -1,0 +1,56 @@
+/// <reference types="node" />
+import { EventEmitter } from 'events';
+import { fs } from '@modern-js/utils';
+import { GeneratorContext } from './constants';
+import { Logger } from "../logger";
+import { ILogger } from "../logger/constants.d";
+import { MaterialsManager } from "../materials";
+import { FsMaterial } from "../materials/FsMaterial.d";
+interface ICreateOptions {
+  logger: Logger;
+  materialsManager: MaterialsManager;
+  outputPath: string;
+}
+export declare class GeneratorCore {
+  logger: ILogger;
+  materialsManager: MaterialsManager;
+  outputPath: string;
+  output: {
+    fs: (file: string | number, data: any, options?: fs.WriteFileOptions | string) => Promise<void>;
+  };
+  _context: GeneratorContext;
+  event: EventEmitter;
+  constructor({
+    logger,
+    materialsManager,
+    outputPath
+  }: ICreateOptions);
+  private get lifeCycleMethod();
+  private setConfig;
+  addMaterial(key: string, material: FsMaterial): void;
+  private setCurrent;
+  private setOutputPath;
+  private loadLocalGenerator;
+  private loadRemoteGenerator;
+  handleForged(generatorName: string, context: {
+    materials: {
+      default: {
+        basePath: string;
+      };
+    };
+    data: Record<string, unknown>;
+    config: Record<string, unknown>;
+  }, needWait?: boolean, projectPath?: string): Promise<unknown>;
+  loadGenerator(generator: string): Promise<{
+    materialKey?: undefined;
+    generatorPkg?: undefined;
+    generatorScript?: undefined;
+  } | {
+    materialKey: string;
+    generatorPkg: FsMaterial;
+    generatorScript: any;
+  }>;
+  runGenerator(generator: string, config?: Record<string, unknown>): Promise<void>;
+  runSubGenerator(subGenerator: string, relativePwdPath?: string, config?: Record<string, any>): Promise<void>;
+}
+export {};

@@ -1,0 +1,46 @@
+import { Context, Model, OnMountHook, Actions } from "../types";
+declare type ModelInitialParams = [context: Context, hook: {
+  use: Context['apis']['useModel'];
+  onMount: OnMountHook;
+}];
+export declare const initializerSymbol: unique symbol;
+declare type ActionDesc<S, State> = {
+  actions?: Actions<State extends void ? S : State>;
+};
+declare type ModelFn = <State = void>(name: string) => {
+  define: (<S, M extends ActionDesc<S, State> & {
+    state: S;
+  } = ActionDesc<S, State> & {
+    state: S;
+  }, Resp = {
+    _name: string;
+    _: Omit<M, 'state'> & {
+      state: State extends void ? S : State;
+    };
+  }>(c: (...args: ModelInitialParams) => M & {
+    state: S;
+  }) => Resp & ((ns: string) => Resp & ((ns: string) => Resp)) & {
+    state: State extends void ? S : State;
+  }) & (<S, M extends ActionDesc<S, State> & {
+    state: S;
+  } = ActionDesc<S, State> & {
+    state: S;
+  }, Resp = {
+    _name: string;
+    _: Omit<M, 'state'> & {
+      state: State extends void ? S : State;
+    };
+  }>(c: M & {
+    state: S;
+  }) => Resp & {
+    (ns: string): Resp & ((ns: string) => Resp);
+    _name: string;
+    _: Omit<M, 'state'> & {
+      state: State extends void ? S : State;
+    };
+  });
+};
+declare const model: ModelFn;
+export declare const getModelInitializer: (_model: Model) => any;
+export declare const isModel: (_model: any) => _model is Model;
+export default model;

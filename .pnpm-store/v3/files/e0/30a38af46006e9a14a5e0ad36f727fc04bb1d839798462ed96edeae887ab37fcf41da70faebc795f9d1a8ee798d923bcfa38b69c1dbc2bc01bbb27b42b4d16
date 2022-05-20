@@ -1,0 +1,8 @@
+export declare function isString(str: any): str is string;
+export declare function isUndefined(obj: any): obj is undefined;
+export declare function isArray(obj: unknown): obj is any[];
+export declare function isFunction(func: any): func is Function;
+export declare function isObject(obj: unknown): obj is Record<string, any>;
+export declare function isPlainObject(obj: unknown): obj is Record<string, any>;
+export declare function isPromise(obj: any): obj is Promise<any>;
+export declare function isRegExp(obj: any): obj is RegExp;

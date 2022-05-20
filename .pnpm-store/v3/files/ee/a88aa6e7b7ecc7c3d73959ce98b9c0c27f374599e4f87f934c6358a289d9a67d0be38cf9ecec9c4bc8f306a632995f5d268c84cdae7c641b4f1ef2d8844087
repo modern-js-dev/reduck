@@ -1,0 +1,53 @@
+import path from 'path';
+import { json5 } from '@modern-js/utils';
+import { fs } from '@modern-js/generator-utils';
+export function alreadyRepo(cwd = process.cwd()) {
+  try {
+    return fs.existsSync(path.resolve(cwd, 'package.json'));
+  } catch (e) {
+    return false;
+  }
+}
+export const readJson = jsonPath => {
+  if (!fs.existsSync(jsonPath)) {
+    return {};
+  }
+
+  const jsonStr = fs.readFileSync(jsonPath, {
+    encoding: 'utf8'
+  });
+
+  try {
+    return json5.parse(jsonStr);
+  } catch (error) {
+    throw Error(`${jsonPath} is not a valid json, please check and try again.`);
+  }
+};
+export function hasEnabledFunction(action, dependencies, devDependencies, peerDependencies, cwd) {
+  const packageJsonPath = path.normalize(`${cwd}/package.json`);
+  const packageJson = readJson(packageJsonPath);
+
+  if (!dependencies[action] && !devDependencies[action]) {
+    return false;
+  }
+
+  if (dependencies[action]) {
+    var _packageJson$dependen;
+
+    return (_packageJson$dependen = packageJson.dependencies) === null || _packageJson$dependen === void 0 ? void 0 : _packageJson$dependen[dependencies[action]];
+  }
+
+  if (peerDependencies[action]) {
+    var _packageJson$peerDepe;
+
+    return (_packageJson$peerDepe = packageJson.peerDependencies) === null || _packageJson$peerDepe === void 0 ? void 0 : _packageJson$peerDepe[peerDependencies[action]];
+  }
+
+  if (!peerDependencies[action] && devDependencies[action]) {
+    var _packageJson$devDepen;
+
+    return (_packageJson$devDepen = packageJson.devDependencies) === null || _packageJson$devDepen === void 0 ? void 0 : _packageJson$devDepen[devDependencies[action]];
+  }
+
+  return false;
+}

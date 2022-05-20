@@ -1,0 +1,129 @@
+"use strict";
+
+var path = _interopRequireWildcard(require("path"));
+
+var _utils = require("@modern-js/utils");
+
+function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
+
+function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+
+const argv = _utils.Import.lazy('process.argv', require);
+
+const core = _utils.Import.lazy('@modern-js/core', require);
+
+const copyUtils = _utils.Import.lazy('../utils/copy', require);
+
+const STYLE_DIRS = 'styles';
+const SRC_DIRS = 'src';
+
+const copyAssets = ({
+  targetDir,
+  outputDir
+}) => {
+  const assetsFiles = _utils.glob.sync(`${targetDir}/**/*.*`, {
+    ignore: ['**/*.{js,jsx,ts,tsx,d.ts,scss,less,css,sass}']
+  });
+
+  if (assetsFiles.length > 0) {
+    _utils.fs.ensureDirSync(outputDir);
+  }
+
+  for (const resource of assetsFiles) {
+    const file = path.relative(targetDir, resource);
+
+    _utils.fs.ensureDirSync(path.dirname(path.resolve(outputDir, file)));
+
+    _utils.fs.copyFileSync(resource, path.resolve(outputDir, file));
+  }
+};
+
+const watchAssets = ({
+  targetDir,
+  outputDir
+}) => {
+  (0, _utils.watch)(`${targetDir}/**/*.*`, ({
+    changeType,
+    changedFilePath
+  }) => {
+    if (changeType === _utils.WatchChangeType.UNLINK) {
+      const removeFile = path.normalize(`${outputDir}/${path.relative(targetDir, changedFilePath)}`);
+
+      _utils.fs.removeSync(removeFile);
+
+      return;
+    }
+
+    const file = path.relative(targetDir, changedFilePath);
+
+    _utils.fs.copyFileSync(changedFilePath, path.resolve(outputDir, file));
+  }, ['**/*.{js,jsx,ts,tsx,d.ts,scss,less,css,sass}']);
+};
+
+const taskMain = ({
+  modernConfig,
+  appContext
+}) => {
+  const processArgv = argv(process.argv.slice(2));
+  const config = processArgv({});
+  const {
+    appDirectory
+  } = appContext;
+  const {
+    jsPath = 'js',
+    assetsPath = 'styles',
+    path: outputPath = 'dist'
+  } = modernConfig.output;
+  const srcDir = path.join(appDirectory, SRC_DIRS);
+  const outputDirToSrc = path.join(appDirectory, outputPath, jsPath, assetsPath);
+  const styleDir = path.join(appDirectory, STYLE_DIRS);
+  const outputDirToStyle = path.join(appDirectory, outputPath, assetsPath);
+  copyAssets({
+    targetDir: srcDir,
+    outputDir: outputDirToSrc
+  });
+  copyAssets({
+    targetDir: styleDir,
+    outputDir: outputDirToStyle
+  });
+  copyUtils.copyTask({
+    modernConfig,
+    appContext
+  });
+
+  if (config.watch) {
+    watchAssets({
+      targetDir: srcDir,
+      outputDir: outputDirToSrc
+    });
+    watchAssets({
+      targetDir: styleDir,
+      outputDir: outputDirToStyle
+    });
+  }
+};
+
+(async () => {
+  let options;
+
+  if (process.env.CORE_INIT_OPTION_FILE) {
+    ({
+      options
+    } = require(process.env.CORE_INIT_OPTION_FILE));
+  }
+
+  const {
+    resolved: modernConfig,
+    appContext
+  } = await core.cli.init([], options);
+  core.manager.run(() => {
+    try {
+      taskMain({
+        modernConfig,
+        appContext
+      });
+    } catch (e) {
+      console.error(e.message);
+    }
+  });
+})();

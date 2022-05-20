@@ -1,0 +1,18 @@
+import _objectSpread from "@babel/runtime/helpers/esm/objectSpread2";
+var allowedFeatures = ['router', 'state'];
+export default function resolvePlugins(features) {
+  var plugins = [];
+
+  if (!features) {
+    return plugins;
+  }
+
+  Object.keys(features).forEach(function (feature) {
+    if (allowedFeatures.includes(feature)) {
+      var curPluginRes = require("@modern-js/runtime/plugins")[feature](_objectSpread({}, features[feature]));
+
+      plugins.push(curPluginRes);
+    }
+  });
+  return plugins;
+}

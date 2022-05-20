@@ -1,0 +1,66 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.initWatcher = void 0;
+const crypto_1 = __importDefault(require("crypto"));
+const fs_1 = __importDefault(require("fs"));
+const path_1 = __importDefault(require("path"));
+const utils_1 = require("@modern-js/utils");
+const debug = (0, utils_1.createDebugger)('watch-files');
+const md5 = (data) => crypto_1.default.createHash('md5').update(data).digest('hex');
+const hashMap = new Map();
+const initWatcher = async (loaded, appDirectory, configDir, hooksRunner, argv) => {
+    // only add fs watcher on dev mode.
+    if (((0, utils_1.isDev)() || (0, utils_1.isTest)()) && argv[0] === 'dev') {
+        const extraFiles = await hooksRunner.watchFiles();
+        const configPath = path_1.default.join(appDirectory, configDir);
+        const watched = [
+            `${configPath}/html`,
+            ...extraFiles,
+            loaded === null || loaded === void 0 ? void 0 : loaded.filePath,
+            ...loaded.dependencies,
+        ].filter(Boolean);
+        debug(`watched: %o`, watched);
+        const watcher = utils_1.chokidar.watch(watched, {
+            cwd: appDirectory,
+            ignoreInitial: true,
+            ignorePermissionErrors: true,
+            ignored: [
+                /node_modules/,
+                '**/__test__/**',
+                '**/*.test.(js|jsx|ts|tsx)',
+                '**/*.spec.(js|jsx|ts|tsx)',
+                '**/*.stories.(js|jsx|ts|tsx)',
+            ],
+        });
+        watcher.on('change', changed => {
+            const lastHash = hashMap.get(changed);
+            const currentHash = md5(fs_1.default.readFileSync(path_1.default.join(appDirectory, changed), 'utf8'));
+            if (currentHash !== lastHash) {
+                debug(`file change: %s`, changed);
+                hashMap.set(changed, currentHash);
+                hooksRunner.fileChange({ filename: changed, eventType: 'change' });
+            }
+        });
+        watcher.on('add', name => {
+            debug(`add file: %s`, name);
+            const currentHash = md5(fs_1.default.readFileSync(path_1.default.join(appDirectory, name), 'utf8'));
+            hashMap.set(name, currentHash);
+            hooksRunner.fileChange({ filename: name, eventType: 'add' });
+        });
+        watcher.on('unlink', name => {
+            debug(`remove file: %s`, name);
+            if (hashMap.has(name)) {
+                hashMap.delete(name);
+            }
+            hooksRunner.fileChange({ filename: name, eventType: 'unlink' });
+        });
+        watcher.on('error', err => {
+            throw err;
+        });
+        return watcher;
+    }
+};
+exports.initWatcher = initWatcher;

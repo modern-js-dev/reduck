@@ -1,0 +1,208 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _path = _interopRequireDefault(require("path"));
+
+var _constants = require("@modern-js/utils/constants");
+
+var _react = _interopRequireDefault(require("react"));
+
+var _server = _interopRequireDefault(require("react-dom/server"));
+
+var _serializeJavascript = _interopRequireDefault(require("serialize-javascript"));
+
+var _reactHelmet = _interopRequireDefault(require("react-helmet"));
+
+var _template = require("./template");
+
+var _type = require("./type");
+
+var _helmet = _interopRequireDefault(require("./helmet"));
+
+var _reduce = require("./reduce");
+
+var loadableRenderer = _interopRequireWildcard(require("./loadable"));
+
+var styledComponentRenderer = _interopRequireWildcard(require("./styledComponent"));
+
+var _measure = require("./measure");
+
+function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
+
+function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+const buildTemplateData = (context, data, renderLevel) => {
+  const {
+    request
+  } = context;
+  return {
+    data,
+    context: {
+      request: {
+        params: request.params,
+        query: request.query,
+        pathname: request.pathname,
+        host: request.host,
+        url: request.url,
+        headers: request.headers,
+        cookieMap: request.cookieMap
+      }
+    },
+    renderLevel
+  };
+};
+
+class Entry {
+  constructor(options) {
+    _defineProperty(this, "entryName", void 0);
+
+    _defineProperty(this, "result", void 0);
+
+    _defineProperty(this, "metrics", void 0);
+
+    _defineProperty(this, "logger", void 0);
+
+    _defineProperty(this, "App", void 0);
+
+    _defineProperty(this, "fragments", void 0);
+
+    const {
+      ctx
+    } = options;
+    const {
+      entryName,
+      template: templateHTML
+    } = ctx;
+    this.fragments = (0, _template.toFragments)(templateHTML);
+    this.entryName = entryName;
+    this.App = options.App;
+    this.metrics = ctx.metrics;
+    this.logger = ctx.logger;
+    this.result = {
+      renderLevel: _type.RenderLevel.CLIENT_RENDER,
+      html: '',
+      chunksMap: {
+        js: '',
+        css: ''
+      }
+    };
+  }
+
+  async renderToHtml(context) {
+    const {
+      ssrContext
+    } = context;
+
+    if (ssrContext.redirection.url) {
+      return '';
+    }
+
+    const prefetchData = await this.prefetch(context);
+
+    if (ssrContext.redirection.url) {
+      return '';
+    }
+
+    if (this.result.renderLevel >= _type.RenderLevel.SERVER_PREFETCH) {
+      this.result.html = this.renderToString(context);
+    }
+
+    if (ssrContext.redirection.url) {
+      return '';
+    }
+
+    let html = '';
+    const templateData = buildTemplateData(ssrContext, prefetchData, this.result.renderLevel);
+    const SSRData = this.getSSRDataScript(templateData);
+
+    for (const fragment of this.fragments) {
+      if (fragment.isVariable && fragment.content === 'SSRDataScript') {
+        html += fragment.getValue(SSRData);
+      } else {
+        html += fragment.getValue(this.result);
+      }
+    }
+
+    const helmetData = _reactHelmet.default.renderStatic();
+
+    return helmetData ? (0, _helmet.default)(html, helmetData) : html;
+  }
+
+  async prefetch(context) {
+    const {
+      App: {
+        prefetch
+      }
+    } = this;
+    let prefetchData;
+    const end = (0, _measure.time)();
+
+    try {
+      prefetchData = prefetch ? await prefetch(context) : null;
+      this.result.renderLevel = _type.RenderLevel.SERVER_PREFETCH;
+      const prefetchCost = end();
+      this.logger.debug(`App Prefetch cost = %d ms`, prefetchCost);
+      this.metrics.emitTimer('app.prefetch.cost', prefetchCost);
+    } catch (e) {
+      this.result.renderLevel = _type.RenderLevel.CLIENT_RENDER;
+      this.logger.error('App Prefetch Render', e);
+      this.metrics.emitCounter('app.prefetch.render.error', 1);
+    }
+
+    return prefetchData || {};
+  }
+
+  renderToString(context) {
+    let html = '';
+    const end = (0, _measure.time)();
+    const {
+      ssrContext
+    } = context;
+
+    try {
+      const App = /*#__PURE__*/_react.default.createElement(this.App, {
+        context: Object.assign(context, {
+          ssr: true
+        })
+      }); // Todo render Hook
+
+
+      const renderContext = {
+        loadableManifest: _path.default.resolve(ssrContext.distDir, _constants.LOADABLE_STATS_FILE),
+        result: this.result,
+        entryName: this.entryName
+      };
+      html = (0, _reduce.reduce)(App, renderContext, [styledComponentRenderer.toHtml, loadableRenderer.toHtml, jsx => _server.default.renderToString(jsx)]);
+      const cost = end();
+      this.logger.debug('App Render To HTML cost = %d ms', cost);
+      this.metrics.emitTimer('app.render.html.cost', cost);
+      this.result.renderLevel = _type.RenderLevel.SERVER_RENDER;
+    } catch (e) {
+      this.logger.error('App Render To HTML', e);
+      this.metrics.emitCounter('app.render.html.error', 1);
+    }
+
+    return html;
+  }
+
+  getSSRDataScript(templateData) {
+    return {
+      SSRDataScript: `
+        <script>window._SSR_DATA = ${(0, _serializeJavascript.default)(templateData, {
+        isJSON: true
+      })}</script>
+      `
+    };
+  }
+
+}
+
+exports.default = Entry;

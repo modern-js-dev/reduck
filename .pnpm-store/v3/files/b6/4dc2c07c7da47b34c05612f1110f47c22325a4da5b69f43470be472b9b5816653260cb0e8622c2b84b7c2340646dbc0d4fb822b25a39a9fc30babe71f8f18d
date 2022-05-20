@@ -1,0 +1,28 @@
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+import NodeEnvironment from 'jest-environment-node';
+import { createApp } from "./app";
+import { bff_info_key } from "./constant";
+export default class extends NodeEnvironment {
+  constructor(...args) {
+    super(...args);
+
+    _defineProperty(this, "app", void 0);
+  }
+
+  async setup() {
+    const bff_info = this.global[bff_info_key];
+    const {
+      plugins
+    } = bff_info; // eslint-disable-next-line no-multi-assign
+
+    this.global.app = this.app = await createApp(bff_info.appDir, bff_info.modernUserConfig, plugins, bff_info.routes);
+  }
+
+  async teardown() {
+    var _this$app, _this$app$server;
+
+    await ((_this$app = this.app) === null || _this$app === void 0 ? void 0 : (_this$app$server = _this$app.server) === null || _this$app$server === void 0 ? void 0 : _this$app$server.close());
+  }
+
+}

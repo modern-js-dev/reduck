@@ -1,0 +1,28 @@
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+export class Package {
+  constructor(packageJson, packageConfigPath, rootPath) {
+    _defineProperty(this, "json", void 0);
+
+    _defineProperty(this, "configPath", void 0);
+
+    _defineProperty(this, "rootPath", void 0);
+
+    this.configPath = packageConfigPath;
+    this.rootPath = rootPath;
+    this.json = packageJson;
+  }
+
+  get name() {
+    return this.json.name;
+  }
+
+  get path() {
+    return this.configPath;
+  }
+
+  get(key) {
+    return this.json[key];
+  }
+
+}

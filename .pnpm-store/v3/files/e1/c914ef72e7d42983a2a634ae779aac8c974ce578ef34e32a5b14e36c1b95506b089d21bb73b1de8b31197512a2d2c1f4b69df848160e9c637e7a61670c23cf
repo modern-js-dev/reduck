@@ -1,0 +1,20 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.program = exports.initCommandsMap = void 0;
+const utils_1 = require("@modern-js/utils");
+Object.defineProperty(exports, "program", { enumerable: true, get: function () { return utils_1.program; } });
+function initCommandsMap() {
+    if (!utils_1.program.hasOwnProperty('commandsMap')) {
+        Object.defineProperty(utils_1.program, 'commandsMap', {
+            get() {
+                const map = new Map();
+                for (const command of utils_1.program.commands) {
+                    map.set(command._name, command);
+                }
+                return map;
+            },
+            configurable: false,
+        });
+    }
+}
+exports.initCommandsMap = initCommandsMap;

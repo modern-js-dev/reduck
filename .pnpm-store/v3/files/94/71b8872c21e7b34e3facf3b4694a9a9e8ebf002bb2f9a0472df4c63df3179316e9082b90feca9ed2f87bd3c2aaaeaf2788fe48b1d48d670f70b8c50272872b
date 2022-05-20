@@ -1,0 +1,2 @@
+import type { NormalizedConfig } from '@modern-js/core';
+export declare const shouldUseSourceMap: (config: NormalizedConfig) => boolean;

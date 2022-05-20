@@ -1,0 +1,12 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.isProdProfile = exports.isTest = exports.isProd = exports.isDev = void 0;
+const isDev = () => process.env.NODE_ENV === 'development';
+exports.isDev = isDev;
+const isProd = () => process.env.NODE_ENV === 'production';
+exports.isProd = isProd;
+const isTest = () => process.env.NODE_ENV === 'test';
+exports.isTest = isTest;
+// Variable used for enabling profiling in Production.
+const isProdProfile = () => (0, exports.isProd)() && process.argv.includes('--profile');
+exports.isProdProfile = isProdProfile;

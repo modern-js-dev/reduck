@@ -1,0 +1,110 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.mergeUserJestConfig = exports.default = void 0;
+
+var _path = _interopRequireDefault(require("path"));
+
+var _utils = require("@modern-js/utils");
+
+var _testing = require("@modern-js/testing");
+
+var _webpack = require("@modern-js/webpack");
+
+var _testingPluginBff = _interopRequireDefault(require("@modern-js/testing-plugin-bff"));
+
+var _constant = require("../constant");
+
+var _test = _interopRequireDefault(require("./test"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+const mergeUserJestConfig = testUtils => {
+  const resolveJestConfig = testUtils.testConfig.jest; // resolveJestConfig 如果是函数类型，在所有测试插件 jestConfig 都执行后，再执行生成最终配置
+
+  if (resolveJestConfig && typeof resolveJestConfig !== 'function') {
+    testUtils.mergeJestConfig(resolveJestConfig);
+  }
+};
+
+exports.mergeUserJestConfig = mergeUserJestConfig;
+
+var _default = () => {
+  const BffPlugin = (0, _testingPluginBff.default)();
+  return {
+    name: '@modern-js/plugin-testing',
+    usePlugins: [BffPlugin],
+    post: [BffPlugin.name],
+    registerHook: _testing.testingHooks,
+    setup: api => {
+      let testingExportsUtils;
+      return {
+        commands: ({
+          program
+        }) => {
+          program.command('test').allowUnknownOption().usage('<regexForTestFiles> --[options]').action(async () => {
+            await (0, _test.default)(api);
+          });
+        },
+
+        validateSchema() {
+          return _utils.PLUGIN_SCHEMAS['@modern-js/plugin-testing'];
+        },
+
+        config() {
+          const appContext = api.useAppContext();
+          testingExportsUtils = (0, _utils.createRuntimeExportsUtils)(appContext.internalDirectory, 'testing');
+          return {
+            source: {
+              alias: {
+                '@modern-js/runtime/testing': testingExportsUtils.getPath()
+              }
+            }
+          };
+        },
+
+        addRuntimeExports() {
+          const testingPath = _path.default.resolve(__dirname, '../');
+
+          testingExportsUtils.addExport(`export * from '${testingPath}'`);
+        },
+
+        jestConfig: async (utils, next) => {
+          const appContext = api.useAppContext();
+          const userConfig = api.useResolvedConfigContext();
+          const apiOnly = await (0, _utils.isApiOnly)(appContext.appDirectory);
+
+          if (apiOnly) {
+            return next(utils);
+          }
+
+          const webpackConfig = (0, _webpack.getWebpackConfig)(_webpack.WebpackConfigTarget.CLIENT, appContext, userConfig);
+          const {
+            resolve: {
+              alias = {}
+            }
+          } = webpackConfig;
+          utils.mergeJestConfig({
+            globals: {
+              [_constant.MODERNJS_CONFIG_KEY]: userConfig
+            },
+            moduleNameMapper: (0, _testing.getModuleNameMapper)(alias),
+            testEnvironment: 'jsdom',
+            resolver: _testing.DEFAULT_RESOLVER_PATH,
+            rootDir: appContext.appDirectory || process.cwd(),
+            // todo: diffrernt test root for diffrent solutions
+            // testMatch: [`<rootDir>/(src|tests|electron)/**/*.test.[jt]s?(x)`],
+            // testMatch bug on windows, issue: https://github.com/facebook/jest/issues/7914
+            testMatch: [`<rootDir>/src/**/*.test.[jt]s?(x)`, `<rootDir>/tests/**/*.test.[jt]s?(x)`, `<rootDir>/electron/**/*.test.[jt]s?(x)`]
+          });
+          mergeUserJestConfig(utils);
+          return next(utils);
+        }
+      };
+    }
+  };
+};
+
+exports.default = _default;

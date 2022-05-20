@@ -1,0 +1,45 @@
+import { readCompilerOptions } from "../../utils";
+
+var resolveTsCompilerOptions = function resolveTsCompilerOptions() {
+  var tsCompilerOptions = readCompilerOptions() || {};
+  var jsx = tsCompilerOptions.jsx;
+
+  if (!jsx) {
+    return null;
+  }
+
+  tsCompilerOptions.jsx = 'react-jsx';
+  return tsCompilerOptions;
+};
+/**
+ * Map `TestConfig.transformer` to jest config
+ */
+
+
+export var patchTransformer = function patchTransformer(testOperator) {
+  var transformer = testOperator.testConfig.transformer;
+
+  if (transformer === 'babel-jest') {
+    testOperator.mergeJestConfig({
+      transform: {
+        '\\.[jt]sx?$': require.resolve("../transformer/babelTransformer")
+      }
+    });
+  }
+
+  if (transformer === 'ts-jest') {
+    testOperator.mergeJestConfig({
+      transform: {
+        '\\.[jt]sx?$': require.resolve('ts-jest')
+      }
+    });
+    var compilerOptions = resolveTsCompilerOptions();
+    compilerOptions && testOperator.mergeJestConfig({
+      globals: {
+        'ts-jest': {
+          tsconfig: compilerOptions
+        }
+      }
+    });
+  }
+};

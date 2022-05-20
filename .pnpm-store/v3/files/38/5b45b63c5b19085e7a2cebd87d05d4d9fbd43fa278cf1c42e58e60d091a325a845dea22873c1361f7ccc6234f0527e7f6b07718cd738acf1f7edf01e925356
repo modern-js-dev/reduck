@@ -1,0 +1,59 @@
+import type { PluginAPI } from '@modern-js/core';
+import type { IBuildConfig, IPackageModeValue, ITaskMapper } from '../../types';
+import type { LoggerText } from './logger';
+export declare const getCodeInitMapper: (api: PluginAPI, _: IBuildConfig) => IPackageModeValue[];
+export declare const getCodeMapper: (api: PluginAPI, {
+  logger,
+  taskPath,
+  config,
+  initMapper,
+  srcRootDir,
+  willCompilerDirOrFile
+}: ITaskMapper & {
+  config: IBuildConfig;
+  initMapper: IPackageModeValue[];
+  srcRootDir: string;
+  willCompilerDirOrFile: string;
+}) => {
+  logger: LoggerText | null;
+  taskPath: string;
+  params: string[];
+}[];
+export declare const getDtsMapper: (api: PluginAPI, config: IBuildConfig, logger: LoggerText) => {
+  logger: LoggerText;
+  taskPath: string;
+  params: string[];
+}[];
+/**
+ * 处理日志信息
+ */
+
+export declare class LogStack {
+  private _codeLogStack;
+  constructor();
+  update(latestLog: string, {
+    splitEOL
+  }?: {
+    splitEOL?: boolean | undefined;
+  }): void;
+  clear(): void;
+  get value(): string[];
+}
+export declare const logTemplate: (title: string, messageStack: string[], maxLength: number, {
+  noBottomBorder,
+  bottomBorderText,
+  noLeftBorder,
+  leftBorder,
+  contentColor
+}?: {
+  noBottomBorder?: boolean | undefined;
+  bottomBorderText?: string | undefined;
+  noLeftBorder?: boolean | undefined;
+  leftBorder?: string | undefined;
+  contentColor?: ((s: string) => string) | undefined;
+}) => string;
+export declare class TimeCounter {
+  static _now: number;
+  static time(): void;
+  static timeEnd(): string;
+}

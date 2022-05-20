@@ -1,0 +1,5 @@
+import { IProjectNode } from '../projects/get-projects';
+export declare const create: (projects: IProjectNode[]) => {
+  projectsMap: Map<any, any>;
+  projectList: string[];
+};

@@ -1,0 +1,76 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.ModuleSpecialSchemaMap = exports.ModuleNewActionSchema = exports.ModuleNewActionGenerators = exports.ModuleActionTypesMap = exports.ModuleActionTypes = exports.ModuleActionFunctionsPeerDependencies = exports.ModuleActionFunctionsDevDependencies = exports.ModuleActionFunctionsDependencies = exports.ModuleActionFunctions = void 0;
+
+var _common = require("../common");
+
+var _locale = require("../../locale");
+
+const ModuleActionTypes = [_common.ActionType.Function];
+exports.ModuleActionTypes = ModuleActionTypes;
+const ModuleActionFunctions = [_common.ActionFunction.TailwindCSS, _common.ActionFunction.Less, _common.ActionFunction.Sass, // ActionFunction.I18n,
+// ActionFunction.Doc,
+_common.ActionFunction.Storybook, _common.ActionFunction.RuntimeApi];
+exports.ModuleActionFunctions = ModuleActionFunctions;
+const ModuleActionTypesMap = {
+  [_common.ActionType.Function]: ModuleActionFunctions
+};
+exports.ModuleActionTypesMap = ModuleActionTypesMap;
+const ModuleSpecialSchemaMap = {};
+exports.ModuleSpecialSchemaMap = ModuleSpecialSchemaMap;
+const ModuleNewActionSchema = {
+  key: 'Module_new_action',
+  isObject: true,
+  items: [{
+    key: 'actionType',
+    label: () => _locale.i18n.t(_locale.localeKeys.action.self),
+    type: ['string'],
+    mutualExclusion: true,
+    items: ModuleActionTypes.map(type => ({
+      key: type,
+      label: _common.ActionTypeText[type],
+      type: ['string'],
+      mutualExclusion: true,
+      items: ModuleActionFunctions.map(func => ModuleSpecialSchemaMap[func] || {
+        key: func,
+        label: _common.ActionFunctionText[func]
+      })
+    }))
+  }]
+};
+exports.ModuleNewActionSchema = ModuleNewActionSchema;
+const ModuleActionFunctionsDevDependencies = {
+  [_common.ActionFunction.Doc]: '@modern-js/plugin-docsite',
+  [_common.ActionFunction.Storybook]: '@modern-js/plugin-storybook',
+  [_common.ActionFunction.RuntimeApi]: '@modern-js/runtime',
+  [_common.ActionFunction.TailwindCSS]: 'tailwindcss'
+};
+exports.ModuleActionFunctionsDevDependencies = ModuleActionFunctionsDevDependencies;
+const ModuleActionFunctionsPeerDependencies = {
+  [_common.ActionFunction.RuntimeApi]: '@modern-js/runtime',
+  [_common.ActionFunction.TailwindCSS]: 'tailwindcss'
+};
+exports.ModuleActionFunctionsPeerDependencies = ModuleActionFunctionsPeerDependencies;
+const ModuleActionFunctionsDependencies = {
+  [_common.ActionFunction.I18n]: '@modern-js/plugin-i18n',
+  [_common.ActionFunction.TailwindCSS]: '@modern-js/plugin-tailwindcss',
+  [_common.ActionFunction.Less]: '@modern-js/plugin-less',
+  [_common.ActionFunction.Sass]: '@modern-js/plugin-sass'
+};
+exports.ModuleActionFunctionsDependencies = ModuleActionFunctionsDependencies;
+const ModuleNewActionGenerators = {
+  [_common.ActionType.Function]: {
+    [_common.ActionFunction.TailwindCSS]: '@modern-js/tailwindcss-generator',
+    [_common.ActionFunction.Less]: '@modern-js/dependence-generator',
+    [_common.ActionFunction.Sass]: '@modern-js/dependence-generator',
+    [_common.ActionFunction.I18n]: '@modern-js/dependence-generator',
+    [_common.ActionFunction.Test]: '@modern-js/dependence-generator',
+    [_common.ActionFunction.Doc]: '@modern-js/dependence-generator',
+    [_common.ActionFunction.Storybook]: '@modern-js/storybook-generator',
+    [_common.ActionFunction.RuntimeApi]: '@modern-js/dependence-generator'
+  }
+};
+exports.ModuleNewActionGenerators = ModuleNewActionGenerators;

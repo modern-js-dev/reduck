@@ -1,0 +1,148 @@
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+import { errorLog } from "../log/error";
+import { getMonorepoBaseData } from "../parse-config/monorepo";
+import { getProjectsByPackageConfig, syncGetProjectsByPackageConfig } from "./get-projects-by-packages-config";
+import { getProjectsByWorkspaceFile, syncGetProjectsByWorkspaceFile } from "./get-projects-by-workspace-file";
+var FindProjectsMode;
+
+(function (FindProjectsMode) {
+  FindProjectsMode[FindProjectsMode["Rough"] = 0] = "Rough";
+  FindProjectsMode[FindProjectsMode["Precise"] = 1] = "Precise";
+})(FindProjectsMode || (FindProjectsMode = {}));
+
+const getProjectsByProjectsConfig = (rootPath, configs = []) => {
+  const subProjects = [];
+
+  for (const config of configs) {
+    subProjects.push({
+      name: config.name,
+      extra: {
+        path: config.path
+      },
+      // dagNodeEdge: 0,
+      dependencyEdge: 0,
+      dependentEdge: 0,
+      checkedCircle: false,
+      circlePath: []
+    });
+  }
+
+  return subProjects;
+};
+
+const getProjectsByPackagesMatch = async (rootPath, match, ignore) => {
+  let projects = [];
+
+  if (Array.isArray(match)) {
+    // like lerna`s packages config
+    projects = await getProjectsByPackageConfig(rootPath, match, ignore);
+  } else {
+    // use workspace file
+    projects = await getProjectsByWorkspaceFile(rootPath, match, ignore);
+  }
+
+  const subProjects = [];
+
+  for (const project of projects) {
+    subProjects.push({
+      name: project.name,
+      extra: _objectSpread({
+        path: project.path
+      }, project.json),
+      // dagNodeEdge: 0,
+      dependencyEdge: 0,
+      dependentEdge: 0,
+      checkedCircle: false,
+      circlePath: []
+    });
+  }
+
+  return subProjects;
+};
+
+const syncGetProjectsByPackagesMatch = (rootPath, match, ignore) => {
+  let projects = []; // TODO: code start
+
+  if (Array.isArray(match)) {
+    // like lerna`s packages config
+    projects = syncGetProjectsByPackageConfig(rootPath, match, ignore);
+  } else {
+    // use workspace file
+    projects = syncGetProjectsByWorkspaceFile(rootPath, match, ignore);
+  }
+
+  const subProjects = [];
+
+  for (const project of projects) {
+    subProjects.push({
+      name: project.name,
+      extra: _objectSpread({
+        path: project.path
+      }, project.json),
+      // dagNodeEdge: 0,
+      dependencyEdge: 0,
+      dependentEdge: 0,
+      checkedCircle: false,
+      circlePath: []
+    });
+  }
+
+  return subProjects;
+};
+
+const checkFindProjectsMode = (config // eslint-disable-next-line consistent-return
+) => {
+  if (config.packagesMatchs && Array.isArray(config.packagesMatchs)) {
+    return FindProjectsMode.Rough;
+  }
+
+  if (config.packagesMatchs && typeof config.packagesMatchs === 'object' && (config.packagesMatchs.workspaceFile || config.packagesMatchs.enableAutoFinder)) {
+    return FindProjectsMode.Rough;
+  }
+
+  if (config.projectsConfig && Array.isArray(config.projectsConfig)) {
+    return FindProjectsMode.Precise;
+  }
+
+  if (config.projectsConfig && config.packagesMatchs) {
+    errorLog('There can not be both `packagesMatchs` and `projectsConfig`');
+  }
+
+  errorLog('No `packagesMatchs` and `projectsConfig` configurations found');
+};
+
+export const getProjects = async (config, currentDir = process.cwd()) => {
+  const {
+    rootPath
+  } = getMonorepoBaseData(currentDir);
+  const mode = checkFindProjectsMode(config);
+  let projects = [];
+
+  if (mode === FindProjectsMode.Rough) {
+    projects = await getProjectsByPackagesMatch(rootPath, config.packagesMatchs, config.packagesIgnoreMatchs || []);
+  } else if (mode === FindProjectsMode.Precise) {
+    projects = getProjectsByProjectsConfig(rootPath, config.projectsConfig);
+  }
+
+  return projects;
+};
+export const syncGetProjects = (config, currentDir = process.cwd()) => {
+  const {
+    rootPath
+  } = getMonorepoBaseData(currentDir);
+  const mode = checkFindProjectsMode(config);
+  let projects = [];
+
+  if (mode === FindProjectsMode.Rough) {
+    projects = syncGetProjectsByPackagesMatch(rootPath, config.packagesMatchs, config.packagesIgnoreMatchs || []);
+  } else if (mode === FindProjectsMode.Precise) {
+    projects = getProjectsByProjectsConfig(rootPath, config.projectsConfig);
+  }
+
+  return projects;
+};

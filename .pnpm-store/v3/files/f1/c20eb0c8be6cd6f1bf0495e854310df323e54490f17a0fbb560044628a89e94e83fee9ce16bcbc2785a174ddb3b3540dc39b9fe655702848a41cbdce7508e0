@@ -1,0 +1,41 @@
+import type { CliPlugin } from '@modern-js/core';
+import type { Route, Entrypoint, ServerRoute, HtmlPartials } from '@modern-js/types';
+import type { ImportStatement } from './generateCode';
+import type { RuntimePlugin } from './templates';
+export declare const modifyEntryImports: import("@modern-js/plugin").AsyncWaterfall<{
+  imports: ImportStatement[];
+  entrypoint: Entrypoint;
+}>;
+export declare const modifyEntryExport: import("@modern-js/plugin").AsyncWaterfall<{
+  entrypoint: Entrypoint;
+  exportStatement: string;
+}>;
+export declare const addRuntimeExports: import("@modern-js/plugin").AsyncWaterfall<void>;
+export declare const modifyEntryRuntimePlugins: import("@modern-js/plugin").AsyncWaterfall<{
+  entrypoint: Entrypoint;
+  plugins: RuntimePlugin[];
+}>;
+export declare const modifyEntryRenderFunction: import("@modern-js/plugin").AsyncWaterfall<{
+  entrypoint: Entrypoint;
+  code: string;
+}>;
+export declare const modifyFileSystemRoutes: import("@modern-js/plugin").AsyncWaterfall<{
+  entrypoint: Entrypoint;
+  routes: Route[];
+}>;
+export declare const modifyServerRoutes: import("@modern-js/plugin").AsyncWaterfall<{
+  routes: ServerRoute[];
+}>;
+export declare const htmlPartials: import("@modern-js/plugin").AsyncWaterfall<{
+  entrypoint: Entrypoint;
+  partials: HtmlPartials;
+}>;
+export declare const beforeGenerateRoutes: import("@modern-js/plugin").AsyncWaterfall<{
+  entrypoint: Entrypoint;
+  code: string;
+}>;
+export declare const addDefineTypes: import("@modern-js/plugin").AsyncWaterfall<void>;
+
+declare const _default: () => CliPlugin;
+
+export default _default;

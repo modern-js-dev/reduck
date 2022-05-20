@@ -1,0 +1,47 @@
+import _asyncToGenerator from "@babel/runtime/helpers/esm/asyncToGenerator";
+import _regeneratorRuntime from "@babel/runtime/regenerator";
+import { AsyncLocalStorage } from 'async_hooks';
+import { Server } from '@modern-js/server';
+var store = new AsyncLocalStorage();
+export var isInHandler = function isInHandler() {
+  return Boolean(store.getStore());
+};
+
+var createApp = /*#__PURE__*/function () {
+  var _ref = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee(pwd, config, plugins, routes) {
+    var server;
+    return _regeneratorRuntime.wrap(function _callee$(_context) {
+      while (1) {
+        switch (_context.prev = _context.next) {
+          case 0:
+            config.output.path = './';
+            server = new Server({
+              apiOnly: true,
+              dev: {
+                watch: false
+              },
+              pwd: pwd,
+              config: config,
+              plugins: plugins,
+              routes: routes
+            });
+            _context.next = 4;
+            return server.init();
+
+          case 4:
+            return _context.abrupt("return", server.getRequestHandler());
+
+          case 5:
+          case "end":
+            return _context.stop();
+        }
+      }
+    }, _callee);
+  }));
+
+  return function createApp(_x, _x2, _x3, _x4) {
+    return _ref.apply(this, arguments);
+  };
+}();
+
+export { createApp };

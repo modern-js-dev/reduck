@@ -1,0 +1,90 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.TestConfigOperator = void 0;
+
+var _lodash = require("@modern-js/utils/lodash");
+
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+class TestConfigOperator {
+  constructor(testConfig) {
+    _defineProperty(this, "_testConfig", void 0);
+
+    _defineProperty(this, "_jestConfig", void 0);
+
+    _defineProperty(this, "userJestConfig", void 0);
+
+    _defineProperty(this, "defaultTestConfig", {
+      transformer: 'babel-jest'
+    });
+
+    this._testConfig = testConfig;
+    this._jestConfig = {};
+    this.userJestConfig = testConfig.jest;
+    this.initial();
+  }
+
+  initial() {
+    this._testConfig = (0, _lodash.merge)({}, this.defaultTestConfig, this.testConfig);
+  }
+
+  get jestConfig() {
+    return this._jestConfig;
+  }
+
+  get testConfig() {
+    return this._testConfig;
+  }
+
+  mergeJestConfig(sourceConfig) {
+    this._jestConfig = (0, _lodash.merge)({}, this._jestConfig, sourceConfig);
+  }
+
+  setJestUserConfig() {
+    const {
+      userJestConfig
+    } = this;
+    this.setJestConfig(userJestConfig);
+  }
+
+  setJestConfig(sourceConfig, options) {
+    if (options) {
+      const {
+        force
+      } = options;
+
+      if (force) {
+        this._jestConfig = sourceConfig;
+        return;
+      }
+    }
+
+    this._jestConfig = _objectSpread(_objectSpread({}, this._jestConfig), sourceConfig);
+  }
+
+  getFinalConfig() {
+    const {
+      userJestConfig
+    } = this;
+
+    if (!userJestConfig) {
+      return this._jestConfig;
+    }
+
+    if (typeof userJestConfig === 'function') {
+      return userJestConfig(this._jestConfig);
+    }
+
+    return this.jestConfig;
+  }
+
+}
+
+exports.TestConfigOperator = TestConfigOperator;

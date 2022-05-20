@@ -1,0 +1,7 @@
+/// <reference types="node" />
+/**
+ * ssr helpers
+ */
+import type { IncomingHttpHeaders } from 'http';
+declare const run: <O>(context: IncomingHttpHeaders, cb: () => O | Promise<O>) => Promise<O>, useHeaders: () => IncomingHttpHeaders;
+export { run, useHeaders };

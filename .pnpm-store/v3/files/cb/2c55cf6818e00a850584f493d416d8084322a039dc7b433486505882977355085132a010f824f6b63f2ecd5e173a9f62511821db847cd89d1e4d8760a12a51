@@ -1,0 +1,3 @@
+export declare const isRelativePath: (test: string) => boolean;
+export declare const normalizeOutputPath: (s: string) => string;
+export declare const normalizeToPosixPath: (p: string) => string;

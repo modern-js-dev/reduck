@@ -1,0 +1,1 @@
+export declare const isDefaultExportFunction: (file: string | false) => boolean;

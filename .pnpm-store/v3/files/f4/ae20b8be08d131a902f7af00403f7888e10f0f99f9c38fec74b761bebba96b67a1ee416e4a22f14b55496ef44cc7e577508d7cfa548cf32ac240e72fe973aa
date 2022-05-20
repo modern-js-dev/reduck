@@ -1,0 +1,38 @@
+import type { IAppContext, NormalizedConfig } from '@modern-js/core';
+import { BabelChain } from '@modern-js/babel-chain';
+import { WebpackChain } from '../compiled';
+export declare type ResolveAlias = {
+    [index: string]: string;
+};
+declare class BaseWebpackConfig {
+    chain: WebpackChain;
+    appContext: IAppContext;
+    metaName: string;
+    options: NormalizedConfig;
+    appDirectory: string;
+    dist: string;
+    jsFilename: string;
+    jsChunkname: string;
+    cssChunkname: string;
+    mediaChunkname: string;
+    babelChain: BabelChain;
+    isTsProject: boolean;
+    constructor(appContext: IAppContext, options: NormalizedConfig);
+    name(): void;
+    mode(): "development" | "production";
+    devtool(): void;
+    entry(): void;
+    output(): void;
+    publicPath(): string;
+    loaders(): WebpackChain.Rule<WebpackChain.Module>;
+    plugins(): void;
+    resolve(): void;
+    cache(): void;
+    optimization(): void;
+    stats(): void;
+    config(): any;
+    watchOptions(): void;
+    applyToolsWebpackChain(): void;
+    getChain(): WebpackChain;
+}
+export { BaseWebpackConfig };

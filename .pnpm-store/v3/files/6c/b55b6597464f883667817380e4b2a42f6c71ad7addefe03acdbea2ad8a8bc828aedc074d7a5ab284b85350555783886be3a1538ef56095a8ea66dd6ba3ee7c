@@ -1,0 +1,268 @@
+import _slicedToArray from "@babel/runtime/helpers/esm/slicedToArray";
+import _createForOfIteratorHelper from "@babel/runtime/helpers/esm/createForOfIteratorHelper";
+import _asyncToGenerator from "@babel/runtime/helpers/esm/asyncToGenerator";
+import _regeneratorRuntime from "@babel/runtime/regenerator";
+import invariant from 'invariant';
+
+/**
+ * Calc id from string or object
+ */
+var createGetId = function createGetId() {
+  var idCache = new Map();
+  return function (objectId) {
+    var cachedId = idCache.get(objectId);
+
+    if (cachedId) {
+      return cachedId;
+    } // WARNING: id should be unique after serialize.
+
+
+    var id = JSON.stringify(objectId);
+    invariant(id, 'params should be not null value');
+    idCache.set(objectId, id);
+    return id;
+  };
+};
+
+export var LoaderStatus;
+
+(function (LoaderStatus) {
+  LoaderStatus[LoaderStatus["idle"] = 0] = "idle";
+  LoaderStatus[LoaderStatus["loading"] = 1] = "loading";
+  LoaderStatus[LoaderStatus["fulfilled"] = 2] = "fulfilled";
+  LoaderStatus[LoaderStatus["rejected"] = 3] = "rejected";
+})(LoaderStatus || (LoaderStatus = {}));
+
+var createLoader = function createLoader(id) {
+  var initialData = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {
+    loading: false,
+    reloading: false,
+    data: undefined,
+    error: undefined
+  };
+  var loaderFn = arguments.length > 2 ? arguments[2] : undefined;
+  var skip = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : false;
+  var promise;
+  var status = LoaderStatus.idle;
+  var data = initialData.data,
+      error = initialData.error;
+  var hasLoaded = false;
+  var handlers = new Set();
+
+  var load = /*#__PURE__*/function () {
+    var _ref = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee() {
+      return _regeneratorRuntime.wrap(function _callee$(_context) {
+        while (1) {
+          switch (_context.prev = _context.next) {
+            case 0:
+              if (!skip) {
+                _context.next = 2;
+                break;
+              }
+
+              return _context.abrupt("return", promise);
+
+            case 2:
+              if (!(status === LoaderStatus.loading)) {
+                _context.next = 4;
+                break;
+              }
+
+              return _context.abrupt("return", promise);
+
+            case 4:
+              status = LoaderStatus.loading;
+              notify();
+              promise = new Promise(function (resolve) {
+                loaderFn().then(function (value) {
+                  data = value;
+                  error = null;
+                  status = LoaderStatus.fulfilled;
+                  notify();
+                  resolve(value);
+                })["catch"](function (e) {
+                  error = e;
+                  data = null;
+                  status = LoaderStatus.rejected;
+                  notify();
+                  resolve(e);
+                })["finally"](function () {
+                  promise = null;
+                  hasLoaded = true;
+                });
+              });
+              return _context.abrupt("return", promise);
+
+            case 8:
+            case "end":
+              return _context.stop();
+          }
+        }
+      }, _callee);
+    }));
+
+    return function load() {
+      return _ref.apply(this, arguments);
+    };
+  }();
+
+  var getResult = function getResult() {
+    return {
+      loading: !hasLoaded && status === LoaderStatus.loading,
+      reloading: hasLoaded && status === LoaderStatus.loading,
+      data: data,
+      error: error instanceof Error ? "".concat(error.message) : error,
+      // redundant fields for ssr log
+      _error: error
+    };
+  };
+
+  var notify = function notify() {
+    handlers.forEach(function (handler) {
+      handler(status, getResult());
+    });
+  };
+
+  var onChange = function onChange(handler) {
+    handlers.add(handler);
+    return function () {
+      handlers["delete"](handler);
+    };
+  };
+
+  return {
+    get result() {
+      return getResult();
+    },
+
+    get promise() {
+      return promise;
+    },
+
+    onChange: onChange,
+    load: load
+  };
+};
+
+/**
+ * Create loaders manager. It's returned instance will add to context
+ * @param initialDataMap used to initialing loader data
+ */
+export var createLoaderManager = function createLoaderManager(initialDataMap) {
+  var managerOptions = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+  var _managerOptions$skipS = managerOptions.skipStatic,
+      skipStatic = _managerOptions$skipS === void 0 ? false : _managerOptions$skipS,
+      _managerOptions$skipN = managerOptions.skipNonStatic,
+      skipNonStatic = _managerOptions$skipN === void 0 ? false : _managerOptions$skipN;
+  var loadersMap = new Map();
+  var getId = createGetId();
+
+  var add = function add(loaderFn, loaderOptions) {
+    var id = getId(loaderOptions.params);
+    var loader = loadersMap.get(id);
+
+    if (!loader) {
+      // ignore non-static loader on static phase
+      var ignoreNonStatic = skipNonStatic && !loaderOptions["static"]; // ignore static loader on non-static phase
+
+      var ignoreStatic = skipStatic && loaderOptions["static"];
+      var skipExec = ignoreNonStatic || ignoreStatic;
+      loader = createLoader(id, typeof initialDataMap[id] !== 'undefined' ? initialDataMap[id] : {
+        data: loaderOptions.initialData
+      }, loaderFn, // Todo whether static loader is exec when CSR
+      skipExec);
+      loadersMap.set(id, loader);
+    }
+
+    return id;
+  };
+
+  var get = function get(id) {
+    return loadersMap.get(id);
+  }; // check if there has pending loaders
+
+
+  var hasPendingLoaders = function hasPendingLoaders() {
+    var _iterator = _createForOfIteratorHelper(loadersMap.values()),
+        _step;
+
+    try {
+      for (_iterator.s(); !(_step = _iterator.n()).done;) {
+        var loader = _step.value;
+        var promise = loader.promise;
+
+        if (promise instanceof Promise) {
+          return true;
+        }
+      }
+    } catch (err) {
+      _iterator.e(err);
+    } finally {
+      _iterator.f();
+    }
+
+    return false;
+  }; // waiting for all pending loaders to be settled
+
+
+  var awaitPendingLoaders = /*#__PURE__*/function () {
+    var _ref2 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee2() {
+      var pendingLoaders, _iterator2, _step2, _step2$value, id, loader, promise;
+
+      return _regeneratorRuntime.wrap(function _callee2$(_context2) {
+        while (1) {
+          switch (_context2.prev = _context2.next) {
+            case 0:
+              pendingLoaders = [];
+              _iterator2 = _createForOfIteratorHelper(loadersMap);
+
+              try {
+                for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
+                  _step2$value = _slicedToArray(_step2.value, 2), id = _step2$value[0], loader = _step2$value[1];
+                  promise = loader.promise;
+
+                  if (promise instanceof Promise) {
+                    pendingLoaders.push([id, loader]);
+                  }
+                }
+              } catch (err) {
+                _iterator2.e(err);
+              } finally {
+                _iterator2.f();
+              }
+
+              _context2.next = 5;
+              return Promise.all(pendingLoaders.map(function (item) {
+                return item[1].promise;
+              }));
+
+            case 5:
+              return _context2.abrupt("return", pendingLoaders.reduce(function (res, _ref3) {
+                var _ref4 = _slicedToArray(_ref3, 2),
+                    id = _ref4[0],
+                    loader = _ref4[1];
+
+                res[id] = loader.result;
+                return res;
+              }, {}));
+
+            case 6:
+            case "end":
+              return _context2.stop();
+          }
+        }
+      }, _callee2);
+    }));
+
+    return function awaitPendingLoaders() {
+      return _ref2.apply(this, arguments);
+    };
+  }();
+
+  return {
+    hasPendingLoaders: hasPendingLoaders,
+    awaitPendingLoaders: awaitPendingLoaders,
+    add: add,
+    get: get
+  };
+};

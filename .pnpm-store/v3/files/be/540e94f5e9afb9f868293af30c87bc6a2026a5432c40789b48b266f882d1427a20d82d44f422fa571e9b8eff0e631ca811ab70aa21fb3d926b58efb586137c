@@ -1,0 +1,131 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.NodeWebpackConfig = void 0;
+const utils_1 = require("@modern-js/utils");
+const webpack_1 = require("webpack");
+const base_1 = require("./base");
+const shared_1 = require("./shared");
+class NodeWebpackConfig extends base_1.BaseWebpackConfig {
+    name() {
+        this.chain.name('server');
+    }
+    devtool() {
+        this.chain.devtool(false);
+    }
+    output() {
+        super.output();
+        this.chain.output
+            .libraryTarget('commonjs2')
+            .filename(`${utils_1.SERVER_BUNDLE_DIRECTORY}/[name].js`);
+        this.chain.output.delete('chunkFilename');
+    }
+    optimization() {
+        super.optimization();
+        this.chain.optimization.splitChunks(false).runtimeChunk(false);
+    }
+    loaders() {
+        var _a, _b, _c;
+        const { USE, ONE_OF } = shared_1.CHAIN_ID;
+        const loaders = super.loaders();
+        // css & css modules
+        if (loaders.oneOfs.has(ONE_OF.CSS)) {
+            loaders.oneOf(ONE_OF.CSS).uses.delete(USE.MINI_CSS_EXTRACT);
+            loaders.oneOf(ONE_OF.CSS).uses.delete(USE.STYLE);
+        }
+        loaders
+            .oneOf(ONE_OF.CSS_MODULES)
+            .uses.delete(USE.MINI_CSS_EXTRACT)
+            .end()
+            .uses.delete(USE.STYLE)
+            .end()
+            .use(USE.CSS)
+            .options({
+            sourceMap: (0, utils_1.isProd)() && !((_a = this.options.output) === null || _a === void 0 ? void 0 : _a.disableSourceMap),
+            importLoaders: 1,
+            modules: {
+                localIdentName: this.options.output
+                    ? this.options.output.cssModuleLocalIdentName
+                    : '',
+                exportLocalsConvention: 'camelCase',
+                exportOnlyLocals: true,
+            },
+        });
+        const babelOptions = loaders.oneOf(ONE_OF.JS).use(USE.BABEL).get('options');
+        loaders
+            .oneOf(ONE_OF.JS)
+            .use(USE.BABEL)
+            .options({
+            ...babelOptions,
+            presets: [
+                [
+                    require.resolve('@modern-js/babel-preset-app'),
+                    {
+                        metaName: this.appContext.metaName,
+                        appDirectory: this.appDirectory,
+                        target: 'server',
+                        useLegacyDecorators: !((_b = this.options.output) === null || _b === void 0 ? void 0 : _b.enableLatestDecorators),
+                        useBuiltIns: false,
+                        chain: this.babelChain,
+                        styledComponents: (0, utils_1.applyOptionsChain)({
+                            pure: true,
+                            displayName: true,
+                            ssr: (0, utils_1.isUseSSRBundle)(this.options),
+                            transpileTemplateLiterals: true,
+                        }, (_c = this.options.tools) === null || _c === void 0 ? void 0 : _c.styledComponents),
+                        userBabelConfig: this.options.tools.babel,
+                    },
+                ],
+            ],
+        });
+        // TODO: ts-loader
+        return loaders;
+    }
+    useDefinePlugin() {
+        const { globalVars } = this.options.source || {};
+        this.chain.plugin('define').use(webpack_1.DefinePlugin, [
+            {
+                ...Object.keys(globalVars || {}).reduce((memo, name) => {
+                    memo[name] = globalVars ? JSON.stringify(globalVars[name]) : '';
+                    return memo;
+                }, {}),
+            },
+        ]);
+    }
+    plugins() {
+        var _a;
+        super.plugins();
+        this.useDefinePlugin();
+        if ((_a = this.options.cliOptions) === null || _a === void 0 ? void 0 : _a.analyze) {
+            (0, shared_1.enableBundleAnalyzer)(this.chain, 'report-ssr.html');
+        }
+    }
+    resolve() {
+        super.resolve();
+        for (const ext of [
+            '.node.js',
+            '.node.jsx',
+            '.node.ts',
+            '.node.tsx',
+        ].reverse()) {
+            this.chain.resolve.extensions.prepend(ext);
+        }
+        this.chain.resolve.mainFields.clear().add('main');
+    }
+    config() {
+        const config = super.config();
+        config.target = 'node';
+        // disable sourcemap
+        config.devtool = false;
+        // prod bundle all dependencies
+        if ((0, utils_1.isProd)()) {
+            config.externals = [];
+            return config;
+        }
+        config.externals = config.externals || [];
+        if (!Array.isArray(config.externals)) {
+            config.externals = [config.externals].filter(Boolean);
+        }
+        return config;
+    }
+}
+exports.NodeWebpackConfig = NodeWebpackConfig;

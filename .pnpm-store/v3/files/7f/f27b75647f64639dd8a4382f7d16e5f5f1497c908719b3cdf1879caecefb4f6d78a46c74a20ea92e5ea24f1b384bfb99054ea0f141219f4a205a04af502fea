@@ -1,0 +1,8 @@
+export declare type ChangeTypeValueT = 'add' | 'unlink' | 'change';
+export declare const ChangeType: Record<'ADD' | 'UNLINK' | 'CHANGE', ChangeTypeValueT>;
+declare type RunTaskType = (option: {
+  changedFilePath: string;
+  changeType: ChangeTypeValueT;
+}) => Promise<void>;
+export declare const watch: (watchDir: string, runTask: RunTaskType, ignored?: never[]) => void;
+export {};

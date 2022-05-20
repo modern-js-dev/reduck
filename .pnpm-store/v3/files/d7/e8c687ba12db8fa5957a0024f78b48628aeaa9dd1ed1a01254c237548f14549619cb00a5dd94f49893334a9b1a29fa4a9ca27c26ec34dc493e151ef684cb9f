@@ -1,0 +1,12 @@
+import { ErrorObject } from '../../compiled/ajv';
+import { defaults } from './defaults';
+import { mergeConfig, NormalizedConfig } from './mergeConfig';
+import { PluginValidateSchema } from './schema';
+import type { UserConfig, ConfigParam, LoadedConfig } from './types';
+export { defaults as defaultsConfig };
+export { mergeConfig };
+export * from './types';
+export declare const addServerConfigToDeps: (dependencies: string[], appDirectory: string, serverConfigFile: string) => Promise<void>;
+export declare const defineConfig: (config: ConfigParam) => ConfigParam;
+export declare const loadUserConfig: (appDirectory: string, filePath?: string | undefined, packageJsonConfig?: string | undefined) => Promise<LoadedConfig>;
+export declare const resolveConfig: (loaded: LoadedConfig, configs: UserConfig[], schemas: PluginValidateSchema[], restartWithExistingPort: number, argv: string[], onSchemaError?: (error: ErrorObject) => void | Promise<void>) => Promise<NormalizedConfig>;

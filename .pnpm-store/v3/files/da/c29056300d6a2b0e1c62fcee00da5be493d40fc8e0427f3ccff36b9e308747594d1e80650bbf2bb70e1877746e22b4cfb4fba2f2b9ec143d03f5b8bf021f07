@@ -1,0 +1,1 @@
+{"version":3,"file":"asyncHooksInterface.js","sourceRoot":"","sources":["../src/asyncHooksInterface.ts"],"names":[],"mappings":";;;AAiBW,QAAA,UAAU,GAAe,SAAS,CAAA;AAEtC,IAAM,IAAI,GAAG,UAAC,eAA2B;IAC9C,kBAAU,GAAG,eAAe,CAAA;AAC9B,CAAC,CAAA;AAFY,QAAA,IAAI,QAEhB;AAEM,IAAM,KAAK,GAAG;IACnB,kBAAU,GAAG,SAAS,CAAA;AACxB,CAAC,CAAA;AAFY,QAAA,KAAK,SAEjB"}

@@ -1,0 +1,1 @@
+export declare const NativeModuleNameMap: Record<string, string>;

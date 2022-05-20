@@ -1,0 +1,16 @@
+import _slicedToArray from "@babel/runtime/helpers/esm/slicedToArray";
+import React, { useEffect, useState } from 'react';
+var csr = false;
+export var NoSSR = function NoSSR(props) {
+  var _useState = useState(csr),
+      _useState2 = _slicedToArray(_useState, 2),
+      isMounted = _useState2[0],
+      setMounted = _useState2[1];
+
+  useEffect(function () {
+    csr = true;
+    setMounted(true);
+  });
+  var children = props.children;
+  return /*#__PURE__*/React.createElement(React.Fragment, null, isMounted ? children : null);
+};

@@ -1,0 +1,79 @@
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+import path from 'path';
+import { fs, chokidar } from '@modern-js/utils';
+import { DependencyTree } from "./dependency-tree";
+import { StatsCache } from "./stats-cache";
+export const getWatchedFiles = watcher => {
+  const watched = watcher.getWatched();
+  const files = [];
+  Object.keys(watched).forEach(dir => {
+    watched[dir].forEach(fileName => {
+      files.push(path.join(dir, fileName));
+    });
+  });
+  return files;
+};
+export default class Watcher {
+  constructor() {
+    _defineProperty(this, "dependencyTree", null);
+
+    _defineProperty(this, "watcher", void 0);
+  }
+
+  listen(files, options, callback) {
+    const watched = files.filter(Boolean);
+    const filenames = watched.map(filename => filename.replace(/\\/g, '/'));
+    const cache = new StatsCache();
+    const watcher = chokidar.watch(filenames, options);
+    watcher.on('ready', () => {
+      cache.add(getWatchedFiles(watcher));
+    });
+    watcher.on('change', changed => {
+      if (!fs.existsSync(changed) || cache.isDiff(changed)) {
+        cache.refresh(changed);
+        callback(changed);
+      }
+    });
+    watcher.on('add', changed => {
+      if (!cache.has(changed)) {
+        cache.add([changed]);
+        callback(changed);
+      }
+    });
+    watcher.on('unlink', changed => {
+      cache.del(changed);
+      callback(changed);
+    });
+    this.watcher = watcher;
+  }
+
+  createDepTree() {
+    this.dependencyTree = new DependencyTree();
+  }
+
+  updateDepTree() {
+    var _this$dependencyTree;
+
+    (_this$dependencyTree = this.dependencyTree) === null || _this$dependencyTree === void 0 ? void 0 : _this$dependencyTree.update(require.cache);
+  }
+
+  cleanDepCache(filepath) {
+    var _this$dependencyTree2;
+
+    const node = (_this$dependencyTree2 = this.dependencyTree) === null || _this$dependencyTree2 === void 0 ? void 0 : _this$dependencyTree2.getNode(filepath);
+
+    if (node && require.cache[filepath]) {
+      delete require.cache[filepath];
+
+      for (const parentNode of node.parent.values()) {
+        this.cleanDepCache(parentNode.module.filename);
+      }
+    }
+  }
+
+  close() {
+    return this.watcher.close();
+  }
+
+}

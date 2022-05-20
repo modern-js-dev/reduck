@@ -1,0 +1,100 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.createProdServer = void 0;
+
+var _constants = require("../constants");
+
+var _modernServer = require("./modern-server");
+
+class ModernSSRServer extends _modernServer.ModernServer {
+  prepareAPIHandler(_m, _) {
+    return null;
+  }
+
+  filterRoutes(routes) {
+    return routes.filter(route => route.isSSR);
+  }
+
+  async setupBeforeProdMiddleware() {
+    if (this.runMode === _constants.RUN_MODE.FULL) {
+      await super.setupBeforeProdMiddleware();
+    }
+  }
+
+  async emitRouteHook(_, _input) {
+    if (this.runMode === _constants.RUN_MODE.FULL) {
+      await super.emitRouteHook(_, _input);
+    }
+  }
+
+}
+
+class ModernAPIServer extends _modernServer.ModernServer {
+  prepareWebHandler(_) {
+    return null;
+  }
+
+  filterRoutes(routes) {
+    return routes.filter(route => route.isApi);
+  }
+
+  async setupBeforeProdMiddleware() {
+    if (this.runMode === _constants.RUN_MODE.FULL) {
+      await super.setupBeforeProdMiddleware();
+    }
+  }
+
+  async emitRouteHook(_, _input) {// empty
+  }
+
+}
+
+class ModernWebServer extends _modernServer.ModernServer {
+  async warmupSSRBundle() {
+    return null;
+  }
+
+  async handleAPI(context) {
+    const {
+      proxyTarget
+    } = this;
+
+    if (proxyTarget !== null && proxyTarget !== void 0 && proxyTarget.api) {
+      return this.proxy();
+    } else {
+      return this.render404(context);
+    }
+  }
+
+  async handleWeb(context, route) {
+    const {
+      proxyTarget
+    } = this;
+
+    if (route.isSSR && proxyTarget !== null && proxyTarget !== void 0 && proxyTarget.ssr) {
+      return this.proxy();
+    } else {
+      // if no proxyTarget but access web server, degradation to csr
+      route.isSSR = false;
+      return super.handleWeb(context, route);
+    }
+  }
+
+}
+
+const createProdServer = options => {
+  if (options.apiOnly) {
+    return new ModernAPIServer(options);
+  } else if (options.ssrOnly) {
+    return new ModernSSRServer(options);
+  } else if (options.webOnly) {
+    return new ModernWebServer(options);
+  } else {
+    return new _modernServer.ModernServer(options);
+  }
+};
+
+exports.createProdServer = createProdServer;

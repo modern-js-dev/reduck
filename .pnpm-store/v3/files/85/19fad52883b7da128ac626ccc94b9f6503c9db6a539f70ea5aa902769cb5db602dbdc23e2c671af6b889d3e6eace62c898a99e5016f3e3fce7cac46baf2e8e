@@ -1,0 +1,119 @@
+import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
+import _slicedToArray from "@babel/runtime/helpers/esm/slicedToArray";
+import _typeof from "@babel/runtime/helpers/esm/typeof";
+import _objectSpread from "@babel/runtime/helpers/esm/objectSpread2";
+// eslint-disable-next-line eslint-comments/disable-enable-pair
+
+/* eslint-disable @typescript-eslint/no-var-requires */
+import * as ptr from 'path-to-regexp'; // import type { Test } from 'supertest';
+
+import * as mock_appModule from "./app"; // import { getAllAPIInfos } from './utils';
+// eslint-disable-next-line @typescript-eslint/naming-convention
+
+var mock_replaceUrlWithParams = function mock_replaceUrlWithParams(url, paramValues, payload) {
+  var keys = [];
+  ptr.pathToRegexp(url, keys);
+  var params = keys.reduce(function (cur, key, index) {
+    if (paramValues[index]) {
+      cur[key.name] = paramValues[index];
+    }
+
+    return cur;
+  }, {});
+  var getFinalPath = ptr.compile(url, {
+    encode: encodeURIComponent
+  });
+  return getFinalPath(_objectSpread(_objectSpread({}, params), payload));
+}; // eslint-disable-next-line @typescript-eslint/naming-convention
+
+
+var mock_getParamsAndPayload = function mock_getParamsAndPayload(args) {
+  if (args.length === 0) {
+    return [[], {}];
+  }
+
+  var head = args[0];
+
+  if (_typeof(head) === 'object') {
+    return [[], head];
+  } else {
+    var latest = args[args.length - 1];
+
+    if (_typeof(latest) === 'object') {
+      return [args.slice(0, args.length - 1), latest];
+    } else {
+      return [args, {}];
+    }
+  }
+};
+
+export default (function (mock_apiInfosByFile, mock_app) {
+  var files = Object.keys(mock_apiInfosByFile);
+  files.forEach(function (mockedFile) {
+    jest.mock(mockedFile, function () {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      var supertest = require('supertest');
+
+      return mock_apiInfosByFile[mockedFile].reduce(function (res, info) {
+        var module = _defineProperty({}, info.name, function () {
+          for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+            args[_key] = arguments[_key];
+          }
+
+          if (mock_appModule.isInHandler()) {
+            return info.handler.apply(info, args);
+          }
+
+          var _mock_getParamsAndPay = mock_getParamsAndPayload(args),
+              _mock_getParamsAndPay2 = _slicedToArray(_mock_getParamsAndPay, 2),
+              params = _mock_getParamsAndPay2[0],
+              payload = _mock_getParamsAndPay2[1];
+
+          var _ref = module[info.name],
+              returnHttp = _ref.returnHttp;
+          var url = mock_replaceUrlWithParams(info.routePath, params, payload.params);
+          var test = supertest(mock_app)[info.method.toLowerCase()](url);
+
+          if (payload.query) {
+            test = test.query(payload.query);
+          }
+
+          if (payload.body) {
+            test = test.send(payload.body);
+          }
+
+          if (payload.data) {
+            test = test.send(payload.data);
+          }
+
+          if (payload.headers) {
+            for (var name in payload.headers) {
+              test = test.set(name, payload.headers[name]);
+            }
+          }
+
+          if (payload.cookies) {
+            test = test.set('Cookie', [payload.cookies]);
+          }
+
+          if (returnHttp) {
+            return test;
+          }
+
+          return test.then(function (value) {
+            try {
+              return JSON.parse(value.text);
+            } catch (_unused) {
+              return value.text;
+            }
+          });
+        });
+
+        res[info.name] = module[info.name];
+        Object.assign(res[info.name], info.handler);
+        res.__esModule = true;
+        return res;
+      }, {});
+    });
+  });
+});

@@ -1,0 +1,6 @@
+import NodeEnvironment from 'jest-environment-node';
+export default class extends NodeEnvironment {
+  app: any;
+  setup(): Promise<void>;
+  teardown(): Promise<void>;
+}

@@ -1,0 +1,59 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+var _exportNames = {
+  compiler: true
+};
+exports.compiler = compiler;
+
+var _getFinalOption = require("./getFinalOption");
+
+var _build = require("./build");
+
+var _buildWatch = require("./buildWatch");
+
+Object.keys(_buildWatch).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;
+  if (key in exports && exports[key] === _buildWatch[key]) return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function () {
+      return _buildWatch[key];
+    }
+  });
+});
+
+var _validate = require("./validate");
+
+var _type = require("./type");
+
+Object.keys(_type).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;
+  if (key in exports && exports[key] === _type[key]) return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function () {
+      return _type[key];
+    }
+  });
+});
+
+async function compiler(compilerOptions, babelOptions = {}) {
+  const validRet = (0, _validate.validate)(compilerOptions);
+
+  if (validRet) {
+    return validRet;
+  }
+
+  const finalCompilerOption = (0, _getFinalOption.getFinalCompilerOption)(compilerOptions);
+
+  if (compilerOptions.enableWatch) {
+    return (0, _buildWatch.buildWatch)(finalCompilerOption, babelOptions);
+  } else {
+    return (0, _build.build)(finalCompilerOption, babelOptions);
+  }
+}

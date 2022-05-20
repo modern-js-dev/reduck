@@ -1,0 +1,161 @@
+import _objectSpread from "@babel/runtime/helpers/esm/objectSpread2";
+export var createBabelPlainChain = function createBabelPlainChain() {
+  var config = {};
+  var plain = {
+    // delete operator
+    "delete": function _delete(key) {
+      delete config[key];
+    },
+    // field setter
+    cwd: function cwd(input) {
+      config.cwd = input;
+    },
+    caller: function caller(input) {
+      config.caller = input;
+    },
+    filename: function filename(input) {
+      config.filename = input;
+    },
+    filenameRelative: function filenameRelative(input) {
+      config.filenameRelative = input;
+    },
+    code: function code(input) {
+      config.code = input;
+    },
+    ast: function ast(input) {
+      config.ast = input;
+    },
+    root: function root(input) {
+      config.root = input;
+    },
+    rootMode: function rootMode(input) {
+      config.rootMode = input;
+    },
+    envName: function envName(input) {
+      config.envName = input;
+    },
+    configFile: function configFile(input) {
+      config.configFile = input;
+    },
+    babelrc: function babelrc(input) {
+      config.babelrc = input;
+    },
+    babelrcRoots: function babelrcRoots(input) {
+      config.babelrcRoots = input;
+    },
+    "extends": function _extends(input) {
+      config["extends"] = input;
+    },
+    env: function env(input) {
+      config.env = input;
+    },
+    overrides: function overrides(input) {
+      config.overrides = input;
+    },
+    test: function test(input) {
+      config.test = input;
+    },
+    include: function include(input) {
+      config.include = input;
+    },
+    exclude: function exclude(input) {
+      config.exclude = input;
+    },
+    ignore: function ignore(input) {
+      config.ignore = input;
+    },
+    only: function only(input) {
+      config.only = input;
+    },
+    inputSourceMap: function inputSourceMap(input) {
+      config.inputSourceMap = input;
+    },
+    sourceMaps: function sourceMaps(input) {
+      config.sourceMaps = input;
+    },
+    sourceFileName: function sourceFileName(input) {
+      config.sourceFileName = input;
+    },
+    sourceRoot: function sourceRoot(input) {
+      config.sourceRoot = input;
+    },
+    sourceType: function sourceType(input) {
+      config.sourceType = input;
+    },
+    highlightCode: function highlightCode(input) {
+      config.highlightCode = input;
+    },
+    wrapPluginVisitorMethod: function wrapPluginVisitorMethod(input) {
+      config.wrapPluginVisitorMethod = input;
+    },
+    parserOpts: function parserOpts(input) {
+      config.parserOpts = input;
+    },
+    generatorOpts: function generatorOpts(input) {
+      config.generatorOpts = input;
+    },
+    retainLines: function retainLines(input) {
+      config.retainLines = input;
+    },
+    compact: function compact(input) {
+      config.compact = input;
+    },
+    minified: function minified(input) {
+      config.minified = input;
+    },
+    auxiliaryCommentBefore: function auxiliaryCommentBefore(input) {
+      config.auxiliaryCommentBefore = input;
+    },
+    auxiliaryCommentAfter: function auxiliaryCommentAfter(input) {
+      config.auxiliaryCommentAfter = input;
+    },
+    comments: function comments(input) {
+      config.comments = input;
+    },
+    shouldPrintComment: function shouldPrintComment(input) {
+      config.shouldPrintComment = input;
+    },
+    moduleIds: function moduleIds(input) {
+      config.moduleIds = input;
+    },
+    moduleId: function moduleId(input) {
+      config.moduleId = input;
+    },
+    getModuleId: function getModuleId(input) {
+      config.getModuleId = input;
+    },
+    moduleRoot: function moduleRoot(input) {
+      config.moduleRoot = input;
+    }
+  };
+
+  var toJSON = function toJSON() {
+    return _objectSpread({}, config);
+  }; // straightforward merging babel config
+  // see https://babeljs.io/docs/en/configuration#how-babel-merges-config-items
+
+
+  var merge = function merge(other) {
+    var otherConfig = other.toJSON();
+
+    var nexConfig = _objectSpread(_objectSpread({}, config), otherConfig);
+
+    if (nexConfig.parserOpts) {
+      nexConfig.parserOpts = _objectSpread(_objectSpread({}, config.parserOpts), otherConfig.parserOpts);
+    }
+
+    if (nexConfig.generatorOpts) {
+      nexConfig.generatorOpts = _objectSpread(_objectSpread({}, config.generatorOpts), otherConfig.generatorOpts);
+    }
+
+    config = nexConfig;
+    return chain;
+  };
+
+  var chain = {
+    plain: plain,
+    toJSON: toJSON,
+    merge: merge
+  };
+  return chain;
+};

@@ -1,0 +1,1 @@
+export declare function getGeneratorDir(generator: string): Promise<string>;

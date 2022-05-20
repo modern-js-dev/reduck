@@ -1,0 +1,65 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.getUserAlias = exports.getAlias = exports.validAlias = void 0;
+const fs_1 = __importDefault(require("fs"));
+const path_1 = __importDefault(require("path"));
+const compiled_1 = require("./compiled");
+const readTsConfig_1 = require("./readTsConfig");
+const applyOptionsChain_1 = require("./applyOptionsChain");
+const validAlias = (modernConfig, { tsconfigPath }) => {
+    const { source: { alias }, } = modernConfig;
+    if (!alias) {
+        return null;
+    }
+    const isTsProject = fs_1.default.existsSync(tsconfigPath);
+    if (!isTsProject) {
+        return null;
+    }
+    const userAlias = (0, exports.getUserAlias)(alias);
+    if (Object.keys(userAlias).length > 0) {
+        return compiled_1.chalk.red('Note: Please use `compilerOptions.paths` in "tsconfig.json" file replace `source.alias` config in "modern.config.js/ts" when project is typescript');
+    }
+    return null;
+};
+exports.validAlias = validAlias;
+const getAlias = (aliasOption, option) => {
+    var _a, _b;
+    const isTsProject = fs_1.default.existsSync(option.tsconfigPath);
+    let aliasConfig;
+    if (!isTsProject) {
+        aliasConfig = {
+            absoluteBaseUrl: option.appDirectory,
+            paths: (0, applyOptionsChain_1.applyOptionsChain)({ '@': ['./src'] }, aliasOption),
+            isTsPath: false,
+            isTsProject,
+        };
+    }
+    else {
+        const tsconfig = (0, readTsConfig_1.readTsConfigByFile)(option.tsconfigPath);
+        const baseUrl = (_a = tsconfig === null || tsconfig === void 0 ? void 0 : tsconfig.compilerOptions) === null || _a === void 0 ? void 0 : _a.baseUrl;
+        aliasConfig = {
+            absoluteBaseUrl: baseUrl
+                ? path_1.default.join(option.appDirectory, baseUrl)
+                : option.appDirectory,
+            paths: {
+                ...(aliasOption || {}),
+                ...(_b = tsconfig === null || tsconfig === void 0 ? void 0 : tsconfig.compilerOptions) === null || _b === void 0 ? void 0 : _b.paths,
+            },
+            isTsPath: true,
+            isTsProject,
+        };
+    }
+    return aliasConfig;
+};
+exports.getAlias = getAlias;
+// filter invalid ts paths that are not array
+const getUserAlias = (alias = {}) => Object.keys(alias).reduce((o, k) => {
+    if (Array.isArray(alias[k])) {
+        o[k] = alias[k];
+    }
+    return o;
+}, {});
+exports.getUserAlias = getUserAlias;

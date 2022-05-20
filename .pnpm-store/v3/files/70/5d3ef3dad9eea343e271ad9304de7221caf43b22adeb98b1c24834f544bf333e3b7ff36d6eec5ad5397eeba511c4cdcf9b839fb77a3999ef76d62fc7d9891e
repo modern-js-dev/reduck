@@ -1,0 +1,1 @@
+export declare const IMAGE_EXT_LIST: string[];

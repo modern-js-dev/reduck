@@ -1,0 +1,7 @@
+interface PublishOptions {
+  tag: string;
+  ignoreScripts: boolean;
+  gitChecks: boolean;
+}
+export declare function release(options: PublishOptions): Promise<void>;
+export {};

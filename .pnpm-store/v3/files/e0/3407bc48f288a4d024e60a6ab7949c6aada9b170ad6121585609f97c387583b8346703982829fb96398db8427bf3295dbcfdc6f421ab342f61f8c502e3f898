@@ -1,0 +1,135 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.setJestConfigForBFF = exports.default = void 0;
+Object.defineProperty(exports, "testBff", {
+  enumerable: true,
+  get: function () {
+    return _utils2.request;
+  }
+});
+
+var _path = _interopRequireDefault(require("path"));
+
+var _testing = require("@modern-js/testing");
+
+var _utils = require("@modern-js/utils");
+
+var _constant = require("./constant");
+
+var _utils2 = require("./utils");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+const setJestConfigForBFF = async ({
+  pwd,
+  userConfig,
+  plugins,
+  routes,
+  utils
+}) => {
+  var _userConfig$source;
+
+  const bffConfig = {
+    rootDir: _path.default.join(pwd, './api'),
+    setupFilesAfterEnv: [require.resolve("./setup")],
+    testEnvironment: require.resolve("./env"),
+    testMatch: [`**/api/**/*.test.[jt]s`],
+    globals: {
+      [_constant.bff_info_key]: {
+        appDir: pwd,
+        modernUserConfig: userConfig,
+        plugins,
+        routes
+      }
+    }
+  };
+  const {
+    jestConfig
+  } = utils;
+  const alias = (userConfig === null || userConfig === void 0 ? void 0 : (_userConfig$source = userConfig.source) === null || _userConfig$source === void 0 ? void 0 : _userConfig$source.alias) || {};
+  const aliasMapper = (0, _testing.getModuleNameMapper)(alias);
+  const {
+    transform,
+    moduleNameMapper
+  } = jestConfig;
+  const apiOnly = await (0, _utils.isApiOnly)(pwd);
+
+  const mergedModuleNameMapper = _objectSpread(_objectSpread({}, moduleNameMapper), aliasMapper);
+
+  const resolver = jestConfig.resolver || _testing.DEFAULT_RESOLVER_PATH; // 这三个配置不能设置在 projects 中，需要设置在外层(https://github.com/facebook/jest/issues/9696)
+
+  const configFields = ['coverage', 'collectCoverage', 'testTimeout'];
+  const commonConfig = configFields.reduce((obj, field) => {
+    if (jestConfig.hasOwnProperty(field)) {
+      obj[field] = jestConfig[field];
+    }
+
+    return obj;
+  }, {});
+
+  if (!apiOnly) {
+    utils.setJestConfig({
+      projects: [_objectSpread({}, jestConfig), _objectSpread({
+        transform,
+        moduleNameMapper: mergedModuleNameMapper,
+        resolver
+      }, bffConfig)]
+    }, {
+      force: true
+    });
+  } else {
+    utils.setJestConfig({
+      projects: [_objectSpread({
+        transform,
+        moduleNameMapper: mergedModuleNameMapper,
+        resolver
+      }, bffConfig)]
+    }, {
+      force: true
+    });
+  }
+
+  utils.setJestConfig(commonConfig);
+};
+
+exports.setJestConfigForBFF = setJestConfigForBFF;
+
+var _default = () => ({
+  name: '@modern-js/testing-plugin-bff',
+
+  setup(api) {
+    return {
+      jestConfig: async (utils, next) => {
+        const appContext = api.useAppContext();
+        const pwd = appContext.appDirectory;
+
+        if (!(0, _utils2.isBFFProject)(pwd)) {
+          return next(utils);
+        }
+
+        const userConfig = api.useResolvedConfigContext();
+        const plugins = appContext.plugins.map(p => p.server).filter(Boolean);
+        await setJestConfigForBFF({
+          pwd,
+          userConfig,
+          plugins,
+          routes: appContext.serverRoutes,
+          utils
+        });
+        return next(utils);
+      }
+    };
+  }
+
+});
+
+exports.default = _default;

@@ -1,0 +1,27 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.getWebpackLogging = void 0;
+const nodeConsole = require('webpack/lib/node/nodeConsole');
+const webpackLogger = nodeConsole({
+    colors: process.env.isTTY,
+    appendOnly: !process.env.isTTY,
+    stream: process.stderr,
+});
+const getWebpackLogging = () => ({
+    level: 'info',
+    console: {
+        ...webpackLogger,
+        info: (...messages) => {
+            if (messages.length) {
+                webpackLogger.info(...messages);
+            }
+        },
+        warn: (...messages) => {
+            const filtered = messages.filter(message => !/\[webpack.cache.PackFileCacheStrategy/.test(message));
+            if (filtered.length) {
+                webpackLogger.warn(...filtered);
+            }
+        },
+    },
+});
+exports.getWebpackLogging = getWebpackLogging;

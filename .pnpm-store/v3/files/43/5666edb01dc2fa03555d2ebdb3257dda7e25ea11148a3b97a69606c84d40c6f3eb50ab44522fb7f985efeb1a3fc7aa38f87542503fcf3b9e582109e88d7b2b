@@ -1,0 +1,84 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _constants = require("../../../constants");
+
+var _spr = require("./spr");
+
+var _util = require("./util");
+
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+var _default = (renderFn, ctx) => {
+  const sprCache = (0, _spr.createCache)();
+
+  const doRender = async context => {
+    const cacheContext = _objectSpread({
+      entry: context.entryName
+    }, context.request);
+
+    const cacheFile = await sprCache.get(cacheContext); // no cache, render sync
+
+    if (!cacheFile) {
+      const html = await renderFn(context);
+      const {
+        cacheConfig
+      } = context;
+
+      if (html && cacheConfig) {
+        await sprCache.set(cacheContext, html, cacheConfig);
+      }
+
+      return html;
+    }
+
+    const cacheHash = cacheFile === null || cacheFile === void 0 ? void 0 : cacheFile.hash; // completely expired
+
+    if (cacheFile.isGarbage) {
+      const html = await renderFn(context);
+      const {
+        cacheConfig
+      } = context;
+
+      if (html && cacheConfig) {
+        await sprCache.set(cacheContext, html, cacheConfig);
+      }
+
+      return html;
+    } else if (cacheFile.isStale) {
+      // if file is stale, request async
+      const render = (0, _util.withCoalescedInvoke)(() => renderFn(context)).bind(null, (0, _util.namespaceHash)('render', cacheFile.hash), []);
+      render().then(res => {
+        if (res.value && res.isOrigin) {
+          const {
+            cacheConfig
+          } = context;
+
+          if (cacheConfig) {
+            sprCache.set(cacheContext, res.value, cacheConfig);
+          } else {
+            sprCache.del(cacheContext, cacheHash);
+          }
+        }
+      }).catch(e => {
+        sprCache.del(cacheContext, cacheHash);
+        ctx.error(_constants.ERROR_DIGEST.ERENDER, e);
+      });
+    }
+
+    ctx.res.setHeader('x-modern-spr', '1');
+    return cacheFile.content;
+  };
+
+  return doRender;
+};
+
+exports.default = _default;

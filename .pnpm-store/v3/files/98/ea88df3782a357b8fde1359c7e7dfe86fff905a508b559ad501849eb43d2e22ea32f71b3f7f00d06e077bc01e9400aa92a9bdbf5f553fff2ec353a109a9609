@@ -1,0 +1,10 @@
+/// <reference types="less" />
+import type { LoaderContext } from 'webpack';
+export declare type LessLoaderOptions = {
+    lessOptions?: Less.Options;
+    additionalData?: string | ((content: string, loaderContext: LoaderContext<LessLoaderOptions>) => string);
+    sourceMap?: boolean;
+    webpackImporter?: boolean;
+    implementation?: boolean;
+};
+export declare type LessConfig = LessLoaderOptions | ((options: LessLoaderOptions, utils?: any) => LessLoaderOptions | void);

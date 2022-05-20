@@ -1,0 +1,84 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.logTemplate = exports.colors = exports.clearFlag = exports.LoggerText = void 0;
+
+var _utils = require("@modern-js/utils");
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+const colors = {
+  title: _utils.chalk.rgb(218, 152, 92)
+};
+exports.colors = colors;
+const clearFlag = '\x1Bc';
+exports.clearFlag = clearFlag;
+
+const logTemplate = (title, messageStack, {
+  noBottomBorder: _noBottomBorder = false,
+  bottomBorderText: _bottomBorderText = '',
+  noLeftBorder: _noLeftBorder = false,
+  leftBorder: _leftBorder = '',
+  contentColor: _contentColor = s => s
+} = {}) => {
+  const maxLength = Infinity; // TODO: 考虑后面是否提供该参数
+
+  const leftBorderFlag = _noLeftBorder ? '' : _leftBorder;
+  const messageFragments = messageStack.map(p => {
+    p.trim();
+    return `${leftBorderFlag}${p.replace(clearFlag, '')}`;
+  }) // 移除 clearFlag
+  .filter(s => s !== leftBorderFlag) // 过滤空字符串
+  .slice(0, maxLength); // 控制长度
+
+  const template = `${colors.title(title)}:
+${_contentColor(messageFragments.join(''))}${_noBottomBorder ? '' : `\n${_bottomBorderText}`}`;
+  return template;
+};
+
+exports.logTemplate = logTemplate;
+
+// 处理Log内容如何展示
+class LoggerText {
+  constructor(option) {
+    _defineProperty(this, "messages", void 0);
+
+    _defineProperty(this, "hasErrorMessage", void 0);
+
+    _defineProperty(this, "option", void 0);
+
+    this.messages = [];
+    this.option = option;
+    this.hasErrorMessage = false;
+  }
+
+  append(message) {
+    if (message.includes(clearFlag)) {
+      this.messages = [];
+    }
+
+    this.messages.push(message);
+  }
+
+  errorHappen() {
+    this.hasErrorMessage = true;
+  }
+
+  hasMessages() {
+    return this.messages.length > 0;
+  }
+
+  get value() {
+    const {
+      title,
+      contentConfig
+    } = this.option;
+    const messages = [...new Set(this.messages)];
+    return logTemplate(title, messages, contentConfig);
+  }
+
+}
+
+exports.LoggerText = LoggerText;

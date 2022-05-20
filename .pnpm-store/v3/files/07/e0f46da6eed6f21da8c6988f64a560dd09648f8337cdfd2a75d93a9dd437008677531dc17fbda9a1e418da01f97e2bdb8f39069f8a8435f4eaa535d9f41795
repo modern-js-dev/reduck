@@ -1,0 +1,1 @@
+export declare function getPackageManager(cwd?: string): Promise<"npm" | "yarn" | "pnpm">;

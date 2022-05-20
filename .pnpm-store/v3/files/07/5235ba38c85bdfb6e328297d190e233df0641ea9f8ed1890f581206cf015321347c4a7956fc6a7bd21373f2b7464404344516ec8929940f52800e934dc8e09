@@ -1,0 +1,24 @@
+import type { NormalizedConfig } from '@modern-js/core';
+import type { ITsconfig } from '../../types';
+export interface IGeneratorConfig {
+  sourceDirName?: string;
+  srcDir: string;
+  distDir: string;
+  projectData: {
+    appDirectory: string;
+  };
+  tsconfigPath?: string;
+  tsCheck?: boolean;
+  watch?: boolean;
+}
+export declare const generatorTsConfig: (projectTsconfig: ITsconfig, {
+  appDirectory,
+  distDir,
+  sourceDir
+}: {
+  appDirectory: string;
+  distDir: string;
+  sourceDir?: string | undefined;
+}) => string;
+export declare const resolveAlias: (modernConfig: NormalizedConfig, config: IGeneratorConfig, watchFilenames?: string[]) => void;
+export declare const getTscBinPath: (appDirectory: string) => string;

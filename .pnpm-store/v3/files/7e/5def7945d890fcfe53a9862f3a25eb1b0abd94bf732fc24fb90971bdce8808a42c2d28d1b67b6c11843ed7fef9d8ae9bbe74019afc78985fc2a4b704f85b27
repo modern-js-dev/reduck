@@ -1,0 +1,106 @@
+let _ = t => t,
+    _t;
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+/**
+ * 1. 注册构建任务
+ * 2. 监听各个构建任务进程中的信息：process.stdout.on('data' | 'error')
+ * 3. 分别输出内容
+ */
+import EventEmitter from 'events';
+import { chalk, Import } from '@modern-js/utils';
+const logText = Import.lazy('./logText', require);
+const readline = Import.lazy('../../../utils/readline', require);
+export class LoggerManager extends EventEmitter {
+  constructor() {
+    super();
+
+    _defineProperty(this, "_compilering", void 0);
+
+    _defineProperty(this, "_listeners", void 0);
+
+    this._compilering = false;
+    this._listeners = [];
+  }
+
+  createLoggerText(option) {
+    return new logText.LoggerText(option);
+  }
+
+  addStdout(loggerText, stdout, config = {}) {
+    const {
+      event = {
+        data: true,
+        error: true
+      },
+      colors = {
+        data: chalk.green,
+        error: chalk.red,
+        warning: chalk.yellow
+      }
+    } = config;
+
+    if (event.data) {
+      stdout === null || stdout === void 0 ? void 0 : stdout.on('data', chunk => {
+        const data = chunk.toString();
+        const content = colors.data ? colors.data(data) : chalk.green(data);
+        loggerText.append(content);
+        this.emit('data');
+      });
+    }
+
+    if (event.error) {
+      stdout === null || stdout === void 0 ? void 0 : stdout.on('error', error => {
+        console.info('error');
+        const data = error.message;
+        const content = colors.error ? colors.error(data) : chalk.red(data);
+        loggerText.append(content);
+        loggerText.errorHappen();
+        this.emit('data');
+      });
+    }
+
+    this._listeners.push(stdout);
+  }
+
+  addStderr(loggerText, stderr, color = chalk.red) {
+    stderr === null || stderr === void 0 ? void 0 : stderr.on('data', chunk => {
+      const data = chunk.toString();
+      loggerText.append(color(data));
+      loggerText.errorHappen();
+      this.emit('data');
+    });
+  }
+
+  showCompiling() {
+    if (!this._compilering) {
+      this._compilering = true;
+      console.info(chalk.green(_t || (_t = _`Compiling in progress...`)));
+    }
+  }
+
+  disappearCompiling() {
+    if (this._compilering) {
+      readline.ReadlineUtils.clearLine(process.stdout);
+      this._compilering = false;
+    }
+  }
+
+  listenDateAndShow(logTexts // stdout: NodeJS.WriteStream & {
+  //   fd: 1;
+  // } = process.stdout,
+  ) {
+    this.on('data', () => {
+      this.disappearCompiling();
+      const content = logTexts.map(logtext => logtext.value).join(''); // 每次更新，使用新的内容覆盖旧的内容，有几率出现内容错乱问题
+
+      console.info(content);
+    });
+    return () => {
+      // eslint-disable-next-line no-process-exit
+      process.exit(0);
+    };
+  }
+
+}

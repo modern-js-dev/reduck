@@ -1,0 +1,47 @@
+import { IncomingMessage, ServerResponse } from 'http';
+import { ModernServerOptions, ServerConstructor } from '../type';
+export declare class Server {
+  options: ModernServerOptions;
+  protected serverImpl: ServerConstructor;
+  private server;
+  private app;
+  private runner;
+  private serverConfig;
+  constructor(options: ModernServerOptions);
+  /**
+   * 初始化顺序
+   * - 获取 server runtime config
+   * - 设置 context
+   * - 创建 hooksRunner
+   * - 合并插件，内置插件和 serverConfig 中配置的插件
+   * - 执行 config hook
+   * - 获取最终的配置
+   * - 设置配置到 context
+   * - 初始化 server
+   * - 执行 prepare hook
+   * - 执行 server init
+   */
+
+  init(): Promise<this>;
+  /**
+   * Execute config hooks
+   * @param runner
+   * @param options
+   */
+
+  private runConfigHook;
+  private runPrepareHook;
+  private initServerConfig;
+  /**
+   *
+   * merge cliConfig and serverConfig
+   */
+
+  private initConfig;
+  close(): Promise<void>;
+  listen(port: number | undefined, listener: any): void;
+  getRequestHandler(): (req: IncomingMessage, res: ServerResponse, next?: (() => void) | undefined) => void;
+  private createHookRunner;
+  private injectContext;
+  private initAppContext;
+}

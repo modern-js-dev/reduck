@@ -1,0 +1,69 @@
+import _asyncToGenerator from "@babel/runtime/helpers/esm/asyncToGenerator";
+import _regeneratorRuntime from "@babel/runtime/regenerator";
+import { RuntimeContext } from '@modern-js/runtime-core';
+import { run } from '@modern-js/utils/ssr';
+import { PreRender } from "../react/prerender";
+import SSREntry from "./entry";
+import { time } from "./measure";
+export var render = /*#__PURE__*/function () {
+  var _ref = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee2(ctx) {
+    var _,
+        App,
+        ssrContext,
+        _args2 = arguments;
+
+    return _regeneratorRuntime.wrap(function _callee2$(_context2) {
+      while (1) {
+        switch (_context2.prev = _context2.next) {
+          case 0:
+            _ = _args2.length > 1 && _args2[1] !== undefined ? _args2[1] : process.cwd();
+            App = _args2.length > 2 ? _args2[2] : undefined;
+            ssrContext = ctx.ssrContext;
+            return _context2.abrupt("return", run(ssrContext.request.headers, /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee() {
+              var entry, end, html, cost, cacheConfig;
+              return _regeneratorRuntime.wrap(function _callee$(_context) {
+                while (1) {
+                  switch (_context.prev = _context.next) {
+                    case 0:
+                      entry = new SSREntry({
+                        ctx: ssrContext,
+                        App: App
+                      });
+                      entry.metrics.emitCounter('app.visit.count', 1);
+                      end = time();
+                      _context.next = 5;
+                      return entry.renderToHtml(ctx);
+
+                    case 5:
+                      html = _context.sent;
+                      cost = end();
+                      entry.logger.info('App Render Total cost = %d ms', cost);
+                      entry.metrics.emitTimer('app.render.cost', cost);
+                      cacheConfig = PreRender.config();
+
+                      if (cacheConfig) {
+                        ctx.ssrContext.cacheConfig = cacheConfig;
+                      }
+
+                      return _context.abrupt("return", html);
+
+                    case 12:
+                    case "end":
+                      return _context.stop();
+                  }
+                }
+              }, _callee);
+            }))));
+
+          case 4:
+          case "end":
+            return _context2.stop();
+        }
+      }
+    }, _callee2);
+  }));
+
+  return function render(_x) {
+    return _ref.apply(this, arguments);
+  };
+}();

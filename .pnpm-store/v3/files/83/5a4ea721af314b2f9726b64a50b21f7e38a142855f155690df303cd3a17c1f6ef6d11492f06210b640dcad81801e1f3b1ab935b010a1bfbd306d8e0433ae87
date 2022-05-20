@@ -1,0 +1,107 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getMethodAndStatementFromName = exports.generateClient = exports.DEFAULT_CLIENT_REQUEST_CREATOR = void 0;
+
+var path = _interopRequireWildcard(require("path"));
+
+var _constant = require("../constant");
+
+var _utils = require("../utils");
+
+var _result = require("./result");
+
+var _getRouteName = require("./get-route-name");
+
+var _checkSource = require("./check-source");
+
+function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
+
+function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+
+const DEFAULT_CLIENT_REQUEST_CREATOR = '@modern-js/create-request';
+exports.DEFAULT_CLIENT_REQUEST_CREATOR = DEFAULT_CLIENT_REQUEST_CREATOR;
+
+const generateClient = async ({
+  resourcePath,
+  source,
+  apiDir,
+  prefix,
+  port,
+  target,
+  requestCreator,
+  fetcher,
+  requireResolve: _requireResolve = require.resolve
+}) => {
+  if (!requestCreator) {
+    // eslint-disable-next-line no-param-reassign
+    requestCreator = _requireResolve(`${DEFAULT_CLIENT_REQUEST_CREATOR}${target ? `/${target}` : ''}`).replace(/\\/g, '/');
+  } else {
+    // 这里约束传入的 requestCreator 包也必须有两个导出 client 和 server，因为目前的机制 client 和 server 要导出不同的 configure 函数；该 api 不对使用者暴露，后续可优化
+    let resolvedPath = requestCreator;
+
+    try {
+      resolvedPath = path.dirname(_requireResolve(requestCreator));
+    } catch (error) {} // eslint-disable-next-line no-param-reassign
+
+
+    requestCreator = `${resolvedPath}${target ? `/${target}` : ''}`.replace(/\\/g, '/');
+  }
+
+  const routeResult = (0, _getRouteName.getRouteName)(resourcePath, apiDir);
+
+  if (routeResult.isErr) {
+    return routeResult;
+  }
+
+  const checkSourceResult = await (0, _checkSource.checkSource)(source);
+
+  if (checkSourceResult.isErr) {
+    return (0, _result.Err)(checkSourceResult.value);
+  }
+
+  const routeName = prefix + routeResult.value;
+  let handlersCode = '';
+
+  for (const name of checkSourceResult.value) {
+    const result = getMethodAndStatementFromName(name);
+
+    if (result.isErr) {
+      return result;
+    }
+
+    const [method, exportStatement] = result.value;
+    handlersCode += `export ${exportStatement} createRequest('${routeName}', '${method}', process.env.PORT || ${String(port)}${fetcher ? `, fetch` : ''});
+`;
+  }
+
+  const importCode = `import { createRequest } from '${requestCreator}';
+${fetcher ? `import { fetch } from '${fetcher}';\n` : ''}`;
+  return (0, _result.Ok)(`${importCode}\n${handlersCode}`);
+};
+
+exports.generateClient = generateClient;
+
+const getMethodAndStatementFromName = name => {
+  const upperName = name.toUpperCase();
+
+  if ((0, _utils.isAllowedHttpMethod)(upperName)) {
+    return (0, _result.Ok)([upperName, `const ${name} =`]);
+  } else {
+    // default export to GET
+    if (upperName === 'DEFAULT') {
+      return (0, _result.Ok)([_constant.HttpMethod.GET, `default`]);
+    } // del to delete
+
+
+    if (upperName === 'DEL') {
+      return (0, _result.Ok)([_constant.HttpMethod.DELETE, `const ${name} =`]);
+    }
+
+    return (0, _result.Err)(`Unknown HTTP Method: ${upperName}`);
+  }
+};
+
+exports.getMethodAndStatementFromName = getMethodAndStatementFromName;

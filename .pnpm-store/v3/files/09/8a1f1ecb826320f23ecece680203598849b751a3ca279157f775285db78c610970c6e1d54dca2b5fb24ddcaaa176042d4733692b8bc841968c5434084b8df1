@@ -1,0 +1,201 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.deploy = void 0;
+
+var path = _interopRequireWildcard(require("path"));
+
+var _nodeCoreLibrary = require("@rushstack/node-core-library");
+
+var _utils = require("@modern-js/utils");
+
+var _constants = require("../../constants");
+
+function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
+
+function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+
+const createCopyMap = (rootPath, targetProject, copyProjects, deployDir) => {
+  const map = new Map();
+
+  for (const project of copyProjects) {
+    const relativePath = path.relative(rootPath, project.extra.path);
+    const targetPath = path.join(deployDir, relativePath);
+    map.set(project.extra.path, targetPath);
+  }
+
+  const targetProjectDeployPath = path.join(deployDir, 'apps/app');
+  map.set(targetProject.extra.path, targetProjectDeployPath);
+  return map;
+};
+
+const createCopyFromMonorepoToDeployDirFn = (monorepoDir, deployDir) => filename => {
+  const sourcePath = path.join(monorepoDir, filename);
+  const destinationPath = path.join(deployDir, filename);
+
+  if (_nodeCoreLibrary.FileSystem.exists(sourcePath)) {
+    _nodeCoreLibrary.FileSystem.copyFile({
+      sourcePath,
+      destinationPath
+    });
+  }
+};
+
+const checkAndUpdatePMWorkspaces = deployDir => {
+  var _pkg$workspaces;
+
+  // pnpm-workspace
+  const pnpmWp = path.join(deployDir, _constants.WORKSPACE_FILE.PNPM);
+
+  if (_utils.fs.existsSync(pnpmWp)) {
+    const pnpmWorkspace = _utils.yaml.load(_utils.fs.readFileSync(pnpmWp, 'utf-8'));
+
+    if (pnpmWorkspace.packages && Array.isArray(pnpmWorkspace.packages)) {
+      pnpmWorkspace.packages.push('apps/**');
+    }
+
+    _utils.fs.writeFileSync(pnpmWp, _utils.yaml.dump(pnpmWorkspace));
+  }
+
+  const pkgPath = path.join(deployDir, _constants.WORKSPACE_FILE.YARN);
+
+  const pkg = _nodeCoreLibrary.JsonFile.load(pkgPath);
+
+  if ((_pkg$workspaces = pkg.workspaces) !== null && _pkg$workspaces !== void 0 && _pkg$workspaces.packages && Array.isArray(pkg.workspaces.packages)) {
+    pkg.workspaces.packages.push('app/**');
+  }
+};
+
+const generatorAndCopyRequiredFiles = (rootPath, deployDir) => {
+  // copy .npmrc
+  const copy = createCopyFromMonorepoToDeployDirFn(rootPath, deployDir);
+  copy('.npmrc');
+  copy('package.json');
+  copy('pnpm-workspace.yaml');
+  copy('.pnpmfile.cjs');
+  copy('tsconfig.json');
+  copy('modern.config.js'); // TODO: 暂时配置，要移除
+  // lock file
+
+  copy('pnpm-lock.yaml');
+  copy('yarn.lock');
+  copy('package-lock.json'); // check workspaces config and add 'apps/**',
+  // because we deploy project to 'apps' dir
+
+  checkAndUpdatePMWorkspaces(deployDir);
+};
+
+const checkAndRunDeployCommand = async (monorepoPath, targetProject, packageManager) => {
+  var _targetProject$extra;
+
+  const scripts = ((_targetProject$extra = targetProject.extra) === null || _targetProject$extra === void 0 ? void 0 : _targetProject$extra.scripts) || {};
+
+  if (scripts.deploy) {
+    var _childProcess$stdout, _childProcess$stderr;
+
+    _utils.logger.info(`The 'deploy' command for the ${targetProject.name} is detected, so 'deploy' will be executed`);
+
+    let runDeployCommands = ['run', 'deploy'];
+
+    if (packageManager === 'pnpm') {
+      runDeployCommands = ['run', 'deploy', '--filter', targetProject.name];
+    } else if (packageManager === 'yarn') {
+      runDeployCommands = ['workspace', targetProject.name, 'run', 'deploy'];
+    }
+
+    const cwd = packageManager === 'npm' ? targetProject.extra.path : monorepoPath;
+    const childProcess = (0, _utils.execa)(packageManager, runDeployCommands, {
+      cwd,
+      stdio: ['pipe']
+    });
+    (_childProcess$stdout = childProcess.stdout) === null || _childProcess$stdout === void 0 ? void 0 : _childProcess$stdout.pipe(process.stdout);
+    (_childProcess$stderr = childProcess.stderr) === null || _childProcess$stderr === void 0 ? void 0 : _childProcess$stderr.pipe(process.stderr);
+    await childProcess;
+  }
+}; // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
+
+const installDependency = async (deployDir, packageManager) => {
+  // TODO: 使用公共方法替换
+  const packageJsonPath = path.join(deployDir, 'package.json');
+
+  const packageJson = _nodeCoreLibrary.JsonFile.load(packageJsonPath);
+
+  const scripts = (packageJson === null || packageJson === void 0 ? void 0 : packageJson.scripts) || {};
+  let commands = [];
+
+  if (scripts.setup) {
+    _utils.logger.info(`The 'setup' command is detected, execute '${packageManager} run setup' to start installing the dependencies`);
+
+    commands = ['run', 'setup'];
+  } else {
+    _utils.logger.info(`No 'setup' command detected, execute '${packageManager} install' to start installing dependencies`);
+
+    commands = ['install'];
+  }
+
+  _utils.logger.log(_utils.chalk.rgb(218, 152, 92)('Install Log:\n'));
+
+  const childProcess = (0, _utils.execa)(packageManager, commands, {
+    stdio: 'inherit',
+    cwd: deployDir,
+    env: {
+      NODE_ENV: undefined
+    }
+  });
+  await childProcess;
+};
+
+const excludeDirs = (filePath, dirs) => dirs.some(dir => filePath.includes(dir));
+
+const defaultDeployPath = 'output';
+
+const deploy = async (deployProjectNames, operator, config) => {
+  const {
+    rootPath,
+    packageManager,
+    deployPath = defaultDeployPath
+  } = config;
+  const realDeployPath = path.isAbsolute(deployPath) ? deployPath : path.join(rootPath, deployPath);
+
+  _nodeCoreLibrary.FileSystem.deleteFolder(realDeployPath); // 保证 realDeployPath 目录内为空
+
+
+  for (const deployProjectName of deployProjectNames) {
+    const currentProject = operator.getNodeData(deployProjectName, {
+      checkExist: true
+    });
+    const alldeps = operator.getNodeAllDependencyData(deployProjectName);
+    const copyMap = createCopyMap(rootPath, currentProject, alldeps, realDeployPath);
+    await checkAndRunDeployCommand(rootPath, currentProject, packageManager);
+
+    _nodeCoreLibrary.FileSystem.ensureFolder(realDeployPath);
+
+    for (const [from, to] of copyMap) {
+      // https://rushstack.io/pages/api/node-core-library.ifilesystemcopyfilesasyncoptions/
+      _nodeCoreLibrary.FileSystem.copyFiles({
+        sourcePath: from,
+        destinationPath: to,
+        // If true, then when copying symlinks, copy the target object instead of copying the link.
+        dereferenceSymlinks: false,
+
+        filter(filePath) {
+          if (excludeDirs(filePath, ['node_modules', 'dist'])) {
+            return false;
+          }
+
+          return true;
+        }
+
+      });
+    }
+  }
+
+  generatorAndCopyRequiredFiles(rootPath, realDeployPath); // await installDependency(realDeployPath, packageManager);
+
+  _utils.signale.success(`Deploy success. The deploy dir is in '${rootPath}/output'`);
+};
+
+exports.deploy = deploy;

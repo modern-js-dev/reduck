@@ -1,0 +1,5 @@
+import type { PluginAPI } from '@modern-js/core';
+export interface IInstallCommandOption {
+  auto?: boolean;
+}
+export declare const install: (projectNames: string[] | undefined, option: IInstallCommandOption, api: PluginAPI) => Promise<void>;

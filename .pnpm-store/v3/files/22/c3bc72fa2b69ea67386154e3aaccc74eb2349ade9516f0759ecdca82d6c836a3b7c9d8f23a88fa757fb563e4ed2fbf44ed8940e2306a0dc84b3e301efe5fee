@@ -1,0 +1,14 @@
+import { fs, json5 } from '@modern-js/utils';
+export const readTsConfig = (tsconfigPath, noExistReturn = null) => {
+  // 如果不存在，则返回 noExistReturn
+  if (!fs.existsSync(tsconfigPath)) {
+    return noExistReturn;
+  }
+
+  const content = fs.readFileSync(tsconfigPath, 'utf-8');
+  return json5.parse(content);
+};
+export const existTsConfigFile = tsconfigAbsolutePath => {
+  const tsconfig = readTsConfig(tsconfigAbsolutePath);
+  return Boolean(tsconfig);
+};

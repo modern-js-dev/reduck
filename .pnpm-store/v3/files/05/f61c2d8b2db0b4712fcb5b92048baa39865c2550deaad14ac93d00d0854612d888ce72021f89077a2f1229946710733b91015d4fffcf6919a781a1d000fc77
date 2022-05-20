@@ -1,0 +1,16 @@
+/// <reference types="node" />
+import * as Event from 'events';
+import { FSWatcher } from '@modern-js/utils';
+import type { IFinaleCompilerOptions, BabelOptions } from './type';
+export declare const BuildWatchEvent: {
+  firstCompiler: string;
+  compiling: string;
+  watchingCompiler: string;
+};
+export declare class BuildWatchEmitter extends Event.EventEmitter {
+  private _initFn;
+  setInitFn(fn: (emitter: BuildWatchEmitter) => Promise<any> | any): void;
+  watch(): Promise<FSWatcher | null>;
+}
+export declare const runBuildWatch: (option: IFinaleCompilerOptions, babelConfig: import("@babel/core").TransformOptions | undefined, emitter: BuildWatchEmitter) => Promise<FSWatcher>;
+export declare const buildWatch: (option: IFinaleCompilerOptions, babelConfig?: BabelOptions) => BuildWatchEmitter;

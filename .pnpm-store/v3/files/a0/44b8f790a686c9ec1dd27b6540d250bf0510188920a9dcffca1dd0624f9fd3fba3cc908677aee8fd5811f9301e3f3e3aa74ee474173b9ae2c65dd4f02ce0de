@@ -1,0 +1,14 @@
+import { NodePath, PluginPass, types as t } from '@babel/core';
+export interface IImportCheckOpts {
+  appDirectory: string;
+}
+export declare const importCheck: () => {
+  name: string;
+  visitor: {
+    Program(nodePath: NodePath<t.Program>, {
+      opts,
+      file
+    }: PluginPass): void;
+  };
+};
+export default importCheck;

@@ -1,0 +1,41 @@
+import { INTERNAL_PLUGINS } from '@modern-js/utils';
+import type { UserConfig } from './config';
+import { CliPlugin } from './manager';
+declare type PluginItem = string | [string, any];
+export declare type LoadedPlugin = {
+    cli?: CliPlugin;
+    server?: string;
+    serverPkg?: string;
+};
+export declare type TransformPlugin = (plugin: PluginConfig, resolvedConfig: UserConfig, pluginOptions?: any) => PluginConfig;
+/**
+ * @deprecated
+ * Using NewPluginConfig instead.
+ */
+declare type OldPluginConfig = Array<PluginItem | {
+    cli?: PluginItem;
+    server?: PluginItem;
+}>;
+declare type NewPluginConfig = CliPlugin[] | {
+    cli?: CliPlugin[];
+    /** Custom server plugin is not supported yet. */
+    server?: never;
+};
+export declare type PluginConfig = OldPluginConfig | NewPluginConfig;
+export declare function getAppPlugins(appDirectory: string, oldPluginConfig: OldPluginConfig, internalPlugins?: typeof INTERNAL_PLUGINS): (PluginItem | {
+    cli?: PluginItem | undefined;
+    server?: PluginItem | undefined;
+})[];
+/**
+ * Load internal plugins which in @modern-js scope and user's custom plugins.
+ * @param appDirectory - Application root directory.
+ * @param userConfig - Resolved user config.
+ * @param options.internalPlugins - Internal plugins.
+ * @param options.transformPlugin - transform plugin before using it. Used for compatible with legacy jupiter plugins.
+ * @returns Plugin Objects has been required.
+ */
+export declare const loadPlugins: (appDirectory: string, userConfig: UserConfig, options?: {
+    internalPlugins?: typeof INTERNAL_PLUGINS;
+    transformPlugin?: TransformPlugin;
+}) => LoadedPlugin[];
+export {};

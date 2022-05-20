@@ -1,0 +1,142 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.updateFile = exports.readFile = exports.init = exports.close = exports.LruReader = void 0;
+
+var _utils = require("@modern-js/utils");
+
+var _lruCache = _interopRequireDefault(require("lru-cache"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+const Byte = 1;
+const KB = 1024 * Byte;
+const MB = 1024 * KB;
+
+const getContentLength = cache => cache.content.length;
+
+const createCacheItem = async (filepath, mtime) => {
+  const content = await _utils.fs.readFile(filepath);
+  return {
+    content,
+    mtime
+  };
+};
+
+class LruReader {
+  // private timer?: NodeJS.Timeout;
+  constructor() {
+    _defineProperty(this, "cache", void 0);
+
+    this.cache = new _lruCache.default({
+      max: 256 * MB,
+      length: getContentLength,
+      maxAge: 5 * 60 * 5000 // 60s
+
+    });
+  }
+
+  init() {// this.timeTask();
+  }
+
+  close() {// if (this.timer) {
+    //   clearInterval(this.timer);
+    // }
+  }
+
+  async read(filepath) {
+    if (this.cache.has(filepath)) {
+      const {
+        content
+      } = this.cache.get(filepath);
+      return {
+        content
+      };
+    }
+
+    if (!_utils.fs.existsSync(filepath)) {
+      return null;
+    }
+
+    const stat = _utils.fs.statSync(filepath);
+
+    if (stat.isDirectory()) {
+      return null;
+    } // if file more than 20 MB
+
+
+    if (stat.size > 20 * MB) {
+      return null;
+    }
+
+    const item = await createCacheItem(filepath, stat.mtime);
+    this.cache.set(filepath, item);
+    return item;
+  }
+
+  update() {
+    const {
+      cache
+    } = this;
+    const files = cache.keys();
+
+    for (const filepath of files) {
+      if (!_utils.fs.existsSync(filepath)) {
+        cache.del(filepath);
+      }
+
+      try {
+        const item = cache.get(filepath);
+
+        const stat = _utils.fs.statSync(filepath);
+
+        const {
+          mtime
+        } = stat; // file is modify
+
+        if (item.mtime < mtime) {
+          cache.del(filepath);
+        }
+      } catch (e) {
+        // for safe
+        cache.del(filepath);
+      }
+    }
+  } // private timeTask() {
+  // this.timer = setInterval(() => this.update, 5 * 60 * 1000).unref();
+  // }
+
+
+}
+
+exports.LruReader = LruReader;
+const reader = new LruReader();
+
+const readFile = async filepath => {
+  const file = await reader.read(filepath);
+  return file === null || file === void 0 ? void 0 : file.content;
+};
+
+exports.readFile = readFile;
+
+const updateFile = () => {
+  reader.update();
+};
+
+exports.updateFile = updateFile;
+
+const init = () => {
+  reader.init();
+};
+
+exports.init = init;
+
+const close = () => {
+  reader.close();
+};
+
+exports.close = close;

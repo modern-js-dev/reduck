@@ -1,0 +1,15 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.ensureAbsolutePath = void 0;
+const path_1 = __importDefault(require("path"));
+/**
+ * ensure absolute file path.
+ * @param base - Base path to resolve relative from.
+ * @param filePath - Absolute or relative file path.
+ * @returns Resolved absolute file path.
+ */
+const ensureAbsolutePath = (base, filePath) => path_1.default.isAbsolute(filePath) ? filePath : path_1.default.resolve(base, filePath);
+exports.ensureAbsolutePath = ensureAbsolutePath;

@@ -1,0 +1,44 @@
+import * as path from 'path';
+import { fs, Import, dotenv } from '@modern-js/utils';
+const tsConfigutils = Import.lazy('../utils/tsconfig', require);
+const valid = Import.lazy('../utils/valide', require);
+const buildFeature = Import.lazy('../features/build', require);
+export const build = async (api, {
+  watch: _watch = false,
+  tsconfig: tsconfigName,
+  tsc,
+  clear: _clear = true,
+  platform
+}) => {
+  const {
+    appDirectory
+  } = api.useAppContext();
+  const modernConfig = api.useResolvedConfigContext();
+  const tsconfigPath = path.join(appDirectory, tsconfigName);
+  dotenv.config();
+  const isTsProject = tsConfigutils.existTsConfigFile(tsconfigPath);
+  const enableTscCompiler = isTsProject && tsc && !modernConfig.output.disableTsChecker;
+  valid.valideBeforeTask({
+    modernConfig,
+    tsconfigPath
+  }); // TODO: 一些配置只需要从modernConfig中获取
+
+  await buildFeature.build(api, {
+    appDirectory,
+    enableWatchMode: _watch,
+    isTsProject,
+    platform,
+    sourceDir: 'src',
+    tsconfigName,
+    enableTscCompiler,
+    clear: _clear
+  }, modernConfig);
+  process.on('SIGBREAK', () => {
+    console.info('exit');
+    const tempTsconfigFilePath = path.join(appDirectory, './tsconfig.temp.json');
+
+    if (fs.existsSync(tempTsconfigFilePath)) {
+      fs.removeSync(tempTsconfigFilePath);
+    }
+  });
+};

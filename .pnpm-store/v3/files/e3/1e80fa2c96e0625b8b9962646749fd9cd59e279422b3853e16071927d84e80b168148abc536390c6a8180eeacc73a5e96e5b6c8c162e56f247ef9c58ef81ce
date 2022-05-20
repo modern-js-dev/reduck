@@ -1,0 +1,467 @@
+/// <reference types="node" />
+import { IncomingMessage, ServerResponse } from 'http';
+import type { Component } from 'react';
+import { CommonAPI, ToThreads, AsyncSetup, PluginOptions } from '@modern-js/plugin';
+import type { ModernServerContext, BaseSSRServerContext, Metrics, Logger } from '@modern-js/types/server';
+import type { NormalizedConfig, UserConfig } from '@modern-js/core';
+import type { ISAppContext } from '@modern-js/types';
+import type { Options } from 'http-proxy-middleware';
+declare type ServerInitInput = {
+  loggerOptions: any;
+  metricsOptions: any;
+};
+declare type InitExtension = {
+  logger: Logger;
+  metrics: Metrics;
+};
+export declare type Adapter = (req: IncomingMessage, res: ServerResponse) => void | Promise<void>;
+export declare type WebServerStartInput = {
+  pwd: string;
+  config: Record<string, any>;
+};
+export declare type APIServerStartInput = {
+  pwd: string;
+  mode: 'function' | 'framework';
+  prefix?: string;
+  config?: {
+    middleware?: Array<any>;
+  };
+};
+export declare type Route = Record<string, unknown>;
+export declare type RequestResult = {
+  isfinish: boolean;
+};
+export declare type SSRServerContext = Record<string, unknown>;
+export declare type RenderContext = Record<string, unknown>;
+export declare const AppContext: import("@modern-js/plugin").Context<ISAppContext>;
+export declare const ConfigContext: import("@modern-js/plugin").Context<UserConfig>;
+/**
+ * Get original content of user config.
+ */
+
+export declare const useConfigContext: () => UserConfig;
+/**
+ * Get app context, including directories, plugins and some static infos.
+ */
+
+export declare const useAppContext: () => ISAppContext;
+declare const pluginAPI: {
+  useAppContext: () => ISAppContext;
+  useConfigContext: () => UserConfig;
+};
+declare const serverHooks: {
+  gather: import("@modern-js/plugin").ParallelWorkflow<{
+    addWebMiddleware: (_input: any) => void;
+    addAPIMiddleware: (_input: any) => void;
+  }, unknown>;
+  config: import("@modern-js/plugin").Waterfall<ServerConfig>;
+  prepare: import("@modern-js/plugin").Waterfall<void>;
+  create: import("@modern-js/plugin").AsyncPipeline<ServerInitInput, InitExtension>;
+  prepareWebServer: import("@modern-js/plugin").AsyncPipeline<WebServerStartInput, Adapter>;
+  prepareApiServer: import("@modern-js/plugin").AsyncPipeline<APIServerStartInput, Adapter>;
+  beforeDevServer: import("@modern-js/plugin").ParallelWorkflow<NormalizedConfig, any>;
+  setupCompiler: import("@modern-js/plugin").ParallelWorkflow<Record<string, unknown>, any[]>;
+  afterDevServer: import("@modern-js/plugin").ParallelWorkflow<NormalizedConfig, any>;
+  beforeRouteSet: import("@modern-js/plugin").AsyncPipeline<Route[], Route[]>;
+  afterRouteSet: import("@modern-js/plugin").AsyncPipeline<unknown, unknown>;
+  beforeProdServer: import("@modern-js/plugin").ParallelWorkflow<NormalizedConfig, any>;
+  afterProdServer: import("@modern-js/plugin").ParallelWorkflow<NormalizedConfig, any>;
+  listen: import("@modern-js/plugin").ParallelWorkflow<{
+    ip: string;
+    port: number;
+  }, any[]>;
+  beforeServerReset: import("@modern-js/plugin").ParallelWorkflow<void, unknown>;
+  afterServerReset: import("@modern-js/plugin").ParallelWorkflow<void, unknown>;
+  extendSSRContext: import("@modern-js/plugin").AsyncWaterfall<BaseSSRServerContext>;
+  extendContext: import("@modern-js/plugin").AsyncPipeline<ModernServerContext, ModernServerContext>;
+  handleError: import("@modern-js/plugin").ParallelWorkflow<{
+    error: Error;
+  }, unknown>;
+  beforeMatch: import("@modern-js/plugin").AsyncPipeline<{
+    context: ModernServerContext;
+  }, any>;
+  afterMatch: import("@modern-js/plugin").AsyncPipeline<{
+    context: ModernServerContext;
+    routeAPI: any;
+  }, any>;
+  prefetch: import("@modern-js/plugin").ParallelWorkflow<{
+    context: SSRServerContext;
+  }, unknown>;
+  renderToString: import("@modern-js/plugin").AsyncPipeline<{
+    App: Component;
+    context: RenderContext;
+  }, string>;
+  beforeRender: import("@modern-js/plugin").AsyncPipeline<{
+    context: ModernServerContext;
+  }, any>;
+  afterRender: import("@modern-js/plugin").AsyncPipeline<{
+    context: ModernServerContext;
+    templateAPI: any;
+  }, any>;
+  beforeSend: import("@modern-js/plugin").AsyncPipeline<ModernServerContext, RequestResult>;
+  afterSend: import("@modern-js/plugin").ParallelWorkflow<{
+    context: ModernServerContext;
+  }, unknown>;
+  reset: import("@modern-js/plugin").ParallelWorkflow<void, unknown>;
+};
+/** All hooks of server plugin. */
+
+export declare type ServerHooks = typeof serverHooks;
+/** All hook callbacks of server plugin. */
+
+export declare type ServerHookCallbacks = ToThreads<ServerHooks>;
+/** All apis for server plugin. */
+
+export declare type PluginAPI = typeof pluginAPI & CommonAPI<ServerHooks>;
+export declare const createServerManager: () => import("@modern-js/plugin").AsyncManager<{
+  gather: import("@modern-js/plugin").ParallelWorkflow<{
+    addWebMiddleware: (_input: any) => void;
+    addAPIMiddleware: (_input: any) => void;
+  }, unknown>;
+  config: import("@modern-js/plugin").Waterfall<ServerConfig>;
+  prepare: import("@modern-js/plugin").Waterfall<void>;
+  create: import("@modern-js/plugin").AsyncPipeline<ServerInitInput, InitExtension>;
+  prepareWebServer: import("@modern-js/plugin").AsyncPipeline<WebServerStartInput, Adapter>;
+  prepareApiServer: import("@modern-js/plugin").AsyncPipeline<APIServerStartInput, Adapter>;
+  beforeDevServer: import("@modern-js/plugin").ParallelWorkflow<NormalizedConfig, any>;
+  setupCompiler: import("@modern-js/plugin").ParallelWorkflow<Record<string, unknown>, any[]>;
+  afterDevServer: import("@modern-js/plugin").ParallelWorkflow<NormalizedConfig, any>;
+  beforeRouteSet: import("@modern-js/plugin").AsyncPipeline<Route[], Route[]>;
+  afterRouteSet: import("@modern-js/plugin").AsyncPipeline<unknown, unknown>;
+  beforeProdServer: import("@modern-js/plugin").ParallelWorkflow<NormalizedConfig, any>;
+  afterProdServer: import("@modern-js/plugin").ParallelWorkflow<NormalizedConfig, any>;
+  listen: import("@modern-js/plugin").ParallelWorkflow<{
+    ip: string;
+    port: number;
+  }, any[]>;
+  beforeServerReset: import("@modern-js/plugin").ParallelWorkflow<void, unknown>;
+  afterServerReset: import("@modern-js/plugin").ParallelWorkflow<void, unknown>;
+  extendSSRContext: import("@modern-js/plugin").AsyncWaterfall<BaseSSRServerContext>;
+  extendContext: import("@modern-js/plugin").AsyncPipeline<ModernServerContext, ModernServerContext>;
+  handleError: import("@modern-js/plugin").ParallelWorkflow<{
+    error: Error;
+  }, unknown>;
+  beforeMatch: import("@modern-js/plugin").AsyncPipeline<{
+    context: ModernServerContext;
+  }, any>;
+  afterMatch: import("@modern-js/plugin").AsyncPipeline<{
+    context: ModernServerContext;
+    routeAPI: any;
+  }, any>;
+  prefetch: import("@modern-js/plugin").ParallelWorkflow<{
+    context: SSRServerContext;
+  }, unknown>;
+  renderToString: import("@modern-js/plugin").AsyncPipeline<{
+    App: Component;
+    context: RenderContext;
+  }, string>;
+  beforeRender: import("@modern-js/plugin").AsyncPipeline<{
+    context: ModernServerContext;
+  }, any>;
+  afterRender: import("@modern-js/plugin").AsyncPipeline<{
+    context: ModernServerContext;
+    templateAPI: any;
+  }, any>;
+  beforeSend: import("@modern-js/plugin").AsyncPipeline<ModernServerContext, RequestResult>;
+  afterSend: import("@modern-js/plugin").ParallelWorkflow<{
+    context: ModernServerContext;
+  }, unknown>;
+  reset: import("@modern-js/plugin").ParallelWorkflow<void, unknown>;
+}, {
+  useAppContext: () => ISAppContext;
+  useConfigContext: () => UserConfig;
+}>;
+export declare const serverManager: import("@modern-js/plugin").AsyncManager<{
+  gather: import("@modern-js/plugin").ParallelWorkflow<{
+    addWebMiddleware: (_input: any) => void;
+    addAPIMiddleware: (_input: any) => void;
+  }, unknown>;
+  config: import("@modern-js/plugin").Waterfall<ServerConfig>;
+  prepare: import("@modern-js/plugin").Waterfall<void>;
+  create: import("@modern-js/plugin").AsyncPipeline<ServerInitInput, InitExtension>;
+  prepareWebServer: import("@modern-js/plugin").AsyncPipeline<WebServerStartInput, Adapter>;
+  prepareApiServer: import("@modern-js/plugin").AsyncPipeline<APIServerStartInput, Adapter>;
+  beforeDevServer: import("@modern-js/plugin").ParallelWorkflow<NormalizedConfig, any>;
+  setupCompiler: import("@modern-js/plugin").ParallelWorkflow<Record<string, unknown>, any[]>;
+  afterDevServer: import("@modern-js/plugin").ParallelWorkflow<NormalizedConfig, any>;
+  beforeRouteSet: import("@modern-js/plugin").AsyncPipeline<Route[], Route[]>;
+  afterRouteSet: import("@modern-js/plugin").AsyncPipeline<unknown, unknown>;
+  beforeProdServer: import("@modern-js/plugin").ParallelWorkflow<NormalizedConfig, any>;
+  afterProdServer: import("@modern-js/plugin").ParallelWorkflow<NormalizedConfig, any>;
+  listen: import("@modern-js/plugin").ParallelWorkflow<{
+    ip: string;
+    port: number;
+  }, any[]>;
+  beforeServerReset: import("@modern-js/plugin").ParallelWorkflow<void, unknown>;
+  afterServerReset: import("@modern-js/plugin").ParallelWorkflow<void, unknown>;
+  extendSSRContext: import("@modern-js/plugin").AsyncWaterfall<BaseSSRServerContext>;
+  extendContext: import("@modern-js/plugin").AsyncPipeline<ModernServerContext, ModernServerContext>;
+  handleError: import("@modern-js/plugin").ParallelWorkflow<{
+    error: Error;
+  }, unknown>;
+  beforeMatch: import("@modern-js/plugin").AsyncPipeline<{
+    context: ModernServerContext;
+  }, any>;
+  afterMatch: import("@modern-js/plugin").AsyncPipeline<{
+    context: ModernServerContext;
+    routeAPI: any;
+  }, any>;
+  prefetch: import("@modern-js/plugin").ParallelWorkflow<{
+    context: SSRServerContext;
+  }, unknown>;
+  renderToString: import("@modern-js/plugin").AsyncPipeline<{
+    App: Component;
+    context: RenderContext;
+  }, string>;
+  beforeRender: import("@modern-js/plugin").AsyncPipeline<{
+    context: ModernServerContext;
+  }, any>;
+  afterRender: import("@modern-js/plugin").AsyncPipeline<{
+    context: ModernServerContext;
+    templateAPI: any;
+  }, any>;
+  beforeSend: import("@modern-js/plugin").AsyncPipeline<ModernServerContext, RequestResult>;
+  afterSend: import("@modern-js/plugin").ParallelWorkflow<{
+    context: ModernServerContext;
+  }, unknown>;
+  reset: import("@modern-js/plugin").ParallelWorkflow<void, unknown>;
+}, {
+  useAppContext: () => ISAppContext;
+  useConfigContext: () => UserConfig;
+}>;
+/** Plugin options of a server plugin. */
+
+export declare type ServerPlugin = PluginOptions<ServerHooks, AsyncSetup<ServerHooks, PluginAPI>>;
+export declare type ServerConfig = {
+  bff?: Partial<{
+    proxy: Record<string, Options>;
+  }>;
+  plugins?: ServerPlugin[];
+};
+export declare const createPlugin: (setup?: AsyncSetup<{
+  gather: import("@modern-js/plugin").ParallelWorkflow<{
+    addWebMiddleware: (_input: any) => void;
+    addAPIMiddleware: (_input: any) => void;
+  }, unknown>;
+  config: import("@modern-js/plugin").Waterfall<ServerConfig>;
+  prepare: import("@modern-js/plugin").Waterfall<void>;
+  create: import("@modern-js/plugin").AsyncPipeline<ServerInitInput, InitExtension>;
+  prepareWebServer: import("@modern-js/plugin").AsyncPipeline<WebServerStartInput, Adapter>;
+  prepareApiServer: import("@modern-js/plugin").AsyncPipeline<APIServerStartInput, Adapter>;
+  beforeDevServer: import("@modern-js/plugin").ParallelWorkflow<NormalizedConfig, any>;
+  setupCompiler: import("@modern-js/plugin").ParallelWorkflow<Record<string, unknown>, any[]>;
+  afterDevServer: import("@modern-js/plugin").ParallelWorkflow<NormalizedConfig, any>;
+  beforeRouteSet: import("@modern-js/plugin").AsyncPipeline<Route[], Route[]>;
+  afterRouteSet: import("@modern-js/plugin").AsyncPipeline<unknown, unknown>;
+  beforeProdServer: import("@modern-js/plugin").ParallelWorkflow<NormalizedConfig, any>;
+  afterProdServer: import("@modern-js/plugin").ParallelWorkflow<NormalizedConfig, any>;
+  listen: import("@modern-js/plugin").ParallelWorkflow<{
+    ip: string;
+    port: number;
+  }, any[]>;
+  beforeServerReset: import("@modern-js/plugin").ParallelWorkflow<void, unknown>;
+  afterServerReset: import("@modern-js/plugin").ParallelWorkflow<void, unknown>;
+  extendSSRContext: import("@modern-js/plugin").AsyncWaterfall<BaseSSRServerContext>;
+  extendContext: import("@modern-js/plugin").AsyncPipeline<ModernServerContext, ModernServerContext>;
+  handleError: import("@modern-js/plugin").ParallelWorkflow<{
+    error: Error;
+  }, unknown>;
+  beforeMatch: import("@modern-js/plugin").AsyncPipeline<{
+    context: ModernServerContext;
+  }, any>;
+  afterMatch: import("@modern-js/plugin").AsyncPipeline<{
+    context: ModernServerContext;
+    routeAPI: any;
+  }, any>;
+  prefetch: import("@modern-js/plugin").ParallelWorkflow<{
+    context: SSRServerContext;
+  }, unknown>;
+  renderToString: import("@modern-js/plugin").AsyncPipeline<{
+    App: Component;
+    context: RenderContext;
+  }, string>;
+  beforeRender: import("@modern-js/plugin").AsyncPipeline<{
+    context: ModernServerContext;
+  }, any>;
+  afterRender: import("@modern-js/plugin").AsyncPipeline<{
+    context: ModernServerContext;
+    templateAPI: any;
+  }, any>;
+  beforeSend: import("@modern-js/plugin").AsyncPipeline<ModernServerContext, RequestResult>;
+  afterSend: import("@modern-js/plugin").ParallelWorkflow<{
+    context: ModernServerContext;
+  }, unknown>;
+  reset: import("@modern-js/plugin").ParallelWorkflow<void, unknown>;
+}, {
+  useAppContext: () => ISAppContext;
+  useConfigContext: () => UserConfig;
+}> | undefined, options?: PluginOptions<{
+  gather: import("@modern-js/plugin").ParallelWorkflow<{
+    addWebMiddleware: (_input: any) => void;
+    addAPIMiddleware: (_input: any) => void;
+  }, unknown>;
+  config: import("@modern-js/plugin").Waterfall<ServerConfig>;
+  prepare: import("@modern-js/plugin").Waterfall<void>;
+  create: import("@modern-js/plugin").AsyncPipeline<ServerInitInput, InitExtension>;
+  prepareWebServer: import("@modern-js/plugin").AsyncPipeline<WebServerStartInput, Adapter>;
+  prepareApiServer: import("@modern-js/plugin").AsyncPipeline<APIServerStartInput, Adapter>;
+  beforeDevServer: import("@modern-js/plugin").ParallelWorkflow<NormalizedConfig, any>;
+  setupCompiler: import("@modern-js/plugin").ParallelWorkflow<Record<string, unknown>, any[]>;
+  afterDevServer: import("@modern-js/plugin").ParallelWorkflow<NormalizedConfig, any>;
+  beforeRouteSet: import("@modern-js/plugin").AsyncPipeline<Route[], Route[]>;
+  afterRouteSet: import("@modern-js/plugin").AsyncPipeline<unknown, unknown>;
+  beforeProdServer: import("@modern-js/plugin").ParallelWorkflow<NormalizedConfig, any>;
+  afterProdServer: import("@modern-js/plugin").ParallelWorkflow<NormalizedConfig, any>;
+  listen: import("@modern-js/plugin").ParallelWorkflow<{
+    ip: string;
+    port: number;
+  }, any[]>;
+  beforeServerReset: import("@modern-js/plugin").ParallelWorkflow<void, unknown>;
+  afterServerReset: import("@modern-js/plugin").ParallelWorkflow<void, unknown>;
+  extendSSRContext: import("@modern-js/plugin").AsyncWaterfall<BaseSSRServerContext>;
+  extendContext: import("@modern-js/plugin").AsyncPipeline<ModernServerContext, ModernServerContext>;
+  handleError: import("@modern-js/plugin").ParallelWorkflow<{
+    error: Error;
+  }, unknown>;
+  beforeMatch: import("@modern-js/plugin").AsyncPipeline<{
+    context: ModernServerContext;
+  }, any>;
+  afterMatch: import("@modern-js/plugin").AsyncPipeline<{
+    context: ModernServerContext;
+    routeAPI: any;
+  }, any>;
+  prefetch: import("@modern-js/plugin").ParallelWorkflow<{
+    context: SSRServerContext;
+  }, unknown>;
+  renderToString: import("@modern-js/plugin").AsyncPipeline<{
+    App: Component;
+    context: RenderContext;
+  }, string>;
+  beforeRender: import("@modern-js/plugin").AsyncPipeline<{
+    context: ModernServerContext;
+  }, any>;
+  afterRender: import("@modern-js/plugin").AsyncPipeline<{
+    context: ModernServerContext;
+    templateAPI: any;
+  }, any>;
+  beforeSend: import("@modern-js/plugin").AsyncPipeline<ModernServerContext, RequestResult>;
+  afterSend: import("@modern-js/plugin").ParallelWorkflow<{
+    context: ModernServerContext;
+  }, unknown>;
+  reset: import("@modern-js/plugin").ParallelWorkflow<void, unknown>;
+}, AsyncSetup<{
+  gather: import("@modern-js/plugin").ParallelWorkflow<{
+    addWebMiddleware: (_input: any) => void;
+    addAPIMiddleware: (_input: any) => void;
+  }, unknown>;
+  config: import("@modern-js/plugin").Waterfall<ServerConfig>;
+  prepare: import("@modern-js/plugin").Waterfall<void>;
+  create: import("@modern-js/plugin").AsyncPipeline<ServerInitInput, InitExtension>;
+  prepareWebServer: import("@modern-js/plugin").AsyncPipeline<WebServerStartInput, Adapter>;
+  prepareApiServer: import("@modern-js/plugin").AsyncPipeline<APIServerStartInput, Adapter>;
+  beforeDevServer: import("@modern-js/plugin").ParallelWorkflow<NormalizedConfig, any>;
+  setupCompiler: import("@modern-js/plugin").ParallelWorkflow<Record<string, unknown>, any[]>;
+  afterDevServer: import("@modern-js/plugin").ParallelWorkflow<NormalizedConfig, any>;
+  beforeRouteSet: import("@modern-js/plugin").AsyncPipeline<Route[], Route[]>;
+  afterRouteSet: import("@modern-js/plugin").AsyncPipeline<unknown, unknown>;
+  beforeProdServer: import("@modern-js/plugin").ParallelWorkflow<NormalizedConfig, any>;
+  afterProdServer: import("@modern-js/plugin").ParallelWorkflow<NormalizedConfig, any>;
+  listen: import("@modern-js/plugin").ParallelWorkflow<{
+    ip: string;
+    port: number;
+  }, any[]>;
+  beforeServerReset: import("@modern-js/plugin").ParallelWorkflow<void, unknown>;
+  afterServerReset: import("@modern-js/plugin").ParallelWorkflow<void, unknown>;
+  extendSSRContext: import("@modern-js/plugin").AsyncWaterfall<BaseSSRServerContext>;
+  extendContext: import("@modern-js/plugin").AsyncPipeline<ModernServerContext, ModernServerContext>;
+  handleError: import("@modern-js/plugin").ParallelWorkflow<{
+    error: Error;
+  }, unknown>;
+  beforeMatch: import("@modern-js/plugin").AsyncPipeline<{
+    context: ModernServerContext;
+  }, any>;
+  afterMatch: import("@modern-js/plugin").AsyncPipeline<{
+    context: ModernServerContext;
+    routeAPI: any;
+  }, any>;
+  prefetch: import("@modern-js/plugin").ParallelWorkflow<{
+    context: SSRServerContext;
+  }, unknown>;
+  renderToString: import("@modern-js/plugin").AsyncPipeline<{
+    App: Component;
+    context: RenderContext;
+  }, string>;
+  beforeRender: import("@modern-js/plugin").AsyncPipeline<{
+    context: ModernServerContext;
+  }, any>;
+  afterRender: import("@modern-js/plugin").AsyncPipeline<{
+    context: ModernServerContext;
+    templateAPI: any;
+  }, any>;
+  beforeSend: import("@modern-js/plugin").AsyncPipeline<ModernServerContext, RequestResult>;
+  afterSend: import("@modern-js/plugin").ParallelWorkflow<{
+    context: ModernServerContext;
+  }, unknown>;
+  reset: import("@modern-js/plugin").ParallelWorkflow<void, unknown>;
+}, {
+  useAppContext: () => ISAppContext;
+  useConfigContext: () => UserConfig;
+}>> | undefined) => import("@modern-js/plugin").AsyncPlugin<{
+  gather: import("@modern-js/plugin").ParallelWorkflow<{
+    addWebMiddleware: (_input: any) => void;
+    addAPIMiddleware: (_input: any) => void;
+  }, unknown>;
+  config: import("@modern-js/plugin").Waterfall<ServerConfig>;
+  prepare: import("@modern-js/plugin").Waterfall<void>;
+  create: import("@modern-js/plugin").AsyncPipeline<ServerInitInput, InitExtension>;
+  prepareWebServer: import("@modern-js/plugin").AsyncPipeline<WebServerStartInput, Adapter>;
+  prepareApiServer: import("@modern-js/plugin").AsyncPipeline<APIServerStartInput, Adapter>;
+  beforeDevServer: import("@modern-js/plugin").ParallelWorkflow<NormalizedConfig, any>;
+  setupCompiler: import("@modern-js/plugin").ParallelWorkflow<Record<string, unknown>, any[]>;
+  afterDevServer: import("@modern-js/plugin").ParallelWorkflow<NormalizedConfig, any>;
+  beforeRouteSet: import("@modern-js/plugin").AsyncPipeline<Route[], Route[]>;
+  afterRouteSet: import("@modern-js/plugin").AsyncPipeline<unknown, unknown>;
+  beforeProdServer: import("@modern-js/plugin").ParallelWorkflow<NormalizedConfig, any>;
+  afterProdServer: import("@modern-js/plugin").ParallelWorkflow<NormalizedConfig, any>;
+  listen: import("@modern-js/plugin").ParallelWorkflow<{
+    ip: string;
+    port: number;
+  }, any[]>;
+  beforeServerReset: import("@modern-js/plugin").ParallelWorkflow<void, unknown>;
+  afterServerReset: import("@modern-js/plugin").ParallelWorkflow<void, unknown>;
+  extendSSRContext: import("@modern-js/plugin").AsyncWaterfall<BaseSSRServerContext>;
+  extendContext: import("@modern-js/plugin").AsyncPipeline<ModernServerContext, ModernServerContext>;
+  handleError: import("@modern-js/plugin").ParallelWorkflow<{
+    error: Error;
+  }, unknown>;
+  beforeMatch: import("@modern-js/plugin").AsyncPipeline<{
+    context: ModernServerContext;
+  }, any>;
+  afterMatch: import("@modern-js/plugin").AsyncPipeline<{
+    context: ModernServerContext;
+    routeAPI: any;
+  }, any>;
+  prefetch: import("@modern-js/plugin").ParallelWorkflow<{
+    context: SSRServerContext;
+  }, unknown>;
+  renderToString: import("@modern-js/plugin").AsyncPipeline<{
+    App: Component;
+    context: RenderContext;
+  }, string>;
+  beforeRender: import("@modern-js/plugin").AsyncPipeline<{
+    context: ModernServerContext;
+  }, any>;
+  afterRender: import("@modern-js/plugin").AsyncPipeline<{
+    context: ModernServerContext;
+    templateAPI: any;
+  }, any>;
+  beforeSend: import("@modern-js/plugin").AsyncPipeline<ModernServerContext, RequestResult>;
+  afterSend: import("@modern-js/plugin").ParallelWorkflow<{
+    context: ModernServerContext;
+  }, unknown>;
+  reset: import("@modern-js/plugin").ParallelWorkflow<void, unknown>;
+}, {
+  useAppContext: () => ISAppContext;
+  useConfigContext: () => UserConfig;
+}>;
+export {};

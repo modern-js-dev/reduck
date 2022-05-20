@@ -1,0 +1,14 @@
+/// <reference types="node" />
+import * as Event from 'events';
+import type { IBuildOption } from './types';
+export declare const BuildWatchEvent: {
+  firstCompiler: string;
+  compilering: string;
+  watchingCompiler: string;
+};
+export declare class BuildWatchEmitter extends Event.EventEmitter {
+  private _initFn;
+  setInitFn(fn: (emitter: BuildWatchEmitter) => Promise<void>): void;
+  watch(): Promise<void>;
+}
+export declare const transformStyleInWatchMode: (option: IBuildOption) => BuildWatchEmitter;

@@ -1,0 +1,60 @@
+import _objectWithoutProperties from "@babel/runtime/helpers/esm/objectWithoutProperties";
+import _objectSpread from "@babel/runtime/helpers/esm/objectSpread2";
+import _objectDestructuringEmpty from "@babel/runtime/helpers/esm/objectDestructuringEmpty";
+import _toConsumableArray from "@babel/runtime/helpers/esm/toConsumableArray";
+var _excluded = ["context"];
+import React from 'react';
+import { createContainer } from '@modern-js/plugin';
+import { runtime, AppComponentContext } from "./plugin";
+import { RuntimeReactContext } from "./runtime-context";
+export var initialWrapper = function initialWrapper(plugins) {
+  var manager = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : runtime;
+  manager.usePlugin.apply(manager, _toConsumableArray(plugins));
+  return function (App, config) {
+    return wrap(App, config, manager);
+  };
+};
+export var wrap = function wrap(App, _ref) {
+  _objectDestructuringEmpty(_ref);
+
+  var manager = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : runtime;
+  var runner = manager.init({});
+  var container = createContainer({
+    App: AppComponentContext.create(App)
+  });
+
+  var WrapperComponent = function WrapperComponent(props) {
+    var element = /*#__PURE__*/React.createElement(App, _objectSpread({}, props), props.children);
+    return runner.provide({
+      element: element,
+      props: _objectSpread({}, props),
+      context: {}
+    }, {
+      container: container,
+      onLast: function onLast(_ref2) {
+        var element = _ref2.element;
+        return element;
+      }
+    });
+  };
+
+  return runner.hoc({
+    App: WrapperComponent
+  }, {
+    container: container,
+    onLast: function onLast(_ref3) {
+      var App = _ref3.App;
+
+      var WrapComponent = function WrapComponent(_ref4) {
+        var context = _ref4.context,
+            props = _objectWithoutProperties(_ref4, _excluded);
+
+        return /*#__PURE__*/React.createElement(RuntimeReactContext.Provider, {
+          value: context
+        }, /*#__PURE__*/React.createElement(App, props));
+      };
+
+      return WrapComponent;
+    }
+  });
+};

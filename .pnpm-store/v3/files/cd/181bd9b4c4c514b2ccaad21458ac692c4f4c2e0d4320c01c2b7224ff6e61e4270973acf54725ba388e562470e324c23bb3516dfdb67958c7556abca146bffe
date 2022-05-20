@@ -1,0 +1,54 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.serverRender = exports.initialRender = exports.clientRender = void 0;
+
+var _react = _interopRequireDefault(require("react"));
+
+var _reactDom = _interopRequireDefault(require("react-dom"));
+
+var _plugin = require("./plugin");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+const initialRender = (plugins, manager = _plugin.runtime) => {
+  manager.usePlugin(...plugins);
+  return {
+    clientRender: (props, rootElement) => clientRender(props, rootElement, manager),
+    serverRender: props => serverRender(props, manager)
+  };
+};
+
+exports.initialRender = initialRender;
+
+const clientRender = ({
+  App
+}, rootElement, manager = _plugin.runtime) => {
+  const runner = manager.init({});
+  return runner.client({
+    App,
+    rootElement
+  }, {
+    onLast: async ({
+      App,
+      rootElement
+    }) => {
+      _reactDom.default.render( /*#__PURE__*/_react.default.createElement(App), rootElement);
+    }
+  });
+};
+
+exports.clientRender = clientRender;
+
+const serverRender = ({
+  App
+}, manager = _plugin.runtime) => {
+  const runner = manager.init({});
+  return runner.server({
+    App
+  });
+};
+
+exports.serverRender = serverRender;

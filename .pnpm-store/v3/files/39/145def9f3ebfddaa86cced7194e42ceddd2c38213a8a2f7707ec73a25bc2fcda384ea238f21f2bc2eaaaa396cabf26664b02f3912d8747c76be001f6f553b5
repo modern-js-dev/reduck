@@ -1,0 +1,16 @@
+import _objectSpread from "@babel/runtime/helpers/esm/objectSpread2";
+import React from 'react';
+import { render } from '@testing-library/react';
+import app from "./app";
+
+var WrapModernProviders = function WrapModernProviders(props) {
+  return /*#__PURE__*/React.createElement(app.createApp(props));
+};
+
+var customRender = function customRender(ui, options) {
+  return render(ui, _objectSpread({
+    wrapper: WrapModernProviders
+  }, options));
+};
+
+export default customRender;

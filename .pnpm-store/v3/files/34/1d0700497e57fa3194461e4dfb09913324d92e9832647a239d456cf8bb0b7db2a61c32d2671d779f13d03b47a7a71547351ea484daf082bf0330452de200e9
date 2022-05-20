@@ -1,0 +1,125 @@
+"use strict";
+
+var _crypto = _interopRequireDefault(require("crypto"));
+
+var _buffer = require("buffer");
+
+var t = _interopRequireWildcard(require("@babel/types"));
+
+var _lodash = require("@modern-js/utils/lodash");
+
+function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
+
+function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+const RUNTIME_PACKAGE_NAMES = ['@modern-js/runtime'];
+const FUNCTION_USE_LOADER_NAME = 'useLoader';
+
+function getHash(filepath) {
+  const cwd = process.cwd();
+  const point = filepath.indexOf(cwd);
+  let relativePath = filepath;
+
+  if (point !== -1) {
+    relativePath = filepath.substring(point + cwd.length);
+  }
+
+  const fileBuf = _buffer.Buffer.from(relativePath);
+
+  const fsHash = _crypto.default.createHash('md5');
+
+  const md5 = fsHash.update(fileBuf).digest('hex');
+  return md5;
+}
+
+function getUseLoaderPath(path, calleeName) {
+  const {
+    node
+  } = path;
+
+  if (!calleeName || node.callee.name !== calleeName) {
+    return false;
+  }
+
+  const arg1 = (0, _lodash.get)(node, 'arguments.0');
+
+  if (t.isFunction(arg1) || t.isFunctionExpression(arg1) || t.isArrowFunctionExpression(arg1) || t.isIdentifier(arg1) || t.isCallExpression(arg1)) {
+    return path.get('arguments.0');
+  }
+
+  console.warn('useLoader 中 loaderId 生成失败，请检查 useLoader');
+  throw path.buildCodeFrameError(`
+    please check the usage of ${path.node.name}
+  `);
+}
+
+function getSelfRunLoaderExpression(loaderExpression, id) {
+  return t.callExpression(t.functionExpression(null, [], t.blockStatement([t.variableDeclaration('var', [t.variableDeclarator(t.identifier('innerLoader'), loaderExpression)]), t.expressionStatement(t.assignmentExpression('=', t.memberExpression(t.identifier('innerLoader'), t.identifier('id')), t.stringLiteral(id))), t.returnStatement(t.identifier('innerLoader'))])), []);
+}
+
+module.exports = function () {
+  let useLoader = null;
+  let hash = '';
+  let index = 0;
+
+  function genId() {
+    return `${hash}_${index++}`;
+  }
+
+  return {
+    name: 'babel-plugin-ssr-loader-id',
+
+    pre() {
+      index = 0;
+      useLoader = null;
+      hash = '';
+    },
+
+    visitor: {
+      ImportDeclaration(path, state) {
+        if (useLoader) {
+          return false;
+        }
+
+        if (!RUNTIME_PACKAGE_NAMES.includes((0, _lodash.get)(path, 'node.source.value'))) {
+          return false;
+        }
+
+        hash = getHash(state.file.opts.filename);
+        (0, _lodash.get)(path, 'node.specifiers', []).forEach(({
+          imported,
+          local
+        }) => {
+          if (!imported) {
+            throw path.buildCodeFrameError(`please \`import { useLoader } from ${RUNTIME_PACKAGE_NAMES[0]}\``);
+          }
+
+          if (!useLoader && imported.name === FUNCTION_USE_LOADER_NAME) {
+            useLoader = local.name;
+          }
+        });
+        return false;
+      },
+
+      CallExpression(path) {
+        let loaderPath = getUseLoaderPath(path, useLoader);
+
+        if (loaderPath) {
+          if (!Array.isArray(loaderPath)) {
+            loaderPath = [loaderPath];
+          }
+
+          loaderPath.forEach(p => {
+            p.replaceWith(getSelfRunLoaderExpression(p.node, genId()));
+          });
+          return false;
+        }
+
+        return false;
+      }
+
+    }
+  };
+};

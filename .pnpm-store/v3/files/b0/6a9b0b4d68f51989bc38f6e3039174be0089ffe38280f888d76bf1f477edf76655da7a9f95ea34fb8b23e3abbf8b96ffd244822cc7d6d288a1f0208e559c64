@@ -1,0 +1,62 @@
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+export var fieldValue = function fieldValue(key, schema, data, extra) {
+  if (schema[key] && typeof schema[key] === 'function') {
+    return schema[key](data, extra);
+  }
+
+  return schema[key];
+};
+export var getSchemaLabel = function getSchemaLabel(schema, data, extra) {
+  return fieldValue('label', schema, data, extra) || '';
+};
+export var getSchemaDisabled = function getSchemaDisabled(schema, data, extra) {
+  var _schema$state;
+
+  if (!schema.state) {
+    return false;
+  }
+
+  if (schema.state.hasOwnProperty('disabled') && typeof schema.state.disabled === 'function') {
+    return schema.state.disabled(data, extra);
+  }
+
+  return Boolean((_schema$state = schema.state) === null || _schema$state === void 0 ? void 0 : _schema$state.disabled);
+};
+export var getSchemaType = function getSchemaType(schema) {
+  if (!schema.type) {
+    return [];
+  }
+
+  return schema.type;
+};
+export var getSchemaDefaultState = function getSchemaDefaultState(schema) {
+  if (!schema.state || typeof schema.state === 'string') {
+    return {
+      "default": false,
+      disabled: false,
+      required: false
+    };
+  }
+
+  return schema.state;
+};
+export var getNodeInfo = function getNodeInfo(schema, data, extra) {
+  return _objectSpread(_objectSpread({
+    label: getSchemaLabel(schema, data, extra),
+    state: schema.state,
+    formState: data,
+    type: getSchemaType(schema)
+  }, getSchemaDefaultState(schema)), {}, {
+    disabled: getSchemaDisabled(schema, data, extra),
+    id: schema.key,
+    validate: schema.validate,
+    when: schema.when,
+    desc: schema.desc,
+    extra: extra
+  });
+};

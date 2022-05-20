@@ -1,0 +1,32 @@
+/// <reference types="node" />
+import http, { Server, IncomingMessage, ServerResponse } from 'http';
+import { ServerHookRunner, ModernServer, BuildOptions } from '@modern-js/prod-server';
+import { ModernDevServerOptions } from '../types';
+export declare class ModernDevServer extends ModernServer {
+  private mockHandler;
+  private readonly dev;
+  private readonly compiler?;
+  private socketServer;
+  private watcher;
+  private devMiddleware;
+  constructor(options: ModernDevServerOptions);
+  onInit(runner: ServerHookRunner): Promise<void>;
+  onClose(): Promise<void>;
+  onRepack(options?: BuildOptions): void;
+  onListening(app: Server): void;
+  createHTTPServer(handler: (req: IncomingMessage, res: ServerResponse, next?: () => void) => void): Promise<http.Server | import("https").Server>;
+  protected warmupSSRBundle(): void;
+  protected onServerChange({
+    filepath
+  }: {
+    filepath: string;
+  }): void;
+  private setupCompiler;
+  private setupDevServerPlugin;
+  private setupHooks;
+  private setupDevMiddleware;
+  private setupBeforeDevMiddleware;
+  private setupAfterDevMiddleware;
+  private cleanSSRCache;
+  private startWatcher;
+}

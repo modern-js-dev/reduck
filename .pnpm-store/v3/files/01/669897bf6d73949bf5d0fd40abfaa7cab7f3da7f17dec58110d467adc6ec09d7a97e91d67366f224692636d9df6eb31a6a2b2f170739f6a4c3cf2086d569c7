@@ -1,0 +1,109 @@
+import _createForOfIteratorHelper from "@babel/runtime/helpers/esm/createForOfIteratorHelper";
+import _toConsumableArray from "@babel/runtime/helpers/esm/toConsumableArray";
+export var createBabelPluginChain = function createBabelPluginChain() {
+  var plugins = [];
+  var blacks = [];
+
+  var plugin = function plugin(name) {
+    var pluginExist = plugins.find(function (plugin) {
+      return plugin.name === name;
+    });
+    var isExist = Boolean(pluginExist);
+    var plugin = pluginExist || {
+      name: name,
+      options: []
+    };
+
+    var tap = function tap(options) {
+      plugin.options = options;
+      set();
+    };
+
+    var options = function options() {
+      return plugin.options;
+    };
+
+    var del = function del() {
+      if (isExist) {
+        plugins = plugins.filter(function (plugin) {
+          return !plugin.name.includes(name);
+        });
+      }
+    };
+
+    var ban = function ban() {
+      if (!blacks.includes(name)) {
+        blacks.push(name);
+      }
+
+      del();
+    };
+
+    var set = function set() {
+      if (blacks.includes(name)) {
+        throw new Error("Plugin: ".concat(name, " has been banned!, You can't set it."));
+      } // merge preset with replacing
+      // see https://babeljs.io/docs/en/configuration#how-babel-merges-config-items
+
+
+      if (!isExist) {
+        plugins.push(plugin);
+      }
+    };
+
+    var use = function use(path, options) {
+      plugin.path = path;
+      plugin.options = options || [];
+      set();
+    };
+
+    return {
+      tap: tap,
+      "delete": del,
+      ban: ban,
+      options: options,
+      filter: plugins.filter,
+      use: use
+    };
+  };
+
+  var toJSON = function toJSON() {
+    return plugins.map(function (plugin) {
+      return plugin.options ? [plugin.path || plugin.name].concat(_toConsumableArray(plugin.options)) : plugin.path || plugin.name;
+    });
+  }; // merge preset with replacing
+  // see https://babeljs.io/docs/en/configuration#how-babel-merges-config-items
+
+
+  var merge = function merge(other) {
+    var _iterator = _createForOfIteratorHelper(other.plugins),
+        _step;
+
+    try {
+      for (_iterator.s(); !(_step = _iterator.n()).done;) {
+        var _plugin = _step.value;
+
+        if (_plugin.path) {
+          chain.plugin(_plugin.name).use(_plugin.path, _plugin.options);
+        } else {
+          chain.plugin(_plugin.name).tap(_plugin.options);
+        }
+      }
+    } catch (err) {
+      _iterator.e(err);
+    } finally {
+      _iterator.f();
+    }
+
+    return chain;
+  };
+
+  var chain = {
+    plugin: plugin,
+    plugins: plugins,
+    blacks: blacks,
+    toJSON: toJSON,
+    merge: merge
+  };
+  return chain;
+};

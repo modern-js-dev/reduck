@@ -1,0 +1,79 @@
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+import React, { useContext } from 'react';
+import { createBrowserHistory, createHashHistory } from 'history';
+import { Router, StaticRouter } from 'react-router-dom';
+import { RuntimeReactContext } from '@modern-js/runtime-core';
+import hoistNonReactStatics from 'hoist-non-react-statics';
+import { renderRoutes, getLocation, urlJoin } from "./utils";
+import { jsx as _jsx } from "react/jsx-runtime";
+
+// todo: check
+const isBrowser = () => typeof window !== 'undefined';
+
+export const routerPlugin = ({
+  serverBase: _serverBase = [],
+  history: customHistory,
+  supportHtml5History: _supportHtml5History = true,
+  routesConfig,
+  historyOptions: _historyOptions = {}
+}) => {
+  const isBrow = isBrowser();
+
+  const select = pathname => _serverBase.find(baseUrl => pathname.search(baseUrl) === 0) || '/';
+
+  return {
+    name: '@modern-js/plugin-router',
+    setup: () => {
+      return {
+        hoc: ({
+          App
+        }, next) => {
+          const getRouteApp = () => {
+            if (isBrow) {
+              var _window$_SERVER_DATA;
+
+              const baseUrl = ((_window$_SERVER_DATA = window._SERVER_DATA) === null || _window$_SERVER_DATA === void 0 ? void 0 : _window$_SERVER_DATA.router.baseUrl) || select(location.pathname);
+              _historyOptions.basename = baseUrl === '/' ? urlJoin(baseUrl, _historyOptions.basename) : baseUrl;
+              const history = customHistory || (_supportHtml5History ? createBrowserHistory(_historyOptions) : createHashHistory(_historyOptions));
+              return props => /*#__PURE__*/_jsx(Router, {
+                history: history,
+                children: /*#__PURE__*/_jsx(App, _objectSpread(_objectSpread({}, props), {}, {
+                  children: routesConfig ? renderRoutes(routesConfig, props) : null
+                }))
+              });
+            }
+
+            return props => {
+              const runtimeContext = useContext(RuntimeReactContext);
+              const {
+                ssrContext
+              } = runtimeContext;
+              const location = getLocation(ssrContext);
+              const routerContext = (ssrContext === null || ssrContext === void 0 ? void 0 : ssrContext.redirection) || {};
+              const request = ssrContext === null || ssrContext === void 0 ? void 0 : ssrContext.request;
+              const baseUrl = request === null || request === void 0 ? void 0 : request.baseUrl;
+              const basename = baseUrl === '/' ? urlJoin(baseUrl, _historyOptions.basename) : baseUrl;
+              return /*#__PURE__*/_jsx(StaticRouter, {
+                basename: basename === '/' ? '' : basename,
+                location: location,
+                context: routerContext,
+                children: /*#__PURE__*/_jsx(App, _objectSpread(_objectSpread({}, props), {}, {
+                  children: routesConfig ? renderRoutes(routesConfig, props) : null
+                }))
+              });
+            };
+          };
+
+          return next({
+            App: App ? hoistNonReactStatics(getRouteApp(), App) : getRouteApp()
+          });
+        }
+      };
+    }
+  };
+};

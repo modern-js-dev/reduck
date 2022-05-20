@@ -1,0 +1,35 @@
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+export class ModernRoute {
+  constructor(routeSpec) {
+    var _routeSpec$enableMode;
+
+    _defineProperty(this, "entryName", void 0);
+
+    _defineProperty(this, "urlPath", void 0);
+
+    _defineProperty(this, "entryPath", void 0);
+
+    _defineProperty(this, "bundle", void 0);
+
+    _defineProperty(this, "isApi", void 0);
+
+    _defineProperty(this, "isSSR", void 0);
+
+    _defineProperty(this, "isSPA", void 0);
+
+    _defineProperty(this, "enableModernMode", void 0);
+
+    _defineProperty(this, "params", {});
+
+    this.entryName = routeSpec.entryName || '';
+    this.urlPath = routeSpec.urlPath;
+    this.entryPath = routeSpec.entryPath || '';
+    this.isSSR = routeSpec.isSSR || false;
+    this.isSPA = routeSpec.isSPA || false;
+    this.isApi = routeSpec.isApi || false;
+    this.bundle = routeSpec.bundle || '';
+    this.enableModernMode = (_routeSpec$enableMode = routeSpec.enableModernMode) !== null && _routeSpec$enableMode !== void 0 ? _routeSpec$enableMode : false;
+  }
+
+}

@@ -1,0 +1,9 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.defaultBuildWatchCmds = void 0;
+// TODO: 第一个参数是否也需要为一个string[]
+const defaultBuildWatchCmds = ['dev', 'build'];
+exports.defaultBuildWatchCmds = defaultBuildWatchCmds;

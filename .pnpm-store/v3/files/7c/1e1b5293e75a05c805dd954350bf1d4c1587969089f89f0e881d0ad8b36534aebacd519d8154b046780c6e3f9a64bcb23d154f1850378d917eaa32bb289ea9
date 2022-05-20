@@ -1,0 +1,66 @@
+import { IProjectNode } from '../projects/get-projects';
+export declare type Task = (currentProject: IProjectNode, currentProjectPreviousProjects: IProjectNode[], earlyFinishFun: () => void) => Promise<void>;
+export interface ITraverseConfig {
+  withSelf?: boolean;
+  runTaskConcurrency?: number;
+}
+export declare class DagOperator {
+  _projects: IProjectNode[];
+  _projectsMap: Map<string, IProjectNode>;
+  _sortedProjects: IProjectNode[][];
+  constructor(projects: IProjectNode[], projectsMap: Map<string, IProjectNode>);
+  checkNodeDataExist(name: string): boolean;
+  getNodeData(name: string, option: {
+    checkExist: true;
+  }): IProjectNode;
+  getNodeData(name: string): IProjectNode | undefined;
+  getNodeDependencyData(name: string): IProjectNode[];
+  getNodeDependentData(name: string): IProjectNode[];
+  getNodeAllDependencyData(name: string, option?: {
+    skipCircleCheck: boolean;
+  }): IProjectNode[];
+  setNodeData(name: string, task: (project: IProjectNode) => void): void;
+  traverseAllNodes(task: Task): Promise<void>;
+  checkCircle(): void;
+  traverseDependenciesToProjectToDependent(name: string, task: Task, config?: ITraverseConfig): Promise<void>;
+  /**
+   * 1. 把目标节点当做叶子节点集合 A 中的元素
+   * 2. 当叶子节点集合中某个 a 元素结束任务的时候进行如下操作：
+   * 2.1 剪(去额外的)枝：获取 a 元素的 dependent集合，将该集合中元素的依赖列表进行过滤，过滤条件为：排除 a 以及 a 元素的 dependent集合以外的元素。
+   * 2.2 入度减一：对 a 元素的 dependent 集合元素的 dependencyEdge 减一
+   * 3. 检查是否存在 dependencyEdge === 0 的节点，加入叶子节点集合 A中。
+   * 4. 根据情况（是否存在空闲的进程）选择是否执行新加入的节点对应的任务。
+   */
+
+  traverseProjectToDependent(name: string, task: Task, {
+    withSelf,
+    runTaskConcurrency
+  }?: ITraverseConfig): Promise<void>;
+  /**
+   * 1. 找到叶子节点集合 A
+   * 2. 找到直接连接叶子节点的节点集合 B
+   * 3. 当有某个叶子节点结束任务，则对该节点的直接连接的节点（或者理解成dependent）的枝数（或者叫入度）减一。
+   * 4. 检查 B 集合中是否存在入度为0的节点，则此节点为叶子节点，并加入叶子节点集合 A
+   * 5. 根据情况（是否存在空闲的进程）选择是否执行新加入的节点对应的任务。
+   */
+
+  traverseDependenciesToProject(name: string, task: Task, {
+    withSelf,
+    runTaskConcurrency
+  }?: ITraverseConfig): Promise<void>;
+  /**
+   * Copyright (c) Microsoft Corporation. All rights reserved.
+   *
+   * This source code is licensed under the MIT license found in the
+   * LICENSE file at
+   * https://github.com/microsoft/rushstack/blob/master/apps/rush-lib/LICENSE
+   *
+  /**
+   * Checks for projects that indirectly depend on themselves.
+   */
+
+  private _checkForCyclicDependencies;
+  private _getDependencyLeafNodes;
+  private readonly _createTask;
+  private _getProjectPreviousNode;
+}

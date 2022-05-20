@@ -1,0 +1,40 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _commands = require("./commands");
+
+var _locale = require("./locale");
+
+var _utils = require("./utils");
+
+var _default = () => ({
+  name: '@modern-js/plugin-changeset',
+  setup: () => {
+    // initial cli language
+    _locale.i18n.changeLanguage({
+      locale: (0, _utils.getLocaleLanguage)()
+    });
+
+    return {
+      plugins() {
+        return [{}];
+      },
+
+      commands({
+        program
+      }) {
+        program.command('change').description(_locale.i18n.t(_locale.localeKeys.command.change.describe)).option('--empty', _locale.i18n.t(_locale.localeKeys.command.change.empty), false).option('--open', _locale.i18n.t(_locale.localeKeys.command.change.open), false).action(options => (0, _commands.change)(options));
+        program.command('bump').description(_locale.i18n.t(_locale.localeKeys.command.bump.describe)).option('--canary', _locale.i18n.t(_locale.localeKeys.command.bump.canary), false).option('--preid <tag>', _locale.i18n.t(_locale.localeKeys.command.bump.preid), 'next').option('--snapshot [snapshot]', _locale.i18n.t(_locale.localeKeys.command.bump.snapshot), false).action(options => (0, _commands.bump)(options));
+        program.command('pre <enter|exit> [tag]').description(_locale.i18n.t(_locale.localeKeys.command.pre.describe)).action((type, tag) => (0, _commands.pre)(type, tag));
+        program.command('release').description(_locale.i18n.t(_locale.localeKeys.command.release.describe)).option('--tag <tag>', _locale.i18n.t(_locale.localeKeys.command.release.tag), '').option('--ignore-scripts', _locale.i18n.t(_locale.localeKeys.command.release.ignore_scripts), '').option('--no-git-checks', _locale.i18n.t(_locale.localeKeys.command.release.no_git_checks), '').action(options => (0, _commands.release)(options));
+      }
+
+    };
+  }
+});
+
+exports.default = _default;

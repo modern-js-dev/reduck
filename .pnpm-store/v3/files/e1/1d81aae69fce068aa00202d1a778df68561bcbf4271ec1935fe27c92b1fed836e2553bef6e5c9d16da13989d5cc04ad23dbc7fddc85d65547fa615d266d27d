@@ -1,0 +1,23 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _babelJest = _interopRequireDefault(require("babel-jest"));
+
+var _babelJest$createTran;
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+const babelTransformer = (_babelJest$createTran = _babelJest.default.createTransformer) === null || _babelJest$createTran === void 0 ? void 0 : _babelJest$createTran.call(_babelJest.default, {
+  presets: [[require.resolve('@modern-js/babel-preset-app'), {
+    appDirectory: process.cwd(),
+    modules: 'cjs'
+  }]],
+  configFile: false,
+  babelrc: false
+});
+var _default = babelTransformer;
+exports.default = _default;

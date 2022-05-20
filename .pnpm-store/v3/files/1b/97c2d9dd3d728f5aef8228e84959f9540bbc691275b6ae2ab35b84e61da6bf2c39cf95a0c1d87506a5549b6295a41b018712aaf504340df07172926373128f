@@ -1,0 +1,51 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.LRUCaches = void 0;
+
+var _lruCache = _interopRequireDefault(require("lru-cache"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+class LRUCaches {
+  constructor(options) {
+    _defineProperty(this, "caches", void 0);
+
+    _defineProperty(this, "max", void 0);
+
+    this.max = options.max;
+    this.caches = new _lruCache.default(this.max);
+  }
+
+  init() {
+    return Promise.resolve();
+  }
+
+  keys() {
+    return this.caches.keys();
+  }
+
+  get(key) {
+    return Promise.resolve(this.caches.get(key) || null);
+  }
+
+  peek(key) {
+    return this.caches.peek(key) || null;
+  }
+
+  set(key, cache) {
+    this.caches.set(key, cache);
+    return Promise.resolve();
+  }
+
+  del(key) {
+    this.caches.del(key);
+  }
+
+}
+
+exports.LRUCaches = LRUCaches;

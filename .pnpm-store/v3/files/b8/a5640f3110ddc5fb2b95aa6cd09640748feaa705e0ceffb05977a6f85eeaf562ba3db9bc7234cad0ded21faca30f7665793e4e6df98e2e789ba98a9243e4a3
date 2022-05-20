@@ -1,0 +1,99 @@
+import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
+
+var _ActionTypeText, _ActionElementText, _ActionFunctionText, _ActionTypeTextMap;
+
+import { i18n, localeKeys } from "../../locale";
+export var ActionType;
+
+(function (ActionType) {
+  ActionType["Function"] = "function";
+  ActionType["Element"] = "element";
+  ActionType["Refactor"] = "refactor";
+})(ActionType || (ActionType = {}));
+
+export var ActionElement;
+
+(function (ActionElement) {
+  ActionElement["Entry"] = "entry";
+  ActionElement["Server"] = "server";
+})(ActionElement || (ActionElement = {}));
+
+export var ActionFunction;
+
+(function (ActionFunction) {
+  ActionFunction["UnBundle"] = "unbundle";
+  ActionFunction["TailwindCSS"] = "tailwindcss";
+  ActionFunction["Less"] = "less";
+  ActionFunction["Sass"] = "sass";
+  ActionFunction["BFF"] = "bff";
+  ActionFunction["MicroFrontend"] = "micro_frontend";
+  ActionFunction["Electron"] = "electron";
+  ActionFunction["I18n"] = "i18n";
+  ActionFunction["Test"] = "test";
+  ActionFunction["E2ETest"] = "e2e_test";
+  ActionFunction["Doc"] = "doc";
+  ActionFunction["Storybook"] = "storybook";
+  ActionFunction["RuntimeApi"] = "runtimeApi";
+  ActionFunction["SSG"] = "ssg";
+  ActionFunction["Polyfill"] = "polyfill";
+  ActionFunction["Deploy"] = "deploy";
+  ActionFunction["Proxy"] = "proxy";
+})(ActionFunction || (ActionFunction = {}));
+
+export var ActionRefactor;
+
+(function (ActionRefactor) {
+  ActionRefactor["BFFToApp"] = "bff_to_app";
+})(ActionRefactor || (ActionRefactor = {}));
+
+export var ActionTypeText = (_ActionTypeText = {}, _defineProperty(_ActionTypeText, ActionType.Function, function () {
+  return i18n.t(localeKeys.action["function"].self);
+}), _defineProperty(_ActionTypeText, ActionType.Element, function () {
+  return i18n.t(localeKeys.action.element.self);
+}), _defineProperty(_ActionTypeText, ActionType.Refactor, function () {
+  return i18n.t(localeKeys.action.refactor.self);
+}), _ActionTypeText);
+export var ActionElementText = (_ActionElementText = {}, _defineProperty(_ActionElementText, ActionElement.Entry, function () {
+  return i18n.t(localeKeys.action.element.entry);
+}), _defineProperty(_ActionElementText, ActionElement.Server, function () {
+  return i18n.t(localeKeys.action.element.server);
+}), _ActionElementText);
+export var ActionFunctionText = (_ActionFunctionText = {}, _defineProperty(_ActionFunctionText, ActionFunction.UnBundle, function () {
+  return i18n.t(localeKeys.action["function"].unbundle);
+}), _defineProperty(_ActionFunctionText, ActionFunction.TailwindCSS, function () {
+  return i18n.t(localeKeys.action["function"].tailwindcss);
+}), _defineProperty(_ActionFunctionText, ActionFunction.Less, function () {
+  return i18n.t(localeKeys.action["function"].less);
+}), _defineProperty(_ActionFunctionText, ActionFunction.Sass, function () {
+  return i18n.t(localeKeys.action["function"].sass);
+}), _defineProperty(_ActionFunctionText, ActionFunction.BFF, function () {
+  return i18n.t(localeKeys.action["function"].bff);
+}), _defineProperty(_ActionFunctionText, ActionFunction.MicroFrontend, function () {
+  return i18n.t(localeKeys.action["function"].micro_frontend);
+}), _defineProperty(_ActionFunctionText, ActionFunction.Electron, function () {
+  return i18n.t(localeKeys.action["function"].electron);
+}), _defineProperty(_ActionFunctionText, ActionFunction.I18n, function () {
+  return i18n.t(localeKeys.action["function"].i18n);
+}), _defineProperty(_ActionFunctionText, ActionFunction.Test, function () {
+  return i18n.t(localeKeys.action["function"].test);
+}), _defineProperty(_ActionFunctionText, ActionFunction.E2ETest, function () {
+  return i18n.t(localeKeys.action["function"].e2e_test);
+}), _defineProperty(_ActionFunctionText, ActionFunction.Doc, function () {
+  return i18n.t(localeKeys.action["function"].doc);
+}), _defineProperty(_ActionFunctionText, ActionFunction.Storybook, function () {
+  return i18n.t(localeKeys.action["function"].storybook);
+}), _defineProperty(_ActionFunctionText, ActionFunction.RuntimeApi, function () {
+  return i18n.t(localeKeys.action["function"].runtime_api);
+}), _defineProperty(_ActionFunctionText, ActionFunction.SSG, function () {
+  return i18n.t(localeKeys.action["function"].ssg);
+}), _defineProperty(_ActionFunctionText, ActionFunction.Polyfill, function () {
+  return i18n.t(localeKeys.action["function"].polyfill);
+}), _defineProperty(_ActionFunctionText, ActionFunction.Deploy, function () {
+  return i18n.t(localeKeys.action["function"].deploy);
+}), _defineProperty(_ActionFunctionText, ActionFunction.Proxy, function () {
+  return i18n.t(localeKeys.action["function"].proxy);
+}), _ActionFunctionText);
+export var ActionRefactorText = _defineProperty({}, ActionRefactor.BFFToApp, function () {
+  return i18n.t(localeKeys.action.refactor.bff_to_app);
+});
+export var ActionTypeTextMap = (_ActionTypeTextMap = {}, _defineProperty(_ActionTypeTextMap, ActionType.Element, ActionElementText), _defineProperty(_ActionTypeTextMap, ActionType.Function, ActionFunctionText), _defineProperty(_ActionTypeTextMap, ActionType.Refactor, ActionRefactorText), _ActionTypeTextMap);

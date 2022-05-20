@@ -1,0 +1,34 @@
+/**
+ * Check if the package name is in dependencies or devDependencies.
+ *
+ * @param appDirectory - Project root directory.
+ * @param name - Package name.
+ * @returns True if the name is in dependencies or devDependencies, false otherwise.
+ */
+export declare const isDepExists: (appDirectory: string, name: string) => boolean;
+/**
+ * Is typescript project.
+ *
+ * @param root - App directory.
+ * @returns Whether to use typescript.
+ */
+export declare const isTypescript: (root: string) => boolean;
+/**
+ * Is Empty object
+ *
+ * @param o - Any object.
+ * @returns Whether it is empty object.
+ */
+export declare const isEmpty: (o: Record<string, unknown>) => boolean;
+/**
+ * Is SSR project
+ *
+ * @param config - User config.
+ * @returns Whether to use server side render.
+ */
+export declare const isSSR: (config: any) => boolean;
+export declare const isUseSSRBundle: (config: any) => boolean;
+export declare const isFastRefresh: () => boolean;
+export * from './node-env';
+export * from './platform';
+export * from './type';

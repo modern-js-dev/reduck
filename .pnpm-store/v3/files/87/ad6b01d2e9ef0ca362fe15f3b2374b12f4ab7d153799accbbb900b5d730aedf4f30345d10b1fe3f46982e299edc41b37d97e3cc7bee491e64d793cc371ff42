@@ -1,0 +1,106 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getHtmlTemplate = void 0;
+
+var _path = _interopRequireDefault(require("path"));
+
+var _utils = require("@modern-js/utils");
+
+var _constants = require("./constants");
+
+var templates = _interopRequireWildcard(require("./templates"));
+
+function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
+
+function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var PartialPosition;
+
+(function (PartialPosition) {
+  PartialPosition["TOP"] = "top";
+  PartialPosition["HEAD"] = "head";
+  PartialPosition["BODY"] = "body";
+  PartialPosition["BOTTOM"] = "bottom";
+  PartialPosition["INDEX"] = "index";
+})(PartialPosition || (PartialPosition = {}));
+
+const findPartials = (dir, entryName, position) => {
+  if (_utils.fs.existsSync(dir)) {
+    const base = (0, _utils.findExists)(_constants.HTML_PARTIALS_EXTENSIONS.map(ext => _path.default.resolve(dir, `${position}${ext}`)));
+    const file = entryName ? (0, _utils.findExists)(_constants.HTML_PARTIALS_EXTENSIONS.map(ext => _path.default.resolve(dir, entryName, `${position}${ext}`))) || base : base;
+    return file ? {
+      file,
+      content: _utils.fs.readFileSync(file, 'utf8')
+    } : null;
+  }
+
+  return null;
+}; // generate html template for
+
+
+const getHtmlTemplate = async (entrypoints, api, {
+  appContext,
+  config
+}) => {
+  const {
+    appDirectory,
+    internalDirectory
+  } = appContext;
+  const {
+    source: {
+      configDir
+    }
+  } = config;
+
+  const htmlDir = _path.default.resolve(appDirectory, configDir, _constants.HTML_PARTIALS_FOLDER);
+
+  const htmlTemplates = {};
+
+  for (const entrypoint of entrypoints) {
+    const {
+      entryName
+    } = entrypoint;
+    const name = entrypoints.length === 1 && entryName === _utils.MAIN_ENTRY_NAME ? '' : entryName;
+    const customIndexTemplate = findPartials(htmlDir, name, PartialPosition.INDEX);
+
+    if (customIndexTemplate) {
+      htmlTemplates[entryName] = customIndexTemplate.file;
+    } else {
+      const hookRunners = api.useHookRunners();
+      const {
+        partials
+      } = await hookRunners.htmlPartials({
+        entrypoint,
+        partials: [PartialPosition.TOP, PartialPosition.HEAD, PartialPosition.BODY].reduce((previous, position) => {
+          const found = findPartials(htmlDir, name, position);
+          previous[position] = found ? [found.content] : [];
+          return previous;
+        }, {
+          top: [],
+          head: [],
+          body: []
+        })
+      });
+
+      const templatePath = _path.default.resolve(internalDirectory, entryName, 'index.html');
+
+      _utils.fs.outputFileSync(templatePath, templates.html(partials), 'utf8');
+
+      htmlTemplates[entryName] = templatePath;
+      const bottomTemplate = findPartials(htmlDir, name, PartialPosition.BOTTOM);
+
+      if (bottomTemplate) {
+        htmlTemplates[`__${entryName}-bottom__`] = bottomTemplate.content;
+      }
+    }
+  }
+
+  return htmlTemplates;
+};
+
+exports.getHtmlTemplate = getHtmlTemplate;

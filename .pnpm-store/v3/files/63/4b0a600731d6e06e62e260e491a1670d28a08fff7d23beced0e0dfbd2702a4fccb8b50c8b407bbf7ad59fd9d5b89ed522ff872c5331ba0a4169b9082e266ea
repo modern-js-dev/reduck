@@ -1,0 +1,27 @@
+import { MaybeAsync, Container } from '../farrow-pipeline';
+declare const ASYNC_WATERFALL_SYMBOL: unique symbol;
+export declare type AsyncBrook<I = unknown> = (I: I) => MaybeAsync<I>;
+export declare type AsyncBrookInput<I = unknown> = AsyncBrook<I> | {
+  middleware: AsyncBrook<I>;
+};
+export declare type AsyncBrooks<I = unknown> = AsyncBrook<I>[];
+export declare type AsyncBrookInputs<I = unknown> = AsyncBrookInput<I>[];
+export declare const getAsyncBrook: <I>(input: AsyncBrookInput<I>) => AsyncBrook<I>;
+export declare type RunAsyncWaterfallOptions<I = unknown> = {
+  container?: Container;
+  onLast?: AsyncBrook<I>;
+};
+export declare type AsyncWaterfall<I> = {
+  run: (input: I, options?: RunAsyncWaterfallOptions<I>) => MaybeAsync<I>;
+  use: (...I: AsyncBrookInputs<I>) => AsyncWaterfall<I>;
+  middleware: AsyncBrook<I>;
+  [ASYNC_WATERFALL_SYMBOL]: true;
+};
+export declare type AsyncWaterfall2AsyncBrook<P extends AsyncWaterfall<any>> = P extends AsyncWaterfall<infer I> ? AsyncBrook<I> : never;
+export declare type AsyncWaterfallRecord = Record<string, AsyncWaterfall<any>>;
+export declare type AsyncWaterfalls2Brooks<PS extends AsyncWaterfallRecord | void> = { [K in keyof PS]: PS[K] extends AsyncWaterfall<any> ? AsyncWaterfall2AsyncBrook<PS[K]> : PS[K] extends void ? void : never };
+export declare type RunnerFromAsyncWaterfall<M extends AsyncWaterfall<any>> = M extends AsyncWaterfall<infer VS> ? AsyncWaterfall<VS>['run'] : never;
+export declare type AsyncWaterfalls2Runners<PS extends AsyncWaterfallRecord | void> = { [K in keyof PS]: PS[K] extends AsyncWaterfall<any> ? RunnerFromAsyncWaterfall<PS[K]> : PS[K] extends void ? void : never };
+export declare const createAsyncWaterfall: <I = void>() => AsyncWaterfall<I>;
+export declare const isAsyncWaterfall: (input: any) => input is AsyncWaterfall<any>;
+export {};

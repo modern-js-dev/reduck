@@ -1,0 +1,14 @@
+import type { IPackageModeValue } from '../../types';
+export declare const DEFAULT_PACKAGE_MODE = "universal-js";
+export declare const PACKAGE_MODES: {
+  'universal-js': IPackageModeValue[];
+  'universal-js-lite': IPackageModeValue[];
+  'browser-js': IPackageModeValue[];
+  'browser-js-lite': IPackageModeValue[];
+  'node-js': IPackageModeValue[];
+};
+export declare const runBabelCompilerTitle = "Run babel compiler code log";
+export declare const runTscWatchTitle = "Run `tsc -w` log";
+export declare const runTscTitle = "Run `tsc` log";
+export declare const runStyleCompilerTitle = "Run style compiler code log";
+export declare const clearFlag = "\u001Bc";

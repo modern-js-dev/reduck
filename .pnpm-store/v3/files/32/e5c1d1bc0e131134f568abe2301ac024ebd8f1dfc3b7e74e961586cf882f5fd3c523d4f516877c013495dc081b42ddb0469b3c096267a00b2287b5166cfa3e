@@ -1,0 +1,76 @@
+import url from 'url';
+export function namespaceHash(namespace, hash) {
+  return `${namespace}/${hash}`;
+}
+export function fname(lv) {
+  return `f${lv}`;
+}
+export function connectFactor(...args) {
+  return args.join('-');
+}
+export function valueFactory(obj) {
+  if (obj instanceof url.URLSearchParams) {
+    return function (key) {
+      return obj.get(key);
+    };
+  } else {
+    return function (key) {
+      const value = obj[key];
+
+      if (Array.isArray(value)) {
+        return value.join(',');
+      }
+
+      return value;
+    };
+  }
+}
+export function getTime([s, ns]) {
+  return Math.floor(s * 1e3 + ns / 1e6);
+}
+const RE_START_IN_HEAD = /<head>/;
+export function cacheAddition(html, hash) {
+  const additionHtml = html.replace(RE_START_IN_HEAD, `<head><meta name="x-moden-spr" content="${hash}">`);
+  return additionHtml;
+}
+const globalInvokeCache = new Map();
+export function withCoalescedInvoke(func) {
+  return async function (key, args) {
+    const entry = globalInvokeCache.get(key);
+
+    if (entry) {
+      return entry.then(res => ({
+        isOrigin: false,
+        value: res.value
+      }));
+    }
+
+    function __wrapper() {
+      return func(...args);
+    }
+
+    const future = __wrapper().then(res => {
+      globalInvokeCache.delete(key);
+      return {
+        isOrigin: true,
+        value: res
+      };
+    }).catch(err => {
+      globalInvokeCache.delete(key);
+      throw err;
+    });
+
+    globalInvokeCache.set(key, future);
+    return future;
+  };
+}
+export function maybeSync(fn) {
+  return sync => {
+    if (sync) {
+      return fn();
+    } else {
+      fn();
+      return Promise.resolve();
+    }
+  };
+}

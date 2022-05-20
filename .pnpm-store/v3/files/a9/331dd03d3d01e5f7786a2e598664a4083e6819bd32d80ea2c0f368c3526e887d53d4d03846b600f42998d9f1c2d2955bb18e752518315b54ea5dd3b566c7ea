@@ -1,0 +1,3 @@
+import type { PluginAPI } from '@modern-js/core';
+import type { Command } from '@modern-js/utils';
+export declare const installCli: (program: Command, api: PluginAPI) => void;

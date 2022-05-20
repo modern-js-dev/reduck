@@ -1,0 +1,21 @@
+{
+  "name": "@modern-js/tsconfig",
+  "version": "1.2.0",
+  "description": "The meta-framework suite designed from scratch for frontend-focused modern web development.",
+  "homepage": "https://modernjs.dev",
+  "bugs": "https://github.com/modern-js-dev/modern.js/issues",
+  "repository": "modern-js-dev/modern.js",
+  "license": "MIT",
+  "keywords": [
+    "react",
+    "framework",
+    "modern",
+    "modern.js"
+  ],
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
+  "main": "./base.json",
+  "readme": "\n<p align=\"center\">\n  <a href=\"https://modernjs.dev\" target=\"blank\"><img src=\"https://lf3-static.bytednsdoc.com/obj/eden-cn/ylaelkeh7nuhfnuhf/modernjs-cover.png\" width=\"300\" alt=\"Modern.js Logo\" /></a>\n</p>\n<p align=\"center\">\n现代 Web 工程体系\n  <br/>\n  <a href=\"https://modernjs.dev\" target=\"blank\">\n    modernjs.dev\n  </a>\n</p>\n<p align=\"center\">\n  The meta-framework suite designed from scratch for frontend-focused modern web development\n</p>\n\n# Introduction\n\n> The doc site ([modernjs.dev](https://modernjs.dev)) and articles are only available in Chinese for now, we are planning to add English versions soon.\n\n- [Modern.js: Hello, World!](https://zhuanlan.zhihu.com/p/426707646)\n\n## Getting Started\n\n- [Quick Start](https://modernjs.dev/docs/start)\n- [Guides](https://modernjs.dev/docs/guides)\n- [API References](https://modernjs.dev/docs/apis)\n\n## Contributing\n\n- [Contributing Guide](https://github.com/modern-js-dev/modern.js/blob/main/CONTRIBUTING.md)\n"
+}

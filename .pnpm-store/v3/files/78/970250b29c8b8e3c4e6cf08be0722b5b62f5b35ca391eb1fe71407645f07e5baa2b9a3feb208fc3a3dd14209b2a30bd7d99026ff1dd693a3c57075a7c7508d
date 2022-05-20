@@ -1,0 +1,114 @@
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+import { expectType, expectAssignable } from 'tsd';
+import { useModel } from '@modern-js/runtime/model';
+import { model } from '..';
+const counterManual = model('counter').define({
+  state: {
+    count: 1
+  },
+  actions: {
+    add(state, n) {
+      expectType(state);
+      return {
+        count: state.count + n,
+        name: 'a'
+      };
+    },
+
+    empty(state) {
+      expectType(state);
+    },
+
+    test: {
+      a(s) {
+        return s;
+      }
+
+    }
+  }
+});
+const counterInfer = model('counter').define({
+  state: {
+    count: 1,
+    name: 'a'
+  },
+  actions: {
+    add(state, n) {
+      expectType(state);
+      return {
+        count: state.count + n,
+        name: 'b'
+      };
+    },
+
+    empty(state) {
+      expectType(state);
+    },
+
+    test: {
+      a(state) {
+        expectType(state);
+        return state;
+      }
+
+    }
+  }
+});
+describe('action and state manually type', () => {
+  expectType(counterManual.name);
+  expectAssignable(counterManual._.actions.add);
+  expectType(counterManual._.actions.empty);
+  const [state, actions] = useModel(counterManual);
+  expectType(state);
+  expectType(actions.add);
+});
+describe('action and state auto infer', () => {
+  expectType(counterInfer.name);
+  expectType(counterInfer._.actions.add);
+  expectType(counterInfer._.actions.empty);
+  const [state, actions] = useModel(counterInfer);
+  expectType(state);
+  expectType(actions.add);
+});
+describe('action and state union type', () => {
+  const [state] = useModel(counterManual);
+  expectType(state.name);
+});
+describe('action and state function Initial', () => {
+  const counter = model('counter').define(() => ({
+    state: {
+      c: 1
+    },
+    actions: {
+      add(state, payload) {
+        expectType(state.c);
+        return {
+          c: state.c + payload
+        };
+      },
+
+      test: {
+        a(s) {
+          return s;
+        },
+
+        b(s, p) {
+          return _objectSpread(_objectSpread({}, s), {}, {
+            c: s.c + p
+          });
+        }
+
+      }
+    }
+  }));
+  const [state, actions] = useModel(counter);
+  expectType(counter._.actions.add);
+  expectType(state.c);
+  expectType(actions.test.a);
+  expectType(actions.test.b);
+});

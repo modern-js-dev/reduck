@@ -1,0 +1,41 @@
+import _slicedToArray from "@babel/runtime/helpers/esm/slicedToArray";
+import _objectSpread from "@babel/runtime/helpers/esm/objectSpread2";
+export var formatServer = function formatServer(request) {
+  var _ref = request.headers || {},
+      cookie = _ref.cookie,
+      userAgent = _ref['user-agent'],
+      referer = _ref.referer;
+
+  return _objectSpread({
+    cookie: cookie,
+    userAgent: userAgent,
+    referer: referer
+  }, request);
+};
+
+var getQuery = function getQuery() {
+  return window.location.search.substring(1).split('&').reduce(function (res, item) {
+    var _item$split = item.split('='),
+        _item$split2 = _slicedToArray(_item$split, 2),
+        key = _item$split2[0],
+        value = _item$split2[1];
+
+    res[key] = value;
+    return res;
+  }, {});
+};
+
+export var formatClient = function formatClient(request) {
+  return {
+    params: request.params || {},
+    host: request.host || location.host,
+    pathname: request.pathname || location.pathname,
+    headers: request.headers || {},
+    cookieMap: request.cookieMap || {},
+    cookie: request.headers.cookie || document.cookie,
+    userAgent: request.headers['user-agent'] || navigator.userAgent,
+    referer: request.referer || document.referrer,
+    query: request.query || getQuery(),
+    url: location.href
+  };
+};

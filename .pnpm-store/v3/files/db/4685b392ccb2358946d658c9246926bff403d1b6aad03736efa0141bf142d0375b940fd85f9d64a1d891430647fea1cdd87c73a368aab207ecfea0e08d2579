@@ -1,0 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.createDebugger = void 0;
+const debug_1 = require("../compiled/debug");
+/**
+ * Create debug function with unified namespace prefix.
+ * @param scope - Custom module name of your debug function.
+ * @returns Debug function which namespace start with modern-js:.
+ */
+const createDebugger = (scope) => (0, debug_1.debug)(`modern-js:${scope}`);
+exports.createDebugger = createDebugger;

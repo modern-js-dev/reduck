@@ -1,0 +1,78 @@
+import _objectSpread from "@babel/runtime/helpers/esm/objectSpread2";
+import { getBabelChain } from '@modern-js/babel-preset-lib';
+import { fs, json5, getAlias, applyOptionsChain } from '@modern-js/utils';
+export * from '@babel/core';
+export var readTsConfig = function readTsConfig(tsconfigPath) {
+  var noExistReturn = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+
+  // 如果不存在，则返回 noExistReturn
+  if (!fs.existsSync(tsconfigPath)) {
+    return noExistReturn;
+  }
+
+  var content = fs.readFileSync(tsconfigPath, 'utf-8');
+  return json5.parse(content);
+};
+export var existTsConfigFile = function existTsConfigFile(tsconfigAbsolutePath) {
+  var tsconfig = readTsConfig(tsconfigAbsolutePath);
+  return Boolean(tsconfig);
+};
+export var getBabelConfig = function getBabelConfig(libPresetOption, syntaxOption) {
+  var chain = getBabelChain(libPresetOption, syntaxOption);
+  return _objectSpread({
+    sourceType: 'unambiguous'
+  }, chain.toJSON());
+};
+export var resolveBabelConfig = function resolveBabelConfig(appDirectory, modernConfig, option // FIXME: babel type can't pass type checking
+) {
+  var _modernConfig$source = modernConfig.source,
+      envVars = _modernConfig$source.envVars,
+      globalVars = _modernConfig$source.globalVars,
+      _modernConfig$source$ = _modernConfig$source.jsxTransformRuntime,
+      jsxTransformRuntime = _modernConfig$source$ === void 0 ? 'automatic' : _modernConfig$source$,
+      userLodashOption = modernConfig.tools.lodash; // alias config
+
+  var aliasConfig = getAlias(modernConfig.source.alias, _objectSpread({
+    appDirectory: appDirectory
+  }, option)); // lodash config
+
+  var lodashOptions = applyOptionsChain({
+    id: ['lodash', 'ramda']
+  }, // TODO: 需要处理类型问题
+  userLodashOption); // babel config
+
+  var babelChain = getBabelChain({
+    appDirectory: appDirectory,
+    enableReactPreset: true,
+    enableTypescriptPreset: true,
+    alias: aliasConfig,
+    envVars: envVars,
+    globalVars: globalVars,
+    lodashOptions: lodashOptions,
+    jsxTransformRuntime: jsxTransformRuntime
+  }, {
+    type: option.type,
+    syntax: option.syntax
+  });
+  var envOptions = babelChain.preset('@babel/preset-env').options();
+  babelChain.preset('@babel/preset-env').use(require.resolve('@babel/preset-env'), [_objectSpread(_objectSpread({}, envOptions[0]), {}, {
+    loose: true
+  })]);
+  babelChain.plugin('babel-plugin-transform-typescript-metadata').use(require.resolve('babel-plugin-transform-typescript-metadata'), []);
+  babelChain.plugin('@babel/plugin-proposal-decorators').use(require.resolve('@babel/plugin-proposal-decorators'), [{
+    legacy: true
+  }]); // resolve "Definitely assigned fields cannot be initialized here, but only in the constructor."
+
+  babelChain.plugin('@babel/plugin-proposal-class-properties').use(require.resolve('@babel/plugin-proposal-class-properties'), [{
+    loose: true
+  }]);
+
+  var internalBabelConfig = _objectSpread({}, babelChain.toJSON());
+
+  var userBabelConfig = modernConfig.tools.babel;
+  applyOptionsChain(internalBabelConfig, // TODO: 感觉 userBabelConfig 的类型应该是TransformOptions
+  userBabelConfig, {
+    chain: babelChain
+  });
+  return internalBabelConfig;
+};

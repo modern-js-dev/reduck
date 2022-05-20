@@ -1,0 +1,3 @@
+import type { NormalizedConfig, PluginAPI } from '@modern-js/core';
+import type { IBuildConfig } from '../../types';
+export declare const buildSourceCode: (api: PluginAPI, config: IBuildConfig, _: NormalizedConfig) => Promise<void>;

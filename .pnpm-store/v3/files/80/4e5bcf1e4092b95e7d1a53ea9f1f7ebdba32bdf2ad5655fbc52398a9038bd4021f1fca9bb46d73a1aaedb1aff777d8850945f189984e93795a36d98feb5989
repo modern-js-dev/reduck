@@ -1,0 +1,85 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.build = void 0;
+
+var _utils = require("@modern-js/utils");
+
+var _constants = require("./constants");
+
+var _compiler = require("./compiler");
+
+const build = async (option, babelConfig = {}) => {
+  const {
+    rootDir,
+    enableVirtualDist,
+    filenames,
+    clean,
+    distDir,
+    distFileExtMap = _constants.defaultDistFileExtMap,
+    verbose = false,
+    quiet = false
+  } = option;
+  const virtualDists = [];
+
+  if (clean) {
+    await _utils.fs.remove(distDir);
+  }
+
+  _utils.fs.ensureDir(distDir);
+
+  const messageDetails = [];
+
+  for (const filename of filenames) {
+    try {
+      const dist = (0, _compiler.compiler)({
+        rootDir,
+        enableVirtualDist,
+        filepath: filename,
+        distDir,
+        verbose,
+        quiet,
+        babelConfig,
+        distFileExtMap
+      });
+
+      if (enableVirtualDist && dist) {
+        virtualDists.push(dist);
+      }
+    } catch (e) {
+      messageDetails.push({
+        filename,
+        content: e.toString()
+      });
+    }
+  }
+
+  const happenError = messageDetails.length > 0;
+
+  if (!quiet) {
+    if (happenError) {
+      _utils.logger.error(`Compilation failure ${messageDetails.length} ${messageDetails.length !== 1 ? 'files' : 'file'} with Babel.`); // TODO: 具体的报错信息打印
+
+    } else {
+      _utils.logger.info(`Successfully compiled ${filenames.length} ${filenames.length !== 1 ? 'files' : 'file'} with Babel.`);
+    }
+  }
+
+  if (happenError) {
+    return {
+      code: 1,
+      message: `Compilation failure ${messageDetails.length} ${messageDetails.length !== 1 ? 'files' : 'file'} with Babel.`,
+      messageDetails
+    };
+  }
+
+  return {
+    code: 0,
+    message: `Successfully compiled ${filenames.length} ${filenames.length !== 1 ? 'files' : 'file'} with Babel.`,
+    virtualDists
+  };
+};
+
+exports.build = build;

@@ -1,0 +1,5 @@
+import { render } from '@testing-library/react';
+
+declare const _default: typeof render;
+
+export default _default;

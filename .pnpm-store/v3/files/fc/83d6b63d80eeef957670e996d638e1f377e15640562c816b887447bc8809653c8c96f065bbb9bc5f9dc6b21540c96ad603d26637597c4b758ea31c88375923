@@ -1,0 +1,100 @@
+import path from 'path';
+import { getEntryOptions, createRuntimeExportsUtils, PLUGIN_SCHEMAS } from '@modern-js/utils';
+import "../types";
+var PLUGIN_IDENTIFIER = 'state';
+export default (function () {
+  return {
+    name: '@modern-js/plugin-state',
+    required: ['@modern-js/runtime'],
+    setup: function setup(api) {
+      var stateConfigMap = new Map();
+      var pluginsExportsUtils;
+      var stateModulePath = path.resolve(__dirname, '../../../../');
+      return {
+        config: function config() {
+          var appContext = api.useAppContext();
+          pluginsExportsUtils = createRuntimeExportsUtils(appContext.internalDirectory, 'plugins');
+          return {
+            source: {
+              alias: {
+                '@modern-js/runtime/plugins': pluginsExportsUtils.getPath()
+              }
+            }
+          };
+        },
+        modifyEntryImports: function modifyEntryImports(_ref) {
+          var _getEntryOptions;
+
+          var entrypoint = _ref.entrypoint,
+              imports = _ref.imports;
+          var entryName = entrypoint.entryName;
+          var userConfig = api.useResolvedConfigContext();
+
+          var _api$useAppContext = api.useAppContext(),
+              packageName = _api$useAppContext.packageName;
+
+          var stateConfig = (_getEntryOptions = getEntryOptions(entryName, userConfig.runtime, userConfig.runtimeByEntries, packageName)) === null || _getEntryOptions === void 0 ? void 0 : _getEntryOptions.state;
+          stateConfigMap.set(entryName, stateConfig);
+
+          var getEnabledPlugins = function getEnabledPlugins() {
+            var internalPlugins = ['immer', 'effects', 'autoActions', 'devtools'];
+            return internalPlugins.filter(function (name) {
+              return stateConfig[name] !== false;
+            });
+          };
+
+          if (stateConfig) {
+            imports.push({
+              value: '@modern-js/runtime/plugins',
+              specifiers: [{
+                imported: PLUGIN_IDENTIFIER
+              }]
+            });
+            imports.push({
+              value: '@modern-js/runtime/model',
+              specifiers: getEnabledPlugins().map(function (imported) {
+                return {
+                  imported: imported
+                };
+              }),
+              initialize: "\n                const createStatePlugins = (config) => {\n                  const plugins = [];\n\n                  ".concat(getEnabledPlugins().map(function (name) {
+                return "\n                      plugins.push(".concat(name, "(config['").concat(name, "']));\n                      ");
+              }).join('\n'), "\n\n                  return plugins;\n                }\n              ")
+            });
+          }
+
+          return {
+            entrypoint: entrypoint,
+            imports: imports
+          };
+        },
+        modifyEntryRuntimePlugins: function modifyEntryRuntimePlugins(_ref2) {
+          var entrypoint = _ref2.entrypoint,
+              plugins = _ref2.plugins;
+          var stateOptions = stateConfigMap.get(entrypoint.entryName);
+
+          if (stateOptions) {
+            var isBoolean = typeof stateOptions === 'boolean';
+            var options = isBoolean ? '{}' : JSON.stringify(stateOptions);
+            options = "".concat(options.substr(0, options.length - 1)).concat(isBoolean ? '' : ',', "plugins: createStatePlugins(").concat(JSON.stringify(stateConfigMap.get(entrypoint.entryName)), ")}");
+            plugins.push({
+              name: PLUGIN_IDENTIFIER,
+              options: options
+            });
+          }
+
+          return {
+            entrypoint: entrypoint,
+            plugins: plugins
+          };
+        },
+        validateSchema: function validateSchema() {
+          return PLUGIN_SCHEMAS['@modern-js/plugin-state'];
+        },
+        addRuntimeExports: function addRuntimeExports() {
+          pluginsExportsUtils.addExport("export { default as state } from '".concat(stateModulePath, "'"));
+        }
+      };
+    }
+  };
+});

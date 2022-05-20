@@ -1,0 +1,97 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.runInstallTask = void 0;
+
+var path = _interopRequireWildcard(require("path"));
+
+var _utils = require("@modern-js/utils");
+
+var _nodeCoreLibrary = require("@rushstack/node-core-library");
+
+var _constants = require("../../constants");
+
+var _install = require("../../utils/install");
+
+function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
+
+function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+
+const replaceWorkspaces = ({
+  rootPath,
+  projectsInWorkspaces
+}) => {
+  // pnpm
+  const pnpmWsFilePath = path.join(rootPath, _constants.WORKSPACE_FILE.PNPM);
+
+  if (_utils.fs.existsSync(pnpmWsFilePath)) {
+    const pnpmWorkspace = _utils.fs.readFileSync(pnpmWsFilePath, 'utf-8');
+
+    const originalPnpmWorkspaces = _utils.yaml.load(pnpmWorkspace);
+
+    _utils.fs.writeFileSync(pnpmWsFilePath, _utils.yaml.dump({
+      packages: projectsInWorkspaces
+    }));
+
+    return () => {
+      _utils.yaml.dump(originalPnpmWorkspaces);
+    };
+  }
+
+  const pkgFilePath = path.join(rootPath, _constants.WORKSPACE_FILE.YARN);
+
+  if (_utils.fs.existsSync(pkgFilePath)) {
+    var _pkg$workspaces;
+
+    const pkg = _nodeCoreLibrary.JsonFile.load(pkgFilePath);
+
+    if (pkg !== null && pkg !== void 0 && (_pkg$workspaces = pkg.workspaces) !== null && _pkg$workspaces !== void 0 && _pkg$workspaces.packages) {
+      const originalPkg = pkg;
+      pkg.workspaces.packages = projectsInWorkspaces;
+
+      _nodeCoreLibrary.JsonFile.save(pkg, pkgFilePath);
+
+      return () => {
+        _nodeCoreLibrary.JsonFile.save(originalPkg, pkgFilePath);
+      };
+    }
+  }
+
+  return false;
+};
+
+const runInstallTask = async (projectNames, operator, config) => {
+  const {
+    rootPath,
+    packageManager
+  } = config;
+  let projectsInWorkspaces = [];
+
+  if (projectNames.length === 0) {
+    console.info('install all projects');
+    return;
+  }
+
+  for (const projectName of projectNames) {
+    const allDeps = operator.getNodeAllDependencyData(projectName);
+    projectsInWorkspaces = [...projectsInWorkspaces, path.relative(rootPath, operator.getNodeData(projectName).extra.path), ...allDeps.map(p => path.relative(rootPath, p.extra.path))];
+  }
+
+  const noDupProjectList = Array.from(new Set(projectsInWorkspaces));
+  const restorWorkspace = replaceWorkspaces({
+    rootPath,
+    projectsInWorkspaces: noDupProjectList
+  });
+  await (0, _install.installByPackageManager)(packageManager, {
+    rootPath,
+    removeLock: true
+  });
+
+  if (restorWorkspace) {
+    restorWorkspace();
+  }
+};
+
+exports.runInstallTask = runInstallTask;

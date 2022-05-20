@@ -1,0 +1,241 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getClientRoutes = void 0;
+
+var _path = _interopRequireDefault(require("path"));
+
+var _utils = require("@modern-js/utils");
+
+var _makeLegalIdentifier = require("./makeLegalIdentifier");
+
+var _constants = require("./constants");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+const debug = (0, _utils.createDebugger)('get-client-routes');
+
+const findLayout = dir => (0, _utils.findExists)(_constants.JS_EXTENSIONS.map(ext => _path.default.resolve(dir, `${_constants.FILE_SYSTEM_ROUTES_LAYOUT}${ext}`)));
+
+const shouldSkip = file => {
+  // should not skip directory.
+  if (_utils.fs.statSync(file).isDirectory()) {
+    return false;
+  }
+
+  const ext = _path.default.extname(file);
+
+  if (_constants.FILE_SYSTEM_ROUTES_IGNORED_REGEX.test(file) || !_constants.JS_EXTENSIONS.includes(ext) || _constants.FILE_SYSTEM_ROUTES_GLOBAL_LAYOUT === _path.default.basename(file, ext)) {
+    return true;
+  }
+
+  return false;
+};
+
+const replaceWithAlias = (base, filePath, alias) => (0, _utils.normalizeToPosixPath)(_path.default.join(alias, _path.default.relative(base, filePath)));
+
+const compName = (srcDirectory, filePath) => {
+  const legalCompName = (0, _makeLegalIdentifier.makeLegalIdentifier)(_path.default.relative(srcDirectory, filePath));
+  return `Comp_${legalCompName}`;
+};
+
+const layoutNameAbbr = filePath => {
+  const prefix = 'L_';
+  const dirName = _path.default.dirname(filePath).split('/').pop() || '';
+  return `${prefix}${(0, _makeLegalIdentifier.makeLegalIdentifier)(dirName)}`;
+};
+
+const parents = [];
+/* eslint-disable no-param-reassign */
+
+const recursiveReadDir = ({
+  dir,
+  routes,
+  basePath: _basePath = '/',
+  srcDirectory,
+  srcAlias
+}) => {
+  let hasDynamicRoute = false;
+  let resetParent = false;
+  let parent = parents[parents.length - 1];
+  const layout = findLayout(dir);
+
+  if (layout) {
+    if (_basePath === '/') {
+      throw new Error(`should use _app instead of _layout in ${dir}`);
+    } else {
+      const alias = replaceWithAlias(srcDirectory, layout, srcAlias);
+      const componentName = compName(srcDirectory, layout);
+      const route = {
+        path: `${_basePath.substring(0, _basePath.length - 1)}`,
+        exact: false,
+        routes: [],
+        _component: alias,
+        component: componentName,
+        parent
+      };
+      parent = route;
+      resetParent = true;
+      routes.push(route);
+      parents.push(route);
+      routes = route.routes;
+    }
+  }
+
+  for (const relative of _utils.fs.readdirSync(dir)) {
+    const filePath = _path.default.join(dir, relative);
+
+    if (!shouldSkip(filePath)) {
+      const filename = _path.default.basename(filePath, _path.default.extname(filePath));
+
+      const alias = replaceWithAlias(srcDirectory, filePath, srcAlias);
+      const componentName = compName(srcDirectory, filePath);
+
+      const dynamicRouteMatched = _constants.FILE_SYSTEM_ROUTES_DYNAMIC_REGEXP.exec(filename);
+
+      if (dynamicRouteMatched) {
+        if (hasDynamicRoute) {
+          throw new Error(`Can't set two dynamic route in one directory: ${dir}`);
+        } else {
+          hasDynamicRoute = true;
+        }
+      }
+
+      const route = {
+        path: `${_basePath}${dynamicRouteMatched ? `:${dynamicRouteMatched[1]}${dynamicRouteMatched[2]}` : filename}`,
+        _component: alias,
+        component: componentName,
+        exact: true,
+        parent
+      };
+
+      if (_utils.fs.statSync(filePath).isDirectory()) {
+        recursiveReadDir({
+          dir: filePath,
+          routes,
+          basePath: `${route.path}/`,
+          srcDirectory,
+          srcAlias
+        });
+        continue;
+      }
+
+      if (filename === _constants.FILE_SYSTEM_ROUTES_LAYOUT) {
+        continue;
+      }
+
+      if (filename === _constants.FILE_SYSTEM_ROUTES_INDEX) {
+        route.path = _basePath === '/' ? _basePath : `${_basePath.substring(0, _basePath.length - 1)}`;
+      }
+
+      if (filename === '404' && _basePath === '/') {
+        route.path = '*';
+        route.exact = false;
+      }
+
+      routes.push(route);
+    }
+  }
+
+  if (resetParent) {
+    parents.pop();
+  }
+};
+/* eslint-enable  no-param-reassign */
+
+
+const normalizeNestedRoutes = (nested, internalComponentsDir, internalDirectory, internalDirAlias) => {
+  const flat = routes => routes.reduce((memo, route) => memo.concat(Array.isArray(route.routes) ? flat(route.routes) : [route]), []);
+
+  const generate = route => {
+    const codes = [];
+    let lastComponent = route.component;
+    const imports = [`import React from 'react';`, `import ${lastComponent} from '${route._component}'`]; // eslint-disable-next-line no-param-reassign, no-cond-assign
+
+    while (route = route.parent) {
+      const layoutComponent = route.component;
+      const layoutComponentAbbr = layoutNameAbbr(route._component);
+      imports.push(`import ${layoutComponent} from '${route._component}';`);
+      const currentComponent = `${layoutComponentAbbr}_${lastComponent}`;
+      codes.push(`const ${currentComponent} = props => <${layoutComponent} Component={${lastComponent}} {...props} />;`);
+      lastComponent = currentComponent;
+    }
+
+    const file = _path.default.resolve(internalComponentsDir, `${lastComponent}.jsx`);
+
+    _utils.fs.outputFileSync(file, `${imports.join('\n')}\n${codes.join('\n')}\nexport default ${lastComponent}`);
+
+    return {
+      component: lastComponent,
+      _component: replaceWithAlias(internalDirectory, file, internalDirAlias)
+    };
+  };
+
+  const normalized = flat(nested).map(route => route.parent ? _objectSpread(_objectSpread(_objectSpread({}, route), generate(route)), {}, {
+    parent: undefined
+  }) : _objectSpread(_objectSpread({}, route), {}, {
+    parent: undefined
+  }));
+  return normalized;
+};
+
+const getRouteWeight = route => route === '*' ? 999 : route.split(':').length - 1;
+
+const getClientRoutes = ({
+  entrypoint,
+  srcDirectory,
+  srcAlias,
+  internalDirectory,
+  internalDirAlias
+}) => {
+  const {
+    entry,
+    entryName
+  } = entrypoint;
+
+  if (!_utils.fs.existsSync(entry)) {
+    throw new Error(`generate file system routes error, ${entry} directory not found.`);
+  }
+
+  if (!(_utils.fs.existsSync(entry) && _utils.fs.statSync(entry).isDirectory())) {
+    throw new Error(`generate file system routes error, ${entry} should be directory.`);
+  }
+
+  let routes = [];
+  recursiveReadDir({
+    dir: entry,
+    routes,
+    basePath: '/',
+    srcDirectory,
+    srcAlias
+  });
+
+  const internalComponentsDir = _path.default.resolve(internalDirectory, `${entryName}/${_constants.FILE_SYSTEM_ROUTES_COMPONENTS_DIR}`);
+
+  _utils.fs.emptyDirSync(internalComponentsDir);
+
+  routes = normalizeNestedRoutes(routes, internalComponentsDir, internalDirectory, internalDirAlias);
+  parents.length = 0; // FIXME: support more situations
+
+  routes.sort((a, b) => {
+    const delta = getRouteWeight(a.path) - getRouteWeight(b.path);
+
+    if (delta === 0) {
+      return a.path.length - b.path.length;
+    }
+
+    return delta;
+  });
+  debug(`fileSystem routes: %o`, routes);
+  return routes;
+};
+
+exports.getClientRoutes = getClientRoutes;

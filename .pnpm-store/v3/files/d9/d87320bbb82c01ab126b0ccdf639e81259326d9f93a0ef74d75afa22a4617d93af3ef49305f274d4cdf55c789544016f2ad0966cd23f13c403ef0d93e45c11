@@ -1,0 +1,18 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.deployCli = void 0;
+
+var _commands = require("../commands");
+
+const deployCli = (program, api) => {
+  program.command('deploy [project...]').usage('[options]').option('-p, --path [path]', 'Specify the path of the product output', 'output').description('deploy project').action(async (deployProjectNames, option) => {
+    // 在查找 workspace 下项目时，默认忽略 output 下面的项目
+    const ignoreMatchs = ['**/output/**'];
+    await (0, _commands.deploy)(api, deployProjectNames, option, ignoreMatchs);
+  });
+};
+
+exports.deployCli = deployCli;

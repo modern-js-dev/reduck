@@ -1,0 +1,27 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.createUpdater = exports.assign = void 0;
+var xstate_1 = require("xstate");
+var immer_1 = require("immer");
+function immerAssign(recipe) {
+    return xstate_1.assign(function (context, event, meta) {
+        return immer_1.produce(context, function (draft) { return void recipe(draft, event, meta); });
+    });
+}
+exports.assign = immerAssign;
+function createUpdater(type, recipe) {
+    var update = function (input) {
+        return {
+            type: type,
+            input: input
+        };
+    };
+    return {
+        update: update,
+        action: immerAssign(function (ctx, event, meta) {
+            recipe(ctx, event, meta);
+        }),
+        type: type
+    };
+}
+exports.createUpdater = createUpdater;

@@ -1,0 +1,18 @@
+export declare const moduleToolsMenu: import("@modern-js/plugin").ParallelWorkflow<undefined, {
+  name: string;
+  value: string;
+  runTask: (p: any) => void | Promise<void>;
+}>;
+export declare const devHooks: {
+  moduleToolsMenu: import("@modern-js/plugin").ParallelWorkflow<undefined, {
+    name: string;
+    value: string;
+    runTask: (p: any) => void | Promise<void>;
+  }>;
+};
+export declare const lifecycle: () => void;
+declare module '@modern-js/core' {
+  interface Hooks {
+    moduleToolsMenu: typeof moduleToolsMenu;
+  }
+}

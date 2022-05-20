@@ -1,0 +1,11 @@
+import { createParallelWorkflow } from '@modern-js/plugin';
+import { registerHook } from '@modern-js/core';
+export const moduleToolsMenu = createParallelWorkflow();
+export const devHooks = {
+  moduleToolsMenu
+};
+export const lifecycle = () => {
+  registerHook({
+    moduleToolsMenu
+  });
+};

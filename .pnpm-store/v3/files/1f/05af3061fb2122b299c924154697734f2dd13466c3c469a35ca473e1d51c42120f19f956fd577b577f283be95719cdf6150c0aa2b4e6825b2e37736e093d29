@@ -1,0 +1,9 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.removeSlash = exports.removeTailSlash = exports.removeLeadingSlash = void 0;
+const removeLeadingSlash = (s) => s.replace(/^\/+/, '');
+exports.removeLeadingSlash = removeLeadingSlash;
+const removeTailSlash = (s) => s.replace(/\/+$/, '');
+exports.removeTailSlash = removeTailSlash;
+const removeSlash = (s) => (0, exports.removeLeadingSlash)((0, exports.removeTailSlash)(s));
+exports.removeSlash = removeSlash;

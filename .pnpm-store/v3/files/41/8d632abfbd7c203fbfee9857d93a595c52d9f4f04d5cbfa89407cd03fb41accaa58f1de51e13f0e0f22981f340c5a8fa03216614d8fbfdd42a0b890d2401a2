@@ -1,0 +1,120 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.useContainer = exports.runWithContainer = exports.runHooks = exports.fromContainer = exports.createContext = exports.createContainer = void 0;
+
+var _hook = require("./hook");
+
+/**
+ * modified from https://github.com/farrow-js/farrow/tree/master/packages/farrow-pipeline
+ * license at https://github.com/farrow-js/farrow/blob/master/LICENSE
+ */
+const ContextSymbol = Symbol.for('MODERN_CONTEXT');
+
+const createContext = value => {
+  const id = Symbol('MODERN_CONTEXT_ID');
+
+  const create = value => {
+    const use = () => {
+      const container = useContainer();
+      return Object.seal({
+        get value() {
+          return container.read(Context);
+        },
+
+        set value(v) {
+          container.write(Context, v);
+        }
+
+      });
+    };
+
+    const get = () => {
+      const container = useContainer();
+      return container.read(Context);
+    };
+
+    const set = v => {
+      const container = useContainer();
+      container.write(Context, v);
+    };
+
+    const Context = {
+      id,
+      [ContextSymbol]: value,
+      create,
+      use,
+      get,
+      set
+    };
+    return Context;
+  };
+
+  return create(value);
+};
+
+exports.createContext = createContext;
+
+const createContextMap = storage => {
+  const contextMap = new Map();
+  const contexts = Object.values(storage); // eslint-disable-next-line @typescript-eslint/prefer-for-of
+
+  for (let i = 0; i < contexts.length; i++) {
+    contextMap.set(contexts[i].id, contexts[i]);
+  }
+
+  return contextMap;
+};
+
+const createContainer = (ContextStorage = {}) => {
+  const contextMap = createContextMap(ContextStorage);
+
+  const read = context => {
+    const target = contextMap.get(context.id);
+
+    if (target) {
+      return target[ContextSymbol];
+    }
+
+    return context[ContextSymbol];
+  };
+
+  const write = (context, value) => {
+    contextMap.set(context.id, context.create(value));
+  };
+
+  return Object.freeze({
+    read,
+    write
+  });
+};
+
+exports.createContainer = createContainer;
+const {
+  run,
+  hooks
+} = (0, _hook.createHooks)({
+  useContainer: () => {
+    throw new Error(`Can't call useContainer out of scope, it should be placed on top of the function`);
+  }
+});
+const runHooks = run;
+exports.runHooks = runHooks;
+const {
+  useContainer
+} = hooks;
+exports.useContainer = useContainer;
+
+const fromContainer = container => ({
+  useContainer: () => {
+    return container;
+  }
+});
+
+exports.fromContainer = fromContainer;
+
+const runWithContainer = (f, container) => runHooks(f, fromContainer(container));
+
+exports.runWithContainer = runWithContainer;

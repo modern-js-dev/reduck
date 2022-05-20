@@ -1,0 +1,29 @@
+export declare const outputSchema: ({
+  target: string;
+  schema: {
+    enum: string[];
+    typeof?: undefined;
+    default?: undefined;
+  };
+} | {
+  target: string;
+  schema: {
+    typeof: string;
+    enum?: undefined;
+    default?: undefined;
+  };
+} | {
+  target: string;
+  schema: {
+    enum: string[];
+    default: string;
+    typeof?: undefined;
+  };
+} | {
+  target: string;
+  schema: {
+    typeof: string;
+    default: string;
+    enum?: undefined;
+  };
+})[];

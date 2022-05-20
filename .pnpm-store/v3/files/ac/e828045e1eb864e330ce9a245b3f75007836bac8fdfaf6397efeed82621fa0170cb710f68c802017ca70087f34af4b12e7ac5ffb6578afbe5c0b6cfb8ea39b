@@ -1,0 +1,7 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.getBrowserslist = exports.defaults = void 0;
+const compiled_1 = require("./compiled");
+exports.defaults = ['> 0.01%', 'not dead', 'not op_mini all'];
+const getBrowserslist = (appDirectory) => compiled_1.browserslist.loadConfig({ path: appDirectory }) || exports.defaults;
+exports.getBrowserslist = getBrowserslist;

@@ -1,0 +1,56 @@
+/// <reference path="../../type.d.ts" />
+/// <reference types="node" />
+/// <reference types="node/http" />
+import { IncomingMessage, ServerResponse } from 'http';
+import { URL } from 'url';
+import qs from 'querystring';
+import type { ModernServerContext as ModernServerContextInterface, Metrics, Logger } from '@modern-js/types/server';
+export declare type ContextOptions = {
+  logger?: Logger;
+  metrics?: Metrics;
+};
+export declare class ModernServerContext implements ModernServerContextInterface {
+  /**
+   * http request
+   */
+  req: IncomingMessage;
+  /**
+   * http response
+   */
+
+  res: ServerResponse;
+  /**
+   * url params
+   */
+
+  params: Record<string, string>;
+  get logger(): Logger;
+  get metrics(): Metrics;
+  serverData: Record<string, any>;
+  constructor(req: IncomingMessage, res: ServerResponse);
+  private bind;
+  setParams(params: Record<string, string>): void;
+  setServerData(key: string, value: any): void;
+  getReqHeader(key: string): string | string[];
+  get headers(): import("http").IncomingHttpHeaders;
+  get method(): string;
+  get url(): string;
+  set url(val: string);
+  get host(): string;
+  get protocol(): string;
+  get origin(): string;
+  get href(): string;
+  get parsedURL(): URL;
+  get path(): string;
+  set path(p: string);
+  get querystring(): string;
+  get query(): qs.ParsedUrlQuery;
+  get status(): number;
+  set status(statusCode: number);
+  /**
+   * 判断链接是否已经关闭
+   */
+
+  resHasHandled(): boolean;
+  error(dig: string, e?: Error | string): void;
+}

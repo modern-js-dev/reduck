@@ -1,0 +1,133 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.syncGetProjectsByPackageConfig = exports.getProjectsByPackageConfig = void 0;
+
+var path = _interopRequireWildcard(require("path"));
+
+var _nodeCoreLibrary = require("@rushstack/node-core-library");
+
+var _utils = require("@modern-js/utils");
+
+var _pMap = _interopRequireDefault(require("p-map"));
+
+var _error = require("../log/error");
+
+var _package = require("../package");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
+
+function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+const normalize = results => results.map(fp => path.normalize(fp));
+
+const getGlobOpts = (rootPath, packageConfigs, ignore = []) => {
+  const globOpts = {
+    cwd: rootPath,
+    absolute: true,
+    expandDirectories: false,
+    followSymbolicLinks: false
+  };
+
+  if (packageConfigs.some(cfg => cfg.includes('**'))) {
+    if (packageConfigs.some(cfg => cfg.includes('node_modules'))) {
+      (0, _error.errorLog)('An explicit node_modules package path does not allow globstars (**)');
+    }
+
+    globOpts.ignore = [// allow globs like "packages/**",
+    // but avoid picking up node_modules/**/package.json and dist/**/package.json
+    '**/dist/**', '**/node_modules/**', ...(ignore || [])];
+  }
+
+  return globOpts;
+};
+
+const makeFileFinder = (rootPath, packageConfigs, ignoreConfigs = []) => {
+  const globOpts = getGlobOpts(rootPath, packageConfigs, ignoreConfigs);
+  return async (fileName, fileMapper, customGlobOpts = {}) => {
+    const options = _objectSpread(_objectSpread({}, customGlobOpts), globOpts);
+
+    const promise = (0, _pMap.default)(Array.from(packageConfigs).sort(), async globPath => {
+      let result = await (0, _utils.globby)(path.posix.join(globPath, fileName), options); // fast-glob does not respect pattern order, so we re-sort by absolute path
+
+      result = result.sort(); // POSIX results always need to be normalized
+
+      result = normalize(result);
+      return fileMapper(result);
+    }, {
+      concurrency: packageConfigs.length || Infinity
+    }); // always flatten the results
+
+    const results = await promise;
+    return results.reduce((acc, result) => acc.concat(result), []);
+  };
+};
+
+const getProjectsByPackageConfig = async (rootPath, packagesConfig, ignoreConfigs) => {
+  const finder = makeFileFinder(rootPath, packagesConfig, ignoreConfigs);
+  const fileName = 'package.json';
+
+  const mapper = packageConfigPath => {
+    const packageJsonLookup = new _nodeCoreLibrary.PackageJsonLookup({
+      loadExtraFields: true
+    });
+    const packageJson = packageJsonLookup.loadNodePackageJson(packageConfigPath);
+    return new _package.Package(packageJson, path.dirname(packageConfigPath), rootPath);
+  };
+
+  const projects = await finder(fileName, filePaths => (0, _pMap.default)(filePaths, mapper, {
+    concurrency: filePaths.length || Infinity
+  }), {});
+  return projects;
+};
+
+exports.getProjectsByPackageConfig = getProjectsByPackageConfig;
+
+const makeSyncFileFinder = (rootPath, packageConfigs, ignoreConfigs = []) => {
+  const globOpts = getGlobOpts(rootPath, packageConfigs, ignoreConfigs);
+  return (fileName, fileMapper, customGlobOpts = {}) => {
+    const results = [];
+
+    const options = _objectSpread(_objectSpread({}, customGlobOpts), globOpts);
+
+    for (const globPath of Array.from(packageConfigs).sort()) {
+      let result = _utils.globby.sync(path.posix.join(globPath, fileName), options); // fast-glob does not respect pattern order, so we re-sort by absolute path
+
+
+      result = result.sort(); // POSIX results always need to be normalized
+
+      result = normalize(result);
+      results.push(fileMapper(result));
+    }
+
+    return results.reduce((acc, result) => acc.concat(result), []);
+  };
+};
+
+const syncGetProjectsByPackageConfig = (rootPath, packagesConfig, ignoreConfigs) => {
+  const finder = makeSyncFileFinder(rootPath, packagesConfig, ignoreConfigs);
+  const fileName = 'package.json';
+
+  const mapper = packageConfigPath => {
+    const packageJsonLookup = new _nodeCoreLibrary.PackageJsonLookup({
+      loadExtraFields: true
+    });
+    const packageJson = packageJsonLookup.loadNodePackageJson(packageConfigPath);
+    return new _package.Package(packageJson, path.dirname(packageConfigPath), rootPath);
+  };
+
+  const projects = finder(fileName, filePaths => filePaths.map(filePath => mapper(filePath)), {});
+  return projects;
+};
+
+exports.syncGetProjectsByPackageConfig = syncGetProjectsByPackageConfig;

@@ -1,0 +1,9 @@
+import { fs } from '@modern-js/utils';
+import { postcssResolve } from "./postcss";
+export const cssResolve = async params => {
+  const {
+    file
+  } = params;
+  const originalCss = fs.readFileSync(file, 'utf-8');
+  return postcssResolve(originalCss, params);
+};

@@ -1,0 +1,71 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.watchDirValidMessage = exports.validateWatchDir = exports.validateSourceDirAndFileNames = exports.validate = exports.sourceDirAndFileNamesValidMessage = void 0;
+
+var _utils = require("@modern-js/utils");
+
+const sourceDirAndFileNamesValidMessage = 'At least one of the sourceDir and filenames configurations must be configured';
+exports.sourceDirAndFileNamesValidMessage = sourceDirAndFileNamesValidMessage;
+const watchDirValidMessage = 'should set watchDir when enableWatch is true';
+exports.watchDirValidMessage = watchDirValidMessage;
+
+const validateSourceDirAndFileNames = compilerOptions => {
+  const {
+    sourceDir,
+    filenames,
+    quiet
+  } = compilerOptions;
+
+  if (!sourceDir && !filenames) {
+    if (!quiet) {
+      _utils.logger.error(sourceDirAndFileNamesValidMessage);
+    }
+
+    return {
+      code: 1,
+      message: sourceDirAndFileNamesValidMessage,
+      virtualDists: []
+    };
+  }
+
+  return null;
+};
+
+exports.validateSourceDirAndFileNames = validateSourceDirAndFileNames;
+
+const validateWatchDir = compilerOptions => {
+  const {
+    watchDir,
+    enableWatch,
+    quiet
+  } = compilerOptions;
+
+  if (enableWatch && !watchDir) {
+    if (!quiet) {
+      _utils.logger.error(watchDirValidMessage);
+    }
+
+    return {
+      code: 1,
+      message: watchDirValidMessage,
+      virtualDists: []
+    };
+  }
+
+  return null;
+};
+
+exports.validateWatchDir = validateWatchDir;
+
+const validate = compilerOptions => {
+  if (compilerOptions.enableWatch) {
+    return validateWatchDir(compilerOptions);
+  }
+
+  return validateSourceDirAndFileNames(compilerOptions);
+};
+
+exports.validate = validate;

@@ -1,0 +1,15 @@
+export declare const sourceSchema: ({
+  target: string;
+  schema: {
+    type: string;
+    enum?: undefined;
+    default?: undefined;
+  };
+} | {
+  target: string;
+  schema: {
+    enum: string[];
+    default: string;
+    type?: undefined;
+  };
+})[];

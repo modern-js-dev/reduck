@@ -1,0 +1,37 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.platformBuild = exports.moduleTailwindConfig = exports.moduleSassConfig = exports.moduleLessConfig = exports.lifecycle = exports.buildHooks = void 0;
+
+var _plugin = require("@modern-js/plugin");
+
+var _core = require("@modern-js/core");
+
+const platformBuild = (0, _plugin.createParallelWorkflow)();
+exports.platformBuild = platformBuild;
+const moduleLessConfig = (0, _plugin.createAsyncPipeline)();
+exports.moduleLessConfig = moduleLessConfig;
+const moduleSassConfig = (0, _plugin.createAsyncPipeline)();
+exports.moduleSassConfig = moduleSassConfig;
+const moduleTailwindConfig = (0, _plugin.createAsyncPipeline)();
+exports.moduleTailwindConfig = moduleTailwindConfig;
+const buildHooks = {
+  platformBuild,
+  moduleLessConfig,
+  moduleSassConfig,
+  moduleTailwindConfig
+};
+exports.buildHooks = buildHooks;
+
+const lifecycle = () => {
+  (0, _core.registerHook)({
+    moduleLessConfig,
+    moduleSassConfig,
+    moduleTailwindConfig,
+    platformBuild
+  });
+};
+
+exports.lifecycle = lifecycle;

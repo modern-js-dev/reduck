@@ -1,0 +1,469 @@
+import type { JSONSchemaType } from '../../../compiled/ajv';
+export interface PluginValidateSchema {
+    target: string;
+    schema: JSONSchemaType<any>;
+}
+export declare const patchSchema: (pluginSchemas: Array<PluginValidateSchema | PluginValidateSchema[]>) => {
+    type: string;
+    additionalProperties: boolean;
+    properties: {
+        source: {
+            type: string;
+            additionalProperties: boolean;
+            properties: {
+                entries: {
+                    type: string;
+                    patternProperties: {
+                        "^[a-zA-Z0-9_-]+$": {
+                            if: {
+                                type: string;
+                            };
+                            then: {
+                                required: string[];
+                                properties: {
+                                    entry: {
+                                        type: string[];
+                                    };
+                                    disableMount: {
+                                        type: string;
+                                    };
+                                    enableFileSystemRoutes: {
+                                        type: string;
+                                    };
+                                };
+                                additionalProperties: boolean;
+                            };
+                            else: {
+                                type: string[];
+                            };
+                        };
+                    };
+                };
+                alias: {
+                    typeof: string[];
+                };
+                disableDefaultEntries: {
+                    type: string;
+                };
+                envVars: {
+                    type: string;
+                };
+                globalVars: {
+                    type: string;
+                };
+                moduleScopes: {
+                    instanceof: string[];
+                };
+                entriesDir: {
+                    type: string;
+                };
+                configDir: {
+                    type: string;
+                };
+                include: {
+                    type: string[];
+                };
+            };
+        };
+        output: {
+            type: string;
+            additionalProperties: boolean;
+            properties: {
+                assetPrefix: {
+                    type: string;
+                };
+                path: {
+                    type: string;
+                };
+                jsPath: {
+                    type: string;
+                };
+                cssPath: {
+                    type: string;
+                };
+                htmlPath: {
+                    type: string;
+                };
+                mediaPath: {
+                    type: string;
+                };
+                mountId: {
+                    type: string;
+                };
+                favicon: {
+                    type: string;
+                };
+                faviconByEntries: {
+                    type: string;
+                    patternProperties: {
+                        "^[a-zA-Z0-9_-]+$": {
+                            type: string;
+                        };
+                    };
+                };
+                title: {
+                    type: string;
+                };
+                titleByEntries: {
+                    type: string;
+                    patternProperties: {
+                        "^[a-zA-Z0-9_-]+$": {
+                            type: string;
+                        };
+                    };
+                };
+                meta: {
+                    type: string;
+                };
+                metaByEntries: {
+                    type: string;
+                    patternProperties: {
+                        "^[a-zA-Z0-9_-]+$": {
+                            type: string;
+                        };
+                    };
+                };
+                inject: {
+                    enum: (string | boolean)[];
+                };
+                injectByEntries: {
+                    type: string;
+                    patternProperties: {
+                        "^[a-zA-Z0-9_-]+$": {
+                            enum: (string | boolean)[];
+                        };
+                    };
+                };
+                copy: {
+                    type: string;
+                };
+                scriptExt: {
+                    type: string;
+                };
+                disableTsChecker: {
+                    type: string;
+                };
+                disableHtmlFolder: {
+                    type: string;
+                };
+                disableCssModuleExtension: {
+                    type: string;
+                };
+                disableCssExtract: {
+                    type: string;
+                };
+                enableCssModuleTSDeclaration: {
+                    type: string;
+                };
+                disableMinimize: {
+                    type: string;
+                };
+                enableInlineStyles: {
+                    type: string;
+                };
+                enableInlineScripts: {
+                    type: string;
+                };
+                disableSourceMap: {
+                    type: string;
+                };
+                disableInlineRuntimeChunk: {
+                    type: string;
+                };
+                disableAssetsCache: {
+                    type: string;
+                };
+                enableLatestDecorators: {
+                    type: string;
+                };
+                enableTsLoader: {
+                    type: string;
+                };
+                dataUriLimit: {
+                    type: string;
+                };
+                templateParameters: {
+                    type: string;
+                };
+                templateParametersByEntries: {
+                    type: string;
+                    patternProperties: {
+                        "^[a-zA-Z0-9_-]+$": {
+                            type: string;
+                        };
+                    };
+                };
+                polyfill: {
+                    type: string;
+                    enum: string[];
+                };
+                cssModuleLocalIdentName: {
+                    type: string;
+                };
+                federation: {
+                    type: string;
+                };
+                disableNodePolyfill: {
+                    type: string;
+                };
+                enableModernMode: {
+                    type: string;
+                };
+            };
+        };
+        server: {
+            type: string;
+            additionalProperties: boolean;
+            properties: {
+                port: {
+                    type: string;
+                };
+                ssr: {
+                    if: {
+                        type: string;
+                    };
+                    then: {
+                        properties: {
+                            disableLoadable: {
+                                type: string;
+                            };
+                            disableHelmet: {
+                                type: string;
+                            };
+                            disableRedirect: {
+                                type: string;
+                            };
+                            enableAsyncData: {
+                                type: string;
+                            };
+                            enableProductWarning: {
+                                type: string;
+                            };
+                            timeout: {
+                                type: string;
+                            };
+                            asyncDataTimeout: {
+                                type: string;
+                            };
+                        };
+                    };
+                    else: {
+                        type: string;
+                    };
+                };
+                ssrByEntries: {
+                    type: string;
+                    patternProperties: {
+                        "^[a-zA-Z0-9_-]+$": {
+                            if: {
+                                type: string;
+                            };
+                            then: {
+                                properties: {
+                                    disableLoadable: {
+                                        type: string;
+                                    };
+                                    disableHelmet: {
+                                        type: string;
+                                    };
+                                    disableRedirect: {
+                                        type: string;
+                                    };
+                                    enableProductWarning: {
+                                        type: string;
+                                    };
+                                    enableAsyncData: {
+                                        type: string;
+                                    };
+                                    timeout: {
+                                        type: string;
+                                    };
+                                    asyncDataTimeout: {
+                                        type: string;
+                                    };
+                                };
+                                additionalProperties: boolean;
+                            };
+                            else: {
+                                type: string;
+                            };
+                        };
+                    };
+                };
+                routes: {
+                    type: string;
+                    patternProperties: {
+                        "^[a-zA-Z0-9_-]+$": {
+                            if: {
+                                type: string;
+                            };
+                            then: {
+                                properties: {
+                                    route: {
+                                        oneOf: ({
+                                            type: string;
+                                            properties: {
+                                                path: {
+                                                    type: string;
+                                                };
+                                                headers: {
+                                                    type: string;
+                                                };
+                                            };
+                                            additionalProperties: boolean;
+                                        } | {
+                                            type: string;
+                                            items?: undefined;
+                                        } | {
+                                            type: string;
+                                            items: {
+                                                oneOf: ({
+                                                    type: string;
+                                                    properties: {
+                                                        path: {
+                                                            type: string;
+                                                        };
+                                                        headers: {
+                                                            type: string;
+                                                        };
+                                                    };
+                                                    additionalProperties: boolean;
+                                                } | {
+                                                    type: string;
+                                                })[];
+                                            };
+                                        })[];
+                                    };
+                                    disableSpa: {
+                                        type: string;
+                                    };
+                                };
+                                additionalProperties: boolean;
+                            };
+                            else: {
+                                oneOf: ({
+                                    type: string;
+                                    items?: undefined;
+                                } | {
+                                    type: string;
+                                    items: {
+                                        type: string;
+                                    };
+                                })[];
+                            };
+                        };
+                    };
+                };
+                publicRoutes: {
+                    type: string;
+                    patternProperties: {
+                        "^[a-zA-Z0-9_-]+$": {
+                            type: string[];
+                        };
+                    };
+                };
+                baseUrl: {
+                    oneOf: ({
+                        type: string;
+                        items?: undefined;
+                    } | {
+                        type: string;
+                        items: {
+                            type: string;
+                        }[];
+                    })[];
+                };
+                middleware: {
+                    instanceof: string[];
+                };
+                renderHook: {
+                    instanceof: string;
+                };
+                logger: {
+                    type: string[];
+                };
+                metrics: {
+                    type: string[];
+                };
+                proxy: {
+                    type: string;
+                };
+                enableMicroFrontendDebug: {
+                    type: string;
+                };
+            };
+        };
+        deploy: {
+            type: string;
+            properties: {
+                domain: {
+                    type: string[];
+                };
+                domainByEntries: {
+                    type: string;
+                    patternProperties: {
+                        "^[a-zA-Z0-9_-]+$": {
+                            type: string[];
+                        };
+                    };
+                };
+            };
+        };
+        plugins: {
+            type: string;
+            additionalProperties: boolean;
+        };
+        dev: {
+            type: string;
+            properties: {
+                assetPrefix: {
+                    type: string[];
+                };
+                https: {
+                    type: string;
+                };
+            };
+            additionalProperties: boolean;
+        };
+        tools: {
+            type: string;
+            additionalProperties: boolean;
+            properties: {
+                webpack: {
+                    typeof: string[];
+                };
+                webpackChain: {
+                    typeof: string[];
+                };
+                babel: {
+                    typeof: string[];
+                };
+                postcss: {
+                    typeof: string[];
+                };
+                lodash: {
+                    typeof: string[];
+                };
+                devServer: {
+                    type: string;
+                };
+                tsLoader: {
+                    typeof: string[];
+                };
+                autoprefixer: {
+                    typeof: string[];
+                };
+                terser: {
+                    typeof: string[];
+                };
+                minifyCss: {
+                    typeof: string[];
+                };
+                styledComponents: {
+                    typeof: string[];
+                };
+            };
+        };
+    };
+};
+export declare const traverseSchema: (schema: ReturnType<typeof patchSchema>) => string[];

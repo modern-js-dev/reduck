@@ -1,0 +1,4 @@
+export declare const createRuntimeExportsUtils: (pwd: any, namespace: string, ts?: any) => {
+    addExport: (statement: string) => void;
+    getPath: () => string;
+};

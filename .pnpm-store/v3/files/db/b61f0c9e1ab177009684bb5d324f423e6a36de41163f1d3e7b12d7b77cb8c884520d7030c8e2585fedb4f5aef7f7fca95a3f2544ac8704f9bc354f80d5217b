@@ -1,0 +1,6 @@
+import type { ICommandConfig } from '../../type';
+import type { DagOperator } from '../../dag/operator';
+export interface IInstallConfig extends ICommandConfig {
+  auto?: boolean;
+}
+export declare const runInstallTask: (projectNames: string[], operator: DagOperator, config: IInstallConfig) => Promise<void>;

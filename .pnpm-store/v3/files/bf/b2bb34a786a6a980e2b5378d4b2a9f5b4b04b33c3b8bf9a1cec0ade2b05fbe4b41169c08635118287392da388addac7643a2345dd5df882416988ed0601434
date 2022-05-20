@@ -1,0 +1,8 @@
+interface FileOption {
+  files?: string[];
+  include?: string[];
+  stylesDir?: string;
+  extensions?: string[];
+}
+export declare const getFiles: (options: FileOption) => string[];
+export {};

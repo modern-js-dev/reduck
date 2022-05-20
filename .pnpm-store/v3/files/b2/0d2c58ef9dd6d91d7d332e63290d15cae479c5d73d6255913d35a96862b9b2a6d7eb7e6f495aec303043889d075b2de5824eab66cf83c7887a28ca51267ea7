@@ -1,0 +1,211 @@
+import type React from 'react';
+import { Setup, ToThreads, CommonAPI, PluginOptions } from '@modern-js/plugin';
+import type { RuntimeContext, TRuntimeContext } from './runtime-context';
+export interface AppProps {}
+export declare const AppComponentContext: import("@modern-js/plugin").Context<React.ComponentType<any> | null>;
+export declare const useAppComponent: () => React.ComponentType<any>;
+export declare const useRootElement: () => React.ComponentType<any>;
+declare const runtimeHooks: {
+  hoc: import("@modern-js/plugin").Pipeline<{
+    App: React.ComponentType<any>;
+  }, React.ComponentType<any>>;
+  provide: import("@modern-js/plugin").Pipeline<{
+    element: JSX.Element;
+    readonly props: AppProps;
+    readonly context: RuntimeContext;
+  }, JSX.Element>;
+  client: import("@modern-js/plugin").AsyncPipeline<{
+    App: React.ComponentType<any>;
+    readonly context?: RuntimeContext | undefined;
+    rootElement: HTMLElement;
+  }, void>;
+  server: import("@modern-js/plugin").AsyncPipeline<{
+    App: React.ComponentType<any>;
+    readonly context?: RuntimeContext | undefined;
+  }, string>;
+  init: import("@modern-js/plugin").AsyncPipeline<{
+    context: RuntimeContext;
+  }, unknown>;
+  pickContext: import("@modern-js/plugin").Pipeline<{
+    context: RuntimeContext;
+    pickedContext: TRuntimeContext;
+  }, TRuntimeContext>;
+};
+/** All hooks of runtime plugin. */
+
+export declare type RuntimeHooks = typeof runtimeHooks;
+/** All hook callbacks of runtime plugin. */
+
+export declare type RuntimeHookCallbacks = ToThreads<RuntimeHooks>;
+/** All apis for runtime plugin. */
+
+export declare type PluginAPI = CommonAPI<RuntimeHooks>;
+/** Plugin options of a runtime plugin. */
+
+export declare type Plugin = PluginOptions<RuntimeHooks, Setup<RuntimeHooks>>;
+export declare const createRuntime: () => import("@modern-js/plugin").Manager<{
+  hoc: import("@modern-js/plugin").Pipeline<{
+    App: React.ComponentType<any>;
+  }, React.ComponentType<any>>;
+  provide: import("@modern-js/plugin").Pipeline<{
+    element: JSX.Element;
+    readonly props: AppProps;
+    readonly context: RuntimeContext;
+  }, JSX.Element>;
+  client: import("@modern-js/plugin").AsyncPipeline<{
+    App: React.ComponentType<any>;
+    readonly context?: RuntimeContext | undefined;
+    rootElement: HTMLElement;
+  }, void>;
+  server: import("@modern-js/plugin").AsyncPipeline<{
+    App: React.ComponentType<any>;
+    readonly context?: RuntimeContext | undefined;
+  }, string>;
+  init: import("@modern-js/plugin").AsyncPipeline<{
+    context: RuntimeContext;
+  }, unknown>;
+  pickContext: import("@modern-js/plugin").Pipeline<{
+    context: RuntimeContext;
+    pickedContext: TRuntimeContext;
+  }, TRuntimeContext>;
+}, Record<string, never>>;
+/**
+ * register init hook. It would be revoked both ssr and csr.
+ */
+
+declare const registerInit: (App: React.ComponentType, _init: (context: RuntimeContext) => any | Promise<any>) => void;
+/**
+ * register prefetch hook. It would be revoked both ssr and csr.
+ * But if ssr success, It wont exec in csr again.
+ * If ssr prefetch failed, It will fallback to exec in csr.
+ */
+
+declare const registerPrefetch: (App: React.ComponentType, prefetch: (context: RuntimeContext) => Promise<any>) => void;
+export declare const runtime: import("@modern-js/plugin").Manager<{
+  hoc: import("@modern-js/plugin").Pipeline<{
+    App: React.ComponentType<any>;
+  }, React.ComponentType<any>>;
+  provide: import("@modern-js/plugin").Pipeline<{
+    element: JSX.Element;
+    readonly props: AppProps;
+    readonly context: RuntimeContext;
+  }, JSX.Element>;
+  client: import("@modern-js/plugin").AsyncPipeline<{
+    App: React.ComponentType<any>;
+    readonly context?: RuntimeContext | undefined;
+    rootElement: HTMLElement;
+  }, void>;
+  server: import("@modern-js/plugin").AsyncPipeline<{
+    App: React.ComponentType<any>;
+    readonly context?: RuntimeContext | undefined;
+  }, string>;
+  init: import("@modern-js/plugin").AsyncPipeline<{
+    context: RuntimeContext;
+  }, unknown>;
+  pickContext: import("@modern-js/plugin").Pipeline<{
+    context: RuntimeContext;
+    pickedContext: TRuntimeContext;
+  }, TRuntimeContext>;
+}, Record<string, never>>;
+export declare const createPlugin: (setup?: Setup<{
+  hoc: import("@modern-js/plugin").Pipeline<{
+    App: React.ComponentType<any>;
+  }, React.ComponentType<any>>;
+  provide: import("@modern-js/plugin").Pipeline<{
+    element: JSX.Element;
+    readonly props: AppProps;
+    readonly context: RuntimeContext;
+  }, JSX.Element>;
+  client: import("@modern-js/plugin").AsyncPipeline<{
+    App: React.ComponentType<any>;
+    readonly context?: RuntimeContext | undefined;
+    rootElement: HTMLElement;
+  }, void>;
+  server: import("@modern-js/plugin").AsyncPipeline<{
+    App: React.ComponentType<any>;
+    readonly context?: RuntimeContext | undefined;
+  }, string>;
+  init: import("@modern-js/plugin").AsyncPipeline<{
+    context: RuntimeContext;
+  }, unknown>;
+  pickContext: import("@modern-js/plugin").Pipeline<{
+    context: RuntimeContext;
+    pickedContext: TRuntimeContext;
+  }, TRuntimeContext>;
+}, Record<string, never>> | undefined, options?: PluginOptions<{
+  hoc: import("@modern-js/plugin").Pipeline<{
+    App: React.ComponentType<any>;
+  }, React.ComponentType<any>>;
+  provide: import("@modern-js/plugin").Pipeline<{
+    element: JSX.Element;
+    readonly props: AppProps;
+    readonly context: RuntimeContext;
+  }, JSX.Element>;
+  client: import("@modern-js/plugin").AsyncPipeline<{
+    App: React.ComponentType<any>;
+    readonly context?: RuntimeContext | undefined;
+    rootElement: HTMLElement;
+  }, void>;
+  server: import("@modern-js/plugin").AsyncPipeline<{
+    App: React.ComponentType<any>;
+    readonly context?: RuntimeContext | undefined;
+  }, string>;
+  init: import("@modern-js/plugin").AsyncPipeline<{
+    context: RuntimeContext;
+  }, unknown>;
+  pickContext: import("@modern-js/plugin").Pipeline<{
+    context: RuntimeContext;
+    pickedContext: TRuntimeContext;
+  }, TRuntimeContext>;
+}, Setup<{
+  hoc: import("@modern-js/plugin").Pipeline<{
+    App: React.ComponentType<any>;
+  }, React.ComponentType<any>>;
+  provide: import("@modern-js/plugin").Pipeline<{
+    element: JSX.Element;
+    readonly props: AppProps;
+    readonly context: RuntimeContext;
+  }, JSX.Element>;
+  client: import("@modern-js/plugin").AsyncPipeline<{
+    App: React.ComponentType<any>;
+    readonly context?: RuntimeContext | undefined;
+    rootElement: HTMLElement;
+  }, void>;
+  server: import("@modern-js/plugin").AsyncPipeline<{
+    App: React.ComponentType<any>;
+    readonly context?: RuntimeContext | undefined;
+  }, string>;
+  init: import("@modern-js/plugin").AsyncPipeline<{
+    context: RuntimeContext;
+  }, unknown>;
+  pickContext: import("@modern-js/plugin").Pipeline<{
+    context: RuntimeContext;
+    pickedContext: TRuntimeContext;
+  }, TRuntimeContext>;
+}, Record<string, never>>> | undefined) => import("@modern-js/plugin").Plugin<{
+  hoc: import("@modern-js/plugin").Pipeline<{
+    App: React.ComponentType<any>;
+  }, React.ComponentType<any>>;
+  provide: import("@modern-js/plugin").Pipeline<{
+    element: JSX.Element;
+    readonly props: AppProps;
+    readonly context: RuntimeContext;
+  }, JSX.Element>;
+  client: import("@modern-js/plugin").AsyncPipeline<{
+    App: React.ComponentType<any>;
+    readonly context?: RuntimeContext | undefined;
+    rootElement: HTMLElement;
+  }, void>;
+  server: import("@modern-js/plugin").AsyncPipeline<{
+    App: React.ComponentType<any>;
+    readonly context?: RuntimeContext | undefined;
+  }, string>;
+  init: import("@modern-js/plugin").AsyncPipeline<{
+    context: RuntimeContext;
+  }, unknown>;
+  pickContext: import("@modern-js/plugin").Pipeline<{
+    context: RuntimeContext;
+    pickedContext: TRuntimeContext;
+  }, TRuntimeContext>;
+}, Record<string, never>>;
+export { registerInit, registerPrefetch };

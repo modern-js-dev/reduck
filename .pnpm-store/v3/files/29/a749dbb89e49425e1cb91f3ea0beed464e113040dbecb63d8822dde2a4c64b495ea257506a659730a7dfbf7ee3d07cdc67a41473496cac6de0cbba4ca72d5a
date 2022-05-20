@@ -1,0 +1,20 @@
+import { Container } from '../farrow-pipeline';
+declare const WORKFLOW_SYMBOL: unique symbol;
+export declare type Worker<I, O> = (I: I) => O;
+export declare type Workers<I, O> = Worker<I, O>[];
+export declare type RunWorkflowOptions = {
+  container?: Container;
+};
+export declare type Workflow<I, O> = {
+  run: (input: I, options?: RunWorkflowOptions) => void;
+  use: (...I: Workers<I, O>) => Workflow<I, O>;
+  [WORKFLOW_SYMBOL]: true;
+};
+export declare type Workflow2Worker<W extends Workflow<any, any>> = W extends Workflow<infer I, infer O> ? Worker<I, O> : never;
+export declare type WorkflowRecord = Record<string, Workflow<any, any>>;
+export declare type Workflows2Workers<PS extends WorkflowRecord | void> = { [K in keyof PS]: PS[K] extends Workflow<any, any> ? Workflow2Worker<PS[K]> : PS[K] extends void ? void : never };
+export declare type RunnerFromWorkflow<W extends Workflow<any, any>> = W extends Workflow<infer I, infer O> ? Workflow<I, O>['run'] : never;
+export declare type Workflows2Runners<PS extends WorkflowRecord | void> = { [K in keyof PS]: PS[K] extends Workflow<any, any> ? RunnerFromWorkflow<PS[K]> : PS[K] extends void ? void : never };
+export declare const createWorkflow: <I = void, O = unknown>() => Workflow<I, O>;
+export declare const isWorkflow: (input: any) => input is Workflow<unknown, unknown>;
+export {};

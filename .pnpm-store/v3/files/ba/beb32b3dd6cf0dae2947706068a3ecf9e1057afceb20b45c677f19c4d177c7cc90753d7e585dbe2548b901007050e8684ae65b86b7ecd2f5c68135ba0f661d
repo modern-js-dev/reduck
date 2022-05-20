@@ -1,0 +1,9 @@
+import type { IAppContext, UserConfig } from '@modern-js/core';
+export declare const verifyTsConfigPaths: (root: string, userConfig: UserConfig) => void;
+export declare const getWebpackAliases: (appContext: IAppContext, userConfig: UserConfig) => {
+    'react-dom$'?: string | undefined;
+    'scheduler/tracing'?: string | undefined;
+    '@': string;
+    '@shared': string;
+    'react-native': string;
+};

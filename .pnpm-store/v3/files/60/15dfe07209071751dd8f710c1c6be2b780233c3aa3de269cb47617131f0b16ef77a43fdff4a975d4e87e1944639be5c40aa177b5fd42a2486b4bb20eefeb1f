@@ -1,0 +1,9 @@
+/// <reference types="node" />
+export declare class ReadlineUtils {
+  static clearPrevLine(output: NodeJS.WriteStream & {
+    fd: 1;
+  }): void;
+  static clearLine(output: NodeJS.WriteStream & {
+    fd: 1;
+  }, n?: number, dir?: 1 | -1): void;
+}

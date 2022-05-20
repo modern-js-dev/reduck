@@ -1,0 +1,18 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.testingHooks = exports.jestConfigHook = exports.afterTestHook = void 0;
+
+var _plugin = require("@modern-js/plugin");
+
+const jestConfigHook = (0, _plugin.createAsyncPipeline)();
+exports.jestConfigHook = jestConfigHook;
+const afterTestHook = (0, _plugin.createParallelWorkflow)();
+exports.afterTestHook = afterTestHook;
+const testingHooks = {
+  jestConfig: (0, _plugin.createAsyncPipeline)(),
+  afterTest: (0, _plugin.createParallelWorkflow)()
+};
+exports.testingHooks = testingHooks;

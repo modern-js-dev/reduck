@@ -1,0 +1,192 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.generateCode = exports.createImportStatements = void 0;
+
+var _path = _interopRequireDefault(require("path"));
+
+var _utils = require("@modern-js/utils");
+
+var templates = _interopRequireWildcard(require("./templates"));
+
+var _getClientRoutes = require("./getClientRoutes");
+
+var _constants = require("./constants");
+
+var _utils2 = require("./utils");
+
+function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
+
+function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+const createImportSpecifier = specifiers => {
+  let defaults = '';
+  const named = [];
+
+  for (const {
+    local,
+    imported
+  } of specifiers) {
+    if (local && imported) {
+      named.push(`${imported} as ${local}`);
+    } else if (local) {
+      defaults = local;
+    } else {
+      named.push(imported);
+    }
+  }
+
+  if (defaults && named.length) {
+    return `${defaults}, { ${named.join(', ')} }`;
+  } else if (defaults) {
+    return defaults;
+  } else {
+    return `{ ${named.join(', ')} }`;
+  }
+};
+
+const createImportStatements = statements => {
+  // merge import statements with the same value.
+  const deDuplicated = [];
+  const seen = new Map();
+
+  for (const {
+    value,
+    specifiers,
+    initialize
+  } of statements) {
+    if (!seen.has(value)) {
+      deDuplicated.push({
+        value,
+        specifiers,
+        initialize
+      });
+      seen.set(value, specifiers);
+    } else {
+      var _deDuplicated$modifyI, _deDuplicated$modifyI2;
+
+      seen.get(value).push(...specifiers); // make "initialize" param can be connected when multiple plugins were imported from same package
+
+      const modifyIndex = deDuplicated.findIndex(v => v.value === value);
+      const originInitialize = (_deDuplicated$modifyI = (_deDuplicated$modifyI2 = deDuplicated[modifyIndex]) === null || _deDuplicated$modifyI2 === void 0 ? void 0 : _deDuplicated$modifyI2.initialize) !== null && _deDuplicated$modifyI !== void 0 ? _deDuplicated$modifyI : '';
+      deDuplicated[modifyIndex].initialize = originInitialize.concat(`\n${initialize || ''}`);
+    }
+  }
+
+  return deDuplicated.map(({
+    value,
+    specifiers,
+    initialize
+  }) => `import ${createImportSpecifier(specifiers)} from '${value}';\n${initialize || ''}`).join('\n');
+};
+
+exports.createImportStatements = createImportStatements;
+
+const generateCode = async (appContext, config, entrypoints, api) => {
+  const {
+    internalDirectory,
+    srcDirectory,
+    internalDirAlias,
+    internalSrcAlias
+  } = appContext;
+  const hookRunners = api.useHookRunners();
+  const {
+    output: {
+      mountId
+    }
+  } = config;
+
+  for (const entrypoint of entrypoints) {
+    const {
+      entryName,
+      isAutoMount,
+      customBootstrap,
+      fileSystemRoutes
+    } = entrypoint;
+
+    if (isAutoMount) {
+      // generate routes file for file system routes entrypoint.
+      if (fileSystemRoutes) {
+        const initialRoutes = (0, _getClientRoutes.getClientRoutes)({
+          entrypoint,
+          srcDirectory,
+          srcAlias: internalSrcAlias,
+          internalDirectory,
+          internalDirAlias
+        });
+        const {
+          routes
+        } = await hookRunners.modifyFileSystemRoutes({
+          entrypoint,
+          routes: initialRoutes
+        });
+        const {
+          code
+        } = await hookRunners.beforeGenerateRoutes({
+          entrypoint,
+          code: templates.fileSystemRoutes({
+            routes
+          })
+        });
+
+        _utils.fs.outputFileSync(_path.default.resolve(internalDirectory, `./${entryName}/${_constants.FILE_SYSTEM_ROUTES_FILE_NAME}`), code, 'utf8');
+      } // call modifyEntryImports hook
+
+
+      const {
+        imports: importStatements
+      } = await hookRunners.modifyEntryImports({
+        entrypoint,
+        imports: (0, _utils2.getDefaultImports)({
+          entrypoint,
+          srcDirectory,
+          internalSrcAlias,
+          internalDirAlias
+        })
+      }); // call modifyEntryRuntimePlugins hook
+
+      const {
+        plugins
+      } = await hookRunners.modifyEntryRuntimePlugins({
+        entrypoint,
+        plugins: []
+      }); // call modifyEntryRenderFunction hook
+
+      const {
+        code: renderFunction
+      } = await hookRunners.modifyEntryRenderFunction({
+        entrypoint,
+        code: templates.renderFunction({
+          plugins,
+          customBootstrap,
+          fileSystemRoutes
+        })
+      }); // call modifyEntryExport hook
+
+      const {
+        exportStatement
+      } = await hookRunners.modifyEntryExport({
+        entrypoint,
+        exportStatement: 'export default AppWrapper;'
+      });
+      const code = templates.index({
+        mountId: mountId,
+        imports: createImportStatements(importStatements),
+        renderFunction,
+        exportStatement
+      }); // generate entry file.
+
+      const entryFile = _path.default.resolve(internalDirectory, `./${entryName}/${_constants.ENTRY_POINT_FILE_NAME}`);
+
+      entrypoint.entry = entryFile;
+
+      _utils.fs.outputFileSync(entryFile, code, 'utf8');
+    }
+  }
+};
+
+exports.generateCode = generateCode;

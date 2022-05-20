@@ -1,0 +1,222 @@
+/**
+ * hmr socket connect path
+ */
+export declare const HMR_SOCK_PATH = "/_modern_js_hmr_ws";
+/**
+ * route specification file
+ */
+export declare const ROUTE_SPEC_FILE = "route.json";
+/**
+ * main entry name
+ */
+export declare const MAIN_ENTRY_NAME = "main";
+/**
+ * open editor request path
+ */
+export declare const LAUNCH_EDITOR_ENDPOINT = "/__open-stack-frame-in-editor";
+/**
+ * server side bundles directory, which relative to dist.
+ */
+export declare const SERVER_BUNDLE_DIRECTORY = "bundles";
+/**
+ * entry name pattern used for ajv pattern properties.
+ */
+export declare const ENTRY_NAME_PATTERN = "^[a-zA-Z0-9_-]+$";
+/**
+ * SSR server render function name
+ */
+export declare const SERVER_RENDER_FUNCTION_NAME = "serverRender";
+/**
+ * loadbale manifest json file
+ */
+export declare const LOADABLE_STATS_FILE = "loadable-stats.json";
+/**
+ * internal specified folder
+ */
+export declare const API_DIR = "api";
+export declare const SERVER_DIR = "server";
+export declare const SHARED_DIR = "shared";
+/**
+ * Modern.config.ts cached dir
+ */
+export declare const CONFIG_CACHE_DIR = "./node_modules/.cache/node-bundle-require";
+export declare const CONFIG_FILE_EXTENSIONS: string[];
+/**
+ * Serialized config path
+ */
+export declare const OUTPUT_CONFIG_FILE = "modern.config.json";
+/**
+ * Default server config basename
+ */
+export declare const DEFAULT_SERVER_CONFIG = "modern.server-runtime.config";
+/**
+ * Internal plugins that work as soon as they are installed.
+ */
+export declare const INTERNAL_PLUGINS: {
+    [name: string]: {
+        cli?: string;
+        server?: string;
+    };
+};
+/**
+ * The schema registered in the plugin.
+ */
+export declare const PLUGIN_SCHEMAS: {
+    '@modern-js/runtime': ({
+        target: string;
+        schema: {
+            type: string;
+            additionalProperties: boolean;
+            patternProperties?: undefined;
+        };
+    } | {
+        target: string;
+        schema: {
+            type: string;
+            patternProperties: {
+                "^[a-zA-Z0-9_-]+$": {
+                    type: string;
+                };
+            };
+            additionalProperties: boolean;
+        };
+    })[];
+    '@modern-js/plugin-bff': {
+        target: string;
+        schema: {
+            type: string;
+            properties: {
+                prefix: {
+                    type: string[];
+                    items: {
+                        type: string;
+                    };
+                };
+                fetcher: {
+                    type: string;
+                };
+                proxy: {
+                    type: string;
+                };
+                requestCreator: {
+                    type: string;
+                };
+            };
+        };
+    }[];
+    '@modern-js/plugin-esbuild': {
+        target: string;
+        schema: {
+            typeof: string[];
+        };
+    }[];
+    '@modern-js/plugin-less': {
+        target: string;
+        schema: {
+            typeof: string[];
+        };
+    }[];
+    '@modern-js/plugin-sass': {
+        target: string;
+        schema: {
+            typeof: string[];
+        };
+    }[];
+    '@modern-js/plugin-tailwindcss': {
+        target: string;
+        schema: {
+            typeof: string[];
+        };
+    }[];
+    '@modern-js/plugin-proxy': {
+        target: string;
+        schema: {
+            typeof: string[];
+        };
+    }[];
+    '@modern-js/plugin-unbundle': ({
+        target: string;
+        schema: {
+            type: string;
+            properties?: undefined;
+        };
+    } | {
+        target: string;
+        schema: {
+            type: string;
+            properties: {
+                ignore: {
+                    type: string[];
+                    items: {
+                        type: string;
+                    };
+                };
+                ignoreModuleCache: {
+                    type: string;
+                };
+                clearPdnCache: {
+                    type: string;
+                };
+                pdnHost: {
+                    type: string;
+                };
+            };
+        };
+    })[];
+    '@modern-js/plugin-ssg': {
+        target: string;
+        schema: {
+            oneOf: ({
+                type: string;
+                instanceof?: undefined;
+            } | {
+                instanceof: string;
+                type?: undefined;
+            })[];
+        };
+    }[];
+    '@modern-js/plugin-ssr': {
+        target: string;
+        schema: {
+            type: string[];
+        };
+    }[];
+    '@modern-js/plugin-state': {
+        target: string;
+        schema: {
+            type: string[];
+        };
+    }[];
+    '@modern-js/plugin-design-token': ({
+        target: string;
+        schema: {
+            typeof: string[];
+            type?: undefined;
+        };
+    } | {
+        target: string;
+        schema: {
+            type: string[];
+            typeof?: undefined;
+        };
+    })[];
+    '@modern-js/plugin-router': {
+        target: string;
+        schema: {
+            type: string[];
+        };
+    }[];
+    '@modern-js/plugin-testing': {
+        target: string;
+        schema: {
+            typeof: string[];
+        };
+    }[];
+    '@modern-js/plugin-garfish': {
+        target: string;
+        schema: {
+            type: string[];
+        };
+    }[];
+    '@modern-js/plugin-nocode': never[];
+};

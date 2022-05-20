@@ -1,0 +1,1 @@
+export declare const getEntryOptions: <T>(name: string, baseOptions?: T | undefined, optionsByEntries?: Record<string, T> | undefined, packageName?: string | undefined) => T | undefined;

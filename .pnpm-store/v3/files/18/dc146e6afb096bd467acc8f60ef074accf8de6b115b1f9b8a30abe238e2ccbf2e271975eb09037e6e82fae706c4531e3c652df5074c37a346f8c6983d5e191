@@ -1,0 +1,1 @@
+export declare const getServerConfig: (appDirectory: string, configFile: string) => Promise<string | false>;

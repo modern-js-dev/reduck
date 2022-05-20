@@ -1,0 +1,82 @@
+import _objectSpread from "@babel/runtime/helpers/esm/objectSpread2";
+import React, { useContext } from 'react';
+import { createBrowserHistory, createHashHistory } from 'history';
+import { Router, StaticRouter } from 'react-router-dom';
+import { RuntimeReactContext } from '@modern-js/runtime-core';
+import hoistNonReactStatics from 'hoist-non-react-statics';
+import { renderRoutes, getLocation, urlJoin } from "./utils";
+import { jsx as _jsx } from "react/jsx-runtime";
+
+// todo: check
+var isBrowser = function isBrowser() {
+  return typeof window !== 'undefined';
+};
+
+export var routerPlugin = function routerPlugin(_ref) {
+  var _ref$serverBase = _ref.serverBase,
+      serverBase = _ref$serverBase === void 0 ? [] : _ref$serverBase,
+      customHistory = _ref.history,
+      _ref$supportHtml5Hist = _ref.supportHtml5History,
+      supportHtml5History = _ref$supportHtml5Hist === void 0 ? true : _ref$supportHtml5Hist,
+      routesConfig = _ref.routesConfig,
+      _ref$historyOptions = _ref.historyOptions,
+      historyOptions = _ref$historyOptions === void 0 ? {} : _ref$historyOptions;
+  var isBrow = isBrowser();
+
+  var select = function select(pathname) {
+    return serverBase.find(function (baseUrl) {
+      return pathname.search(baseUrl) === 0;
+    }) || '/';
+  };
+
+  return {
+    name: '@modern-js/plugin-router',
+    setup: function setup() {
+      return {
+        hoc: function hoc(_ref2, next) {
+          var App = _ref2.App;
+
+          var getRouteApp = function getRouteApp() {
+            if (isBrow) {
+              var _window$_SERVER_DATA;
+
+              var baseUrl = ((_window$_SERVER_DATA = window._SERVER_DATA) === null || _window$_SERVER_DATA === void 0 ? void 0 : _window$_SERVER_DATA.router.baseUrl) || select(location.pathname);
+              historyOptions.basename = baseUrl === '/' ? urlJoin(baseUrl, historyOptions.basename) : baseUrl;
+              var history = customHistory || (supportHtml5History ? createBrowserHistory(historyOptions) : createHashHistory(historyOptions));
+              return function (props) {
+                return /*#__PURE__*/_jsx(Router, {
+                  history: history,
+                  children: /*#__PURE__*/_jsx(App, _objectSpread(_objectSpread({}, props), {}, {
+                    children: routesConfig ? renderRoutes(routesConfig, props) : null
+                  }))
+                });
+              };
+            }
+
+            return function (props) {
+              var runtimeContext = useContext(RuntimeReactContext);
+              var ssrContext = runtimeContext.ssrContext;
+              var location = getLocation(ssrContext);
+              var routerContext = (ssrContext === null || ssrContext === void 0 ? void 0 : ssrContext.redirection) || {};
+              var request = ssrContext === null || ssrContext === void 0 ? void 0 : ssrContext.request;
+              var baseUrl = request === null || request === void 0 ? void 0 : request.baseUrl;
+              var basename = baseUrl === '/' ? urlJoin(baseUrl, historyOptions.basename) : baseUrl;
+              return /*#__PURE__*/_jsx(StaticRouter, {
+                basename: basename === '/' ? '' : basename,
+                location: location,
+                context: routerContext,
+                children: /*#__PURE__*/_jsx(App, _objectSpread(_objectSpread({}, props), {}, {
+                  children: routesConfig ? renderRoutes(routesConfig, props) : null
+                }))
+              });
+            };
+          };
+
+          return next({
+            App: App ? hoistNonReactStatics(getRouteApp(), App) : getRouteApp()
+          });
+        }
+      };
+    }
+  };
+};

@@ -1,0 +1,27 @@
+import { Container } from '../farrow-pipeline';
+declare const WATERFALL_SYMBOL: unique symbol;
+export declare type Brook<I = unknown> = (I: I) => I;
+export declare type BrookInput<I = unknown> = Brook<I> | {
+  middleware: Brook<I>;
+};
+export declare type Brooks<I = unknown> = Brook<I>[];
+export declare type BrookInputs<I = unknown> = BrookInput<I>[];
+export declare const getBrook: <I>(input: BrookInput<I>) => Brook<I>;
+export declare type RunWaterfallOptions<I = unknown> = {
+  container?: Container;
+  onLast?: Brook<I>;
+};
+export declare type Waterfall<I = void> = {
+  run: (input: I, options?: RunWaterfallOptions<I>) => I;
+  use: (...I: BrookInputs<I>) => Waterfall<I>;
+  middleware: Brook<I>;
+  [WATERFALL_SYMBOL]: true;
+};
+export declare type Waterfall2Brook<P extends Waterfall<any>> = P extends Waterfall<infer I> ? Brook<I> : never;
+export declare type WaterfallRecord = Record<string, Waterfall<any>>;
+export declare type Waterfalls2Brooks<PS extends WaterfallRecord | void> = { [K in keyof PS]: PS[K] extends Waterfall<any> ? Waterfall2Brook<PS[K]> : PS[K] extends void ? void : never };
+export declare type RunnerFromWaterfall<M extends Waterfall<any>> = M extends Waterfall<infer VS> ? Waterfall<VS>['run'] : never;
+export declare type Waterfalls2Runners<PS extends WaterfallRecord | void> = { [K in keyof PS]: PS[K] extends Waterfall<any> ? RunnerFromWaterfall<PS[K]> : PS[K] extends void ? void : never };
+export declare const createWaterfall: <I = void>() => Waterfall<I>;
+export declare const isWaterfall: (input: any) => input is Waterfall<any>;
+export {};

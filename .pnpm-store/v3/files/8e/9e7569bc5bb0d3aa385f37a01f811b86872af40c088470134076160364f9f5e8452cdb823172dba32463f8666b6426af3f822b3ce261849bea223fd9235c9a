@@ -1,0 +1,132 @@
+function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest(); }
+
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+
+function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+
+function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+
+function _iterableToArrayLimit(arr, i) { var _i = arr == null ? null : typeof Symbol !== "undefined" && arr[Symbol.iterator] || arr["@@iterator"]; if (_i == null) return; var _arr = []; var _n = true; var _d = false; var _s, _e; try { for (_i = _i.call(arr); !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
+
+function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
+
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+import { createStore, model } from '..';
+var count1Model = model('count1').define(function () {
+  return {
+    state: {
+      value: 1
+    },
+    actions: {
+      add: function add(state) {
+        return _objectSpread(_objectSpread({}, state), {}, {
+          value: state.value + 1
+        });
+      }
+    }
+  };
+});
+var count2Model = model('count2').define(function (_, _ref) {
+  var use = _ref.use;
+  use(count1Model);
+  return {
+    state: {
+      value: 1
+    },
+    actions: {
+      addCount1Value: function addCount1Value(state) {
+        var _use = use(count1Model),
+            _use2 = _slicedToArray(_use, 1),
+            count1Value = _use2[0].value;
+
+        return _objectSpread(_objectSpread({}, state), {}, {
+          value: state.value + count1Value
+        });
+      }
+    }
+  };
+});
+describe('test useModel', function () {
+  test("use model in model's action should work", function () {
+    var store = createStore();
+
+    var _store$use = store.use(count2Model),
+        _store$use2 = _slicedToArray(_store$use, 2),
+        actions = _store$use2[1];
+
+    var _store$use3 = store.use(count1Model),
+        _store$use4 = _slicedToArray(_store$use3, 2),
+        count1Actions = _store$use4[1];
+
+    expect(store.getState()).toEqual({
+      count1: {
+        value: 1
+      },
+      count2: {
+        value: 1
+      }
+    });
+    actions.addCount1Value();
+    expect(store.getState()).toEqual({
+      count1: {
+        value: 1
+      },
+      count2: {
+        value: 2
+      }
+    });
+    count1Actions.add();
+    expect(store.getState()).toEqual({
+      count1: {
+        value: 2
+      },
+      count2: {
+        value: 2
+      }
+    });
+    actions.addCount1Value();
+    expect(store.getState()).toEqual({
+      count1: {
+        value: 2
+      },
+      count2: {
+        value: 4
+      }
+    });
+  });
+  test('use models with same name should get a warning', function () {
+    var spy = jest.spyOn(console, 'info');
+    var store = createStore();
+    var countModel = model('count1').define({
+      state: 1
+    });
+    store.use(count1Model, countModel);
+    expect(spy).toHaveBeenLastCalledWith('model named count1 has already mounted, so skip');
+    spy.mockClear();
+  });
+  test('use self in model will get error', function () {
+    var test = model('name').define(function (_, _ref2) {
+      var use = _ref2.use;
+      use(test);
+      return {
+        state: 1
+      };
+    });
+    expect(function () {
+      return createStore().use(test);
+    }).toThrow(Error);
+  });
+  test('use mltiple model with primitive state get error', function () {
+    var test = model('name').define({
+      state: 1
+    });
+    expect(function () {
+      return createStore().use(test, count1Model);
+    }).toThrow(Error);
+  });
+});

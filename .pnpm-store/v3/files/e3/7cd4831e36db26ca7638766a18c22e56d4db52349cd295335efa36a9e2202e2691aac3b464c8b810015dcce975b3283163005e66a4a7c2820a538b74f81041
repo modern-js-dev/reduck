@@ -1,0 +1,28 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.cleanRequireCache = exports.requireExistModule = exports.compatRequire = void 0;
+const findExists_1 = require("./findExists");
+/**
+ * Require function compatible with esm and cjs module.
+ * @param filePath - File to required.
+ * @returns module export object.
+ */
+const compatRequire = (filePath) => {
+    const mod = require(filePath);
+    return (mod === null || mod === void 0 ? void 0 : mod.__esModule) ? mod.default : mod;
+};
+exports.compatRequire = compatRequire;
+const requireExistModule = (filename, extensions = ['.ts', '.js']) => {
+    const exist = (0, findExists_1.findExists)(extensions.map(ext => `${filename}${ext}`));
+    if (!exist) {
+        return null;
+    }
+    return (0, exports.compatRequire)(exist);
+};
+exports.requireExistModule = requireExistModule;
+const cleanRequireCache = (filelist) => {
+    filelist.forEach(filepath => {
+        delete require.cache[filepath];
+    });
+};
+exports.cleanRequireCache = cleanRequireCache;

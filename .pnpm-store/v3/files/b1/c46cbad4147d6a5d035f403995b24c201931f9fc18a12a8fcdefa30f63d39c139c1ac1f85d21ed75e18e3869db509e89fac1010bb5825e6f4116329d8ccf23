@@ -1,0 +1,11 @@
+export declare const CSS_REGEX: RegExp;
+export declare const CSS_MODULE_REGEX: RegExp;
+export declare const GLOBAL_CSS_REGEX: RegExp;
+export declare const NODE_MODULES_CSS_REGEX: RegExp;
+export declare const JS_REGEX: RegExp;
+export declare const TS_REGEX: RegExp;
+export declare const ASSETS_REGEX: RegExp;
+export declare const ICON_EXTENSIONS: string[];
+export declare const SVG_REGEX: RegExp;
+export declare const JS_RESOLVE_EXTENSIONS: string[];
+export declare const CACHE_DIRECTORY = "./node_modules/.cache";

@@ -1,0 +1,232 @@
+import _asyncToGenerator from "@babel/runtime/helpers/esm/asyncToGenerator";
+import _objectWithoutProperties from "@babel/runtime/helpers/esm/objectWithoutProperties";
+import _objectSpread from "@babel/runtime/helpers/esm/objectSpread2";
+import _toConsumableArray from "@babel/runtime/helpers/esm/toConsumableArray";
+var _excluded = ["context"];
+import _regeneratorRuntime from "@babel/runtime/regenerator";
+import React, { useContext, useMemo } from 'react';
+import ReactDOM from 'react-dom';
+import hoistNonReactStatics from 'hoist-non-react-statics';
+import { createContainer } from '@modern-js/plugin';
+import { runtime, AppComponentContext } from "./plugin";
+import { RuntimeReactContext } from "./runtime-context";
+import { createLoaderManager } from "./loader/loaderManager";
+import { jsx as _jsx } from "react/jsx-runtime";
+var runnerMap = new WeakMap();
+export var createApp = function createApp(_ref) {
+  var plugins = _ref.plugins;
+  var appRuntime = runtime.clone();
+  appRuntime.usePlugin.apply(appRuntime, _toConsumableArray(plugins));
+  return function (App) {
+    var runner = appRuntime.init({});
+    var container = createContainer({
+      App: AppComponentContext.create(App)
+    });
+
+    var WrapperComponent = function WrapperComponent(props) {
+      var element = /*#__PURE__*/React.createElement(App || React.Fragment, _objectSpread({}, props), props.children);
+      var context = useContext(RuntimeReactContext);
+      return runner.provide({
+        element: element,
+        props: _objectSpread({}, props),
+        context: context
+      }, {
+        container: container,
+        onLast: function onLast(_ref2) {
+          var element = _ref2.element;
+          return element;
+        }
+      });
+    };
+
+    if (App) {
+      hoistNonReactStatics(WrapperComponent, App);
+    }
+
+    var HOCApp = runner.hoc({
+      App: WrapperComponent
+    }, {
+      container: container,
+      onLast: function onLast(_ref3) {
+        var App = _ref3.App;
+
+        var WrapComponent = function WrapComponent(_ref4) {
+          var context = _ref4.context,
+              props = _objectWithoutProperties(_ref4, _excluded);
+
+          var contextValue = context;
+
+          if (!contextValue) {
+            contextValue = {
+              loaderManager: createLoaderManager({}),
+              runner: runner
+            };
+            runner.init({
+              context: contextValue
+            }, {
+              onLast: function onLast(_ref5) {
+                var _App$init;
+
+                var context1 = _ref5.context;
+                return App === null || App === void 0 ? void 0 : (_App$init = App.init) === null || _App$init === void 0 ? void 0 : _App$init.call(App, context1);
+              }
+            });
+          }
+
+          return /*#__PURE__*/_jsx(RuntimeReactContext.Provider, {
+            value: contextValue,
+            children: /*#__PURE__*/_jsx(App, _objectSpread({}, props))
+          });
+        };
+
+        return hoistNonReactStatics(WrapComponent, App);
+      }
+    });
+    runnerMap.set(HOCApp, runner);
+    return HOCApp;
+  };
+};
+export var bootstrap = /*#__PURE__*/function () {
+  var _ref6 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee2(BootApp, id) {
+    var App, runner, context, runInit, _ssrData$data, ssrData, loadersData, initialLoadersState;
+
+    return _regeneratorRuntime.wrap(function _callee2$(_context3) {
+      while (1) {
+        switch (_context3.prev = _context3.next) {
+          case 0:
+            App = BootApp;
+            runner = runnerMap.get(App); // ensure Component used is created by `createApp`
+
+            if (!runner) {
+              App = createApp({
+                plugins: []
+              })(App);
+              runner = runnerMap.get(App);
+            }
+
+            context = {
+              loaderManager: createLoaderManager({}),
+              runner: runner,
+              isBrowser: true
+            };
+
+            runInit = function runInit(_context) {
+              return runner.init({
+                context: _context
+              }, {
+                onLast: function onLast(_ref7) {
+                  var _App, _App$init2;
+
+                  var context1 = _ref7.context;
+                  return (_App = App) === null || _App === void 0 ? void 0 : (_App$init2 = _App.init) === null || _App$init2 === void 0 ? void 0 : _App$init2.call(_App, context1);
+                }
+              });
+            };
+
+            if (!(typeof window !== 'undefined')) {
+              _context3.next = 13;
+              break;
+            }
+
+            ssrData = window._SSR_DATA;
+            loadersData = (ssrData === null || ssrData === void 0 ? void 0 : (_ssrData$data = ssrData.data) === null || _ssrData$data === void 0 ? void 0 : _ssrData$data.loadersData) || {};
+            initialLoadersState = Object.keys(loadersData).reduce(function (res, key) {
+              var loaderData = loadersData[key];
+
+              if (loaderData.loading !== false) {
+                return res;
+              }
+
+              res[key] = loaderData;
+              return res;
+            }, {});
+            Object.assign(context, _objectSpread({
+              loaderManager: createLoaderManager(initialLoadersState, {
+                skipStatic: true
+              })
+            }, ssrData ? {
+              ssrContext: ssrData === null || ssrData === void 0 ? void 0 : ssrData.context
+            } : {}));
+            _context3.next = 12;
+            return runInit(context);
+
+          case 12:
+            return _context3.abrupt("return", runner.client({
+              App: App,
+              context: context,
+              rootElement: typeof id !== 'string' ? id : document.getElementById(id || 'root')
+            }, {
+              onLast: function () {
+                var _onLast = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee(_ref8) {
+                  var App, rootElement;
+                  return _regeneratorRuntime.wrap(function _callee$(_context2) {
+                    while (1) {
+                      switch (_context2.prev = _context2.next) {
+                        case 0:
+                          App = _ref8.App, rootElement = _ref8.rootElement;
+                          ReactDOM.render( /*#__PURE__*/React.createElement(App, {
+                            context: context
+                          }), rootElement);
+
+                        case 2:
+                        case "end":
+                          return _context2.stop();
+                      }
+                    }
+                  }, _callee);
+                }));
+
+                function onLast(_x3) {
+                  return _onLast.apply(this, arguments);
+                }
+
+                return onLast;
+              }()
+            }));
+
+          case 13:
+            Object.assign(context, {
+              ssrContext: id,
+              isBrowser: false,
+              loaderManager: createLoaderManager({}, {
+                skipNonStatic: id.staticGenerate,
+                // if not static generate, only non-static loader can exec on prod env
+                skipStatic: process.env.NODE_ENV === 'production' && !id.staticGenerate
+              })
+            });
+            _context3.next = 16;
+            return runInit(context);
+
+          case 16:
+            return _context3.abrupt("return", runner.server({
+              App: App,
+              context: context
+            }));
+
+          case 17:
+          case "end":
+            return _context3.stop();
+        }
+      }
+    }, _callee2);
+  }));
+
+  return function bootstrap(_x, _x2) {
+    return _ref6.apply(this, arguments);
+  };
+}();
+export var useRuntimeContext = function useRuntimeContext() {
+  var context = useContext(RuntimeReactContext);
+  var memoizedContext = useMemo(function () {
+    return context.runner.pickContext({
+      context: context,
+      pickedContext: {}
+    }, {
+      onLast: function onLast(_ref9) {
+        var pickedContext = _ref9.pickedContext;
+        return pickedContext;
+      }
+    });
+  }, [context]);
+  return memoizedContext;
+};

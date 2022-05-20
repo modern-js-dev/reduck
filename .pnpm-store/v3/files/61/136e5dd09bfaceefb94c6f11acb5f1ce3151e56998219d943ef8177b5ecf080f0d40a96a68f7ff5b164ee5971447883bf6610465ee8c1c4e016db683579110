@@ -1,0 +1,39 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.generateOutputFile = void 0;
+
+var _path = _interopRequireDefault(require("path"));
+
+var _utils = require("@modern-js/utils");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+const generateOutputFile = (file, css, projectOptions) => {
+  const fileName = _path.default.basename(file);
+
+  if (fileName.startsWith('_')) {
+    return;
+  }
+
+  const {
+    stylesDir,
+    outDir
+  } = projectOptions;
+
+  const ext = _path.default.extname(fileName);
+
+  const relativePath = _path.default.relative(stylesDir, _path.default.dirname(file));
+
+  const outputPath = _path.default.resolve(outDir, relativePath);
+
+  const outputFile = _path.default.join(outputPath, fileName.replace(ext, '.css'));
+
+  _utils.fs.ensureFileSync(outputFile);
+
+  _utils.fs.writeFileSync(outputFile, css);
+};
+
+exports.generateOutputFile = generateOutputFile;

@@ -1,0 +1,347 @@
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+import { createServer } from 'http';
+import path from 'path';
+import { createServer as createHttpsServer } from 'https';
+import { API_DIR, SERVER_DIR, SHARED_DIR } from '@modern-js/utils';
+import webpackDevMiddleware from 'webpack-dev-middleware';
+import { createProxyHandler, ModernServer, AGGRED_DIR } from '@modern-js/prod-server';
+import { DEFAULT_DEV_OPTIONS } from "../constants";
+import { createMockHandler } from "../dev-tools/mock";
+import SocketServer from "../dev-tools/socket-server";
+import DevServerPlugin from "../dev-tools/dev-server-plugin";
+import { createLaunchEditorHandler } from "../dev-tools/launch-editor";
+import { enableRegister } from "../dev-tools/babel/register";
+import Watcher from "../dev-tools/watcher";
+export class ModernDevServer extends ModernServer {
+  constructor(options) {
+    super(options); // dev server should work in pwd
+
+    _defineProperty(this, "mockHandler", null);
+
+    _defineProperty(this, "dev", void 0);
+
+    _defineProperty(this, "compiler", void 0);
+
+    _defineProperty(this, "socketServer", void 0);
+
+    _defineProperty(this, "watcher", void 0);
+
+    _defineProperty(this, "devMiddleware", void 0);
+
+    this.workDir = this.pwd; // set webpack compiler
+
+    this.compiler = options.compiler; // set dev server options, like webpack-dev-server
+
+    this.dev = _objectSpread(_objectSpread({}, DEFAULT_DEV_OPTIONS), typeof options.dev === 'boolean' ? {} : options.dev);
+    enableRegister(this.pwd, this.conf);
+  } // Complete the preparation of services
+
+
+  async onInit(runner) {
+    var _conf$tools, _conf$tools$devServer;
+
+    this.runner = runner;
+    const {
+      conf,
+      pwd,
+      compiler,
+      dev
+    } = this; // before dev handler
+
+    const beforeHandlers = await this.setupBeforeDevMiddleware();
+    beforeHandlers.forEach(handler => {
+      this.addHandler((ctx, next) => {
+        const {
+          req,
+          res
+        } = ctx;
+        return handler(req, res, next);
+      });
+    }); // mock handler
+
+    this.mockHandler = createMockHandler({
+      pwd
+    });
+    this.addHandler((ctx, next) => {
+      if (this.mockHandler) {
+        this.mockHandler(ctx, next);
+      } else {
+        next();
+      }
+    }); // dev proxy handler, each proxy has own handler
+
+    const proxyHandlers = createProxyHandler((_conf$tools = conf.tools) === null || _conf$tools === void 0 ? void 0 : (_conf$tools$devServer = _conf$tools.devServer) === null || _conf$tools$devServer === void 0 ? void 0 : _conf$tools$devServer.proxy);
+
+    if (proxyHandlers) {
+      proxyHandlers.forEach(handler => {
+        this.addHandler(handler);
+      });
+    } // do webpack build / plugin apply / socket server when pass compiler instance
+
+
+    if (compiler) {
+      // init socket server
+      this.socketServer = new SocketServer(dev); // open file in editor.
+
+      this.addHandler(createLaunchEditorHandler()); // setup compiler in server, also add dev-middleware to handler static file in memory
+
+      const devMiddlewareHandler = this.setupCompiler(compiler);
+      this.addHandler(devMiddlewareHandler);
+    } // after dev handler
+
+
+    const afterHandlers = await this.setupAfterDevMiddleware();
+    afterHandlers.forEach(handler => {
+      this.addHandler((ctx, next) => {
+        const {
+          req,
+          res
+        } = ctx;
+        return handler(req, res, next);
+      });
+    });
+    await super.onInit(runner); // watch mock/ server/ api/ dir file change
+
+    if (dev.watch) {
+      this.startWatcher();
+    }
+  }
+
+  async onClose() {
+    var _this$socketServer;
+
+    await super.onClose();
+    await this.watcher.close();
+    await new Promise(resolve => {
+      if (this.devMiddleware) {
+        this.devMiddleware.close(() => {
+          resolve();
+        });
+      } else {
+        resolve();
+      }
+    });
+    (_this$socketServer = this.socketServer) === null || _this$socketServer === void 0 ? void 0 : _this$socketServer.close();
+  }
+
+  onRepack(options = {}) {
+    // reset the routing management instance every times the service starts
+    if (Array.isArray(options.routes)) {
+      this.router.reset(this.filterRoutes(options.routes));
+    } // clean ssr bundle cache
+
+
+    this.cleanSSRCache(); // reset static file
+
+    this.reader.updateFile(); // emit reset hook
+
+    this.runner.reset();
+    super.onRepack(options);
+  }
+
+  onListening(app) {
+    var _this$socketServer2;
+
+    (_this$socketServer2 = this.socketServer) === null || _this$socketServer2 === void 0 ? void 0 : _this$socketServer2.prepare(app);
+  }
+
+  async createHTTPServer(handler) {
+    const {
+      dev
+    } = this;
+    const devHttpsOption = typeof dev === 'object' && dev.https;
+
+    if (devHttpsOption) {
+      const {
+        genHttpsOptions
+      } = require("../dev-tools/https");
+
+      const httpsOptions = await genHttpsOptions(devHttpsOption);
+      return createHttpsServer(httpsOptions, handler);
+    } else {
+      return createServer(handler);
+    }
+  }
+
+  warmupSSRBundle() {// not warmup ssr bundle on development
+  }
+
+  onServerChange({
+    filepath
+  }) {
+    const {
+      pwd
+    } = this;
+    const {
+      mock
+    } = AGGRED_DIR;
+    const mockPath = path.normalize(path.join(pwd, mock));
+    this.runner.reset();
+
+    if (filepath.startsWith(mockPath)) {
+      this.mockHandler = createMockHandler({
+        pwd
+      });
+    } else {
+      try {
+        super.onServerChange({
+          filepath
+        });
+      } catch (e) {
+        this.logger.error(e);
+      }
+    }
+  } // set up plugin to each compiler
+  // register hooks for each compilation, update socket stats if recompiled
+  // start dev middleware
+
+
+  setupCompiler(compiler) {
+    this.setupDevServerPlugin(compiler);
+    this.setupHooks();
+    return this.setupDevMiddleware(compiler);
+  }
+
+  setupDevServerPlugin(compiler) {
+    const {
+      dev: devConf
+    } = this;
+
+    if (compiler.compilers) {
+      compiler.compilers.forEach(target => {
+        if (target.name === 'client') {
+          new DevServerPlugin(devConf).apply(target);
+        }
+      });
+    } else {
+      new DevServerPlugin(devConf).apply(compiler);
+    }
+  }
+
+  setupHooks() {
+    const invalidPlugin = () => {
+      this.socketServer.sockWrite('invalid');
+    };
+
+    const addHooks = compiler => {
+      if (compiler.name === 'server') {
+        return;
+      }
+
+      const {
+        compile,
+        invalid,
+        done
+      } = compiler.hooks;
+      compile.tap('modern-dev-server', invalidPlugin);
+      invalid.tap('modern-dev-server', invalidPlugin);
+      done.tap('modern-dev-server', stats => {
+        this.socketServer.updateStats(stats); // Reset only when client compile done
+
+        if (stats.toJson({
+          all: false
+        }).name === 'client') {
+          this.onRepack({
+            routes: this.getRoutes()
+          });
+        }
+      });
+    };
+
+    if (this.compiler.compilers) {
+      this.compiler.compilers.forEach(addHooks);
+    } else {
+      addHooks(this.compiler);
+    }
+  }
+
+  setupDevMiddleware(compiler) {
+    var _conf$tools2, _conf$tools2$devServe;
+
+    const {
+      conf
+    } = this;
+    this.devMiddleware = webpackDevMiddleware(compiler, _objectSpread({
+      headers: (_conf$tools2 = conf.tools) === null || _conf$tools2 === void 0 ? void 0 : (_conf$tools2$devServe = _conf$tools2.devServer) === null || _conf$tools2$devServe === void 0 ? void 0 : _conf$tools2$devServe.headers,
+      publicPath: '/',
+      stats: false
+    }, this.dev.devMiddleware));
+    return (ctx, next) => {
+      const {
+        req,
+        res
+      } = ctx;
+      this.devMiddleware(req, res, next);
+    };
+  }
+
+  async setupBeforeDevMiddleware() {
+    var _conf$tools$devServer2;
+
+    const {
+      runner,
+      conf
+    } = this;
+    const setupMids = ((_conf$tools$devServer2 = conf.tools.devServer) === null || _conf$tools$devServer2 === void 0 ? void 0 : _conf$tools$devServer2.before) || [];
+    const pluginMids = await runner.beforeDevServer(conf);
+    return [...setupMids, ...pluginMids].flat();
+  }
+
+  async setupAfterDevMiddleware() {
+    var _conf$tools$devServer3;
+
+    const {
+      runner,
+      conf
+    } = this;
+    const setupMids = ((_conf$tools$devServer3 = conf.tools.devServer) === null || _conf$tools$devServer3 === void 0 ? void 0 : _conf$tools$devServer3.after) || [];
+    const pluginMids = await runner.afterDevServer(conf);
+    return [...pluginMids, ...setupMids].flat();
+  }
+
+  cleanSSRCache() {
+    const {
+      distDir
+    } = this;
+    const bundles = this.router.getBundles();
+    bundles.forEach(bundle => {
+      const filepath = path.join(distDir, bundle);
+
+      if (require.cache[filepath]) {
+        delete require.cache[filepath];
+      }
+    });
+  }
+
+  startWatcher() {
+    const {
+      pwd
+    } = this;
+    const {
+      mock
+    } = AGGRED_DIR;
+    const defaultWatched = [`${mock}/**/*`, `${SERVER_DIR}/**/*`, `${API_DIR}/**`, `${SHARED_DIR}/**/*`];
+    const defaultWatchedPaths = defaultWatched.map(p => path.normalize(path.join(pwd, p)));
+    const watcher = new Watcher();
+    watcher.createDepTree(); // 监听文件变动，如果有变动则给 client，也就是 start 启动的插件发消息
+
+    watcher.listen(defaultWatchedPaths, {
+      // 初始化的时候不触发 add、addDir 事件
+      ignoreInitial: true,
+      ignored: /api\/typings\/.*/
+    }, filepath => {
+      watcher.updateDepTree();
+      watcher.cleanDepCache(filepath);
+      this.onServerChange({
+        filepath
+      });
+    });
+    this.watcher = watcher;
+  }
+
+}

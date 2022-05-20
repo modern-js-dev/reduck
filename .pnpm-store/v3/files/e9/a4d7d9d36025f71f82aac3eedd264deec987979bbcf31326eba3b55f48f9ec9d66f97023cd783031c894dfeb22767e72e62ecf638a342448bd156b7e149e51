@@ -1,0 +1,111 @@
+import path from 'path';
+import { getEntryOptions, SERVER_RENDER_FUNCTION_NAME, LOADABLE_STATS_FILE, isUseSSRBundle, createRuntimeExportsUtils, PLUGIN_SCHEMAS } from '@modern-js/utils';
+import LoadableWebpackPlugin from '@loadable/webpack-plugin';
+var PLUGIN_IDENTIFIER = 'ssr';
+export default (function () {
+  return {
+    name: '@modern-js/plugin-ssr',
+    required: ['@modern-js/runtime'],
+    setup: function setup(api) {
+      var ssrConfigMap = new Map();
+      var pluginsExportsUtils;
+      var ssrModulePath = path.resolve(__dirname, '../../../../');
+      return {
+        config: function config() {
+          var appContext = api.useAppContext();
+          pluginsExportsUtils = createRuntimeExportsUtils(appContext.internalDirectory, 'plugins');
+          return {
+            source: {
+              alias: {
+                '@modern-js/runtime/plugins': pluginsExportsUtils.getPath()
+              }
+            },
+            tools: {
+              webpackChain: function webpackChain(chain, _ref) {
+                var name = _ref.name,
+                    CHAIN_ID = _ref.CHAIN_ID;
+                var userConfig = api.useResolvedConfigContext();
+
+                if (isUseSSRBundle(userConfig) && name !== 'server') {
+                  chain.plugin(CHAIN_ID.PLUGIN.LOADABLE).use(LoadableWebpackPlugin, [{
+                    filename: LOADABLE_STATS_FILE
+                  }]);
+                }
+              },
+              babel: function babel(config) {
+                var userConfig = api.useResolvedConfigContext();
+
+                if (isUseSSRBundle(userConfig)) {
+                  config.plugins.push(require.resolve('@loadable/babel-plugin'));
+                }
+              }
+            }
+          };
+        },
+        validateSchema: function validateSchema() {
+          return PLUGIN_SCHEMAS['@modern-js/plugin-ssr'];
+        },
+        modifyEntryImports: function modifyEntryImports(_ref2) {
+          var entrypoint = _ref2.entrypoint,
+              imports = _ref2.imports;
+          var entryName = entrypoint.entryName;
+          var userConfig = api.useResolvedConfigContext();
+
+          var _api$useAppContext = api.useAppContext(),
+              packageName = _api$useAppContext.packageName;
+
+          pluginsExportsUtils.addExport("export { default as ssr } from '".concat(ssrModulePath, "'")); // if use ssg then set ssr config to true
+
+          var ssrConfig = Boolean(userConfig.output.ssg) || getEntryOptions(entryName, userConfig.server.ssr, userConfig.server.ssrByEntries, packageName);
+          ssrConfigMap.set(entryName, ssrConfig);
+
+          if (ssrConfig) {
+            imports.push({
+              value: '@modern-js/runtime/plugins',
+              specifiers: [{
+                imported: PLUGIN_IDENTIFIER
+              }]
+            });
+          }
+
+          return {
+            entrypoint: entrypoint,
+            imports: imports
+          };
+        },
+        modifyEntryRuntimePlugins: function modifyEntryRuntimePlugins(_ref3) {
+          var entrypoint = _ref3.entrypoint,
+              plugins = _ref3.plugins;
+
+          if (ssrConfigMap.get(entrypoint.entryName)) {
+            plugins.push({
+              name: PLUGIN_IDENTIFIER,
+              options: ssrConfigMap.get(entrypoint.entryName)
+            });
+          }
+
+          return {
+            entrypoint: entrypoint,
+            plugins: plugins
+          };
+        },
+        modifyEntryExport: function modifyEntryExport(_ref4) {
+          var entrypoint = _ref4.entrypoint,
+              exportStatement = _ref4.exportStatement;
+
+          if (ssrConfigMap.get(entrypoint.entryName)) {
+            return {
+              entrypoint: entrypoint,
+              exportStatement: ["export function ".concat(SERVER_RENDER_FUNCTION_NAME, "(context) {\n              return bootstrap(AppWrapper, context)\n            }"), exportStatement].join('\n')
+            };
+          }
+
+          return {
+            entrypoint: entrypoint,
+            exportStatement: exportStatement
+          };
+        }
+      };
+    }
+  };
+});

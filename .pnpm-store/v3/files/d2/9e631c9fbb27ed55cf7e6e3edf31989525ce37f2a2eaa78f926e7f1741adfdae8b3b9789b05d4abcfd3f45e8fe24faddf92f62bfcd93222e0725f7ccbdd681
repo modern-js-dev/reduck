@@ -1,0 +1,53 @@
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+import * as path from 'path';
+import * as Event from 'events';
+import { fs } from '@modern-js/utils';
+import { transformStyle } from "./build";
+import { watch, ChangeType } from "./watch";
+export const BuildWatchEvent = {
+  firstCompiler: 'first-compiler',
+  compilering: 'compilering',
+  watchingCompiler: 'watching-compiler'
+};
+export class BuildWatchEmitter extends Event.EventEmitter {
+  constructor(...args) {
+    super(...args);
+
+    _defineProperty(this, "_initFn", void 0);
+  }
+
+  setInitFn(fn) {
+    this._initFn = fn;
+  }
+
+  async watch() {
+    if (typeof this._initFn === 'function') {
+      await this._initFn(this);
+    }
+  }
+
+}
+export const transformStyleInWatchMode = option => {
+  const buildWatchEmitter = new BuildWatchEmitter();
+  buildWatchEmitter.setInitFn(async () => {
+    buildWatchEmitter.emit(BuildWatchEvent.compilering);
+    const firstResult = await transformStyle(option);
+    buildWatchEmitter.emit(BuildWatchEvent.firstCompiler, firstResult);
+    watch(option.stylesDir, async ({
+      changeType,
+      changedFilePath
+    }) => {
+      buildWatchEmitter.emit(BuildWatchEvent.compilering);
+
+      if (changeType === ChangeType.UNLINK) {
+        const removeFile = path.normalize(`${option.outDir}/${path.relative(option.stylesDir, changedFilePath)}`);
+        fs.removeSync(removeFile.replace(path.extname(removeFile), '.css'));
+      }
+
+      const result = await transformStyle(option);
+      buildWatchEmitter.emit(BuildWatchEvent.watchingCompiler, result);
+    });
+  });
+  return buildWatchEmitter;
+};

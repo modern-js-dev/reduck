@@ -1,0 +1,104 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.lessResolve = void 0;
+
+var _path = _interopRequireDefault(require("path"));
+
+var _utils = require("@modern-js/utils");
+
+var _less = _interopRequireDefault(require("less"));
+
+var _postcss = require("./postcss");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+const lessToCss = async (lessCode, params) => {
+  const {
+    file,
+    options
+  } = params;
+  const data = lessCode.replace(/^\uFEFF/, '');
+  const sourceMapOptions = {
+    outputFilename: `${file}.map`,
+    outputSourceFiles: true
+  };
+
+  try {
+    var _options$less, _options$less2;
+
+    const lessResult = await _less.default.render(data, _objectSpread({
+      // [rootPath] https://lesscss.org/usage/#less-options-rootpath
+      // TODO: support any path and url
+      rootpath: '.',
+      // relativeUrls: true,
+      filename: _path.default.resolve(file),
+      paths: [_path.default.dirname(file)],
+      sourceMap: (_options$less = options.less) !== null && _options$less !== void 0 && _options$less.enableSourceMap ? sourceMapOptions : false
+    }, (_options$less2 = options.less) === null || _options$less2 === void 0 ? void 0 : _options$less2.lessOption));
+    return {
+      code: 0,
+      filename: file,
+      content: lessResult.css,
+      error: null,
+      sourceMap: lessResult.map,
+      sourceMapFileName: ''
+    };
+  } catch (error) {
+    return {
+      code: 1,
+      filename: file,
+      content: '',
+      error: error.message
+    };
+  }
+};
+
+const generateContent = async (lessCode, params) => {
+  const lessCompilerResult = await lessToCss(lessCode, params);
+
+  if (lessCompilerResult.code === 1) {
+    return lessCompilerResult;
+  }
+
+  return (0, _postcss.postcssResolve)(lessCompilerResult.content, params, {
+    sourcemapContent: lessCompilerResult.sourceMap
+  });
+};
+
+const lessResolve = async params => {
+  const {
+    file,
+    options,
+    stylesDir,
+    outDir
+  } = params;
+
+  const originalLessCode = _utils.fs.readFileSync(file, 'utf-8');
+
+  const relativePath = _path.default.relative(stylesDir, file);
+
+  const outFile = _path.default.join(outDir, relativePath); // 如果没有配置 less，则认为没有开启 less 功能
+
+
+  if (!options.less) {
+    return {
+      code: 0,
+      filename: outFile,
+      content: originalLessCode,
+      error: null
+    };
+  }
+
+  return generateContent(originalLessCode, params);
+};
+
+exports.lessResolve = lessResolve;

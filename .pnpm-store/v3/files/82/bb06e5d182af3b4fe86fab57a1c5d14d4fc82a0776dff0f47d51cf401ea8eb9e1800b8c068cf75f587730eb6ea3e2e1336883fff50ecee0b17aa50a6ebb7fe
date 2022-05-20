@@ -1,0 +1,66 @@
+import { Color } from '../compiled/chalk';
+declare type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+interface LoggerConfiguration {
+    color?: typeof Color;
+    label?: string;
+    level?: LogLevel;
+}
+interface InstanceConfiguration {
+    displayLabel?: boolean;
+    underlineLabel?: boolean;
+    uppercaseLabel?: boolean;
+}
+interface ConstructorOptions {
+    config?: InstanceConfiguration;
+    level?: string;
+    types?: Record<string, LoggerConfiguration>;
+}
+declare type LoggerFunction = (message?: number | string | Error, ...args: any[]) => void;
+declare const LOG_TYPES: {
+    error: {
+        color: string;
+        label: string;
+        level: string;
+    };
+    info: {
+        color: string;
+        label: string;
+        level: string;
+    };
+    warn: {
+        color: string;
+        label: string;
+        level: string;
+    };
+    debug: {
+        color: string;
+        label: string;
+        level: string;
+    };
+    log: {
+        level: string;
+    };
+};
+declare class Logger {
+    private readonly logCount;
+    private readonly level;
+    private history;
+    private readonly config;
+    private readonly types;
+    private readonly longestLabel;
+    [key: string]: any;
+    constructor(options?: ConstructorOptions);
+    private retainLog;
+    private _log;
+    private getLongestLabel;
+    private get longestUnderlinedLabel();
+    getRetainedLogs(type: string): string[];
+    clearRetainedLogs(type: string): void;
+}
+declare type LoggerInterface = {
+    [key in keyof typeof LOG_TYPES]: LoggerFunction;
+};
+declare const logger: Logger & LoggerInterface;
+export { Logger };
+export { logger };
+export type { LoggerInterface };

@@ -1,0 +1,32 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.isSassRule = exports.isSassModuleRule = exports.isLessRule = exports.isLessModuleRule = exports.isCssRule = exports.isCssModuleRule = void 0;
+
+var _constants = require("../constants");
+
+const isCssRule = file => file.endsWith('.css');
+
+exports.isCssRule = isCssRule;
+
+const isCssModuleRule = file => file.endsWith('.module.css');
+
+exports.isCssModuleRule = isCssModuleRule;
+
+const isLessRule = file => file.endsWith('.less');
+
+exports.isLessRule = isLessRule;
+
+const isLessModuleRule = file => file.endsWith('.module.less');
+
+exports.isLessModuleRule = isLessModuleRule;
+
+const isSassRule = file => _constants.CSS_EXTENSIONS_RULE.sassRule.test(file);
+
+exports.isSassRule = isSassRule;
+
+const isSassModuleRule = file => _constants.CSS_EXTENSIONS_RULE.sassModuleRule.test(file);
+
+exports.isSassModuleRule = isSassModuleRule;

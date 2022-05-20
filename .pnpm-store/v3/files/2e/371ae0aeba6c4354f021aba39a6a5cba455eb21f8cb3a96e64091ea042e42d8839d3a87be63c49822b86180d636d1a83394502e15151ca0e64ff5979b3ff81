@@ -1,0 +1,122 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.PreRender = void 0;
+
+var _reactSideEffect = _interopRequireDefault(require("react-side-effect"));
+
+var _react = _interopRequireWildcard(require("react"));
+
+var _util = require("./util");
+
+function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
+
+function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+const PROP_NAMES = {
+  INTERVAL: 'interval',
+  STALE_LIMIT: 'staleLimit',
+  LEVEL: 'level',
+  INCLUDES: 'includes',
+  EXCLUDES: 'excludes',
+  FALLBACK: 'fallback',
+  MATCHES: 'matches'
+};
+
+const handleClientStateChange = () => {// not used
+};
+
+const mapStateOnServer = reduceProps => {
+  const defaultProps = {
+    interval: 10,
+    staleLimit: false,
+    level: 0,
+    includes: null,
+    excludes: null,
+    fallback: false,
+    matches: null
+  };
+  return Object.keys(defaultProps).reduce((props, key) => {
+    const propKey = key;
+    const reduceProp = reduceProps[propKey];
+    let nextProps = props;
+
+    if ((0, _util.exist)(reduceProp)) {
+      nextProps = _objectSpread(_objectSpread({}, props), {}, {
+        [propKey]: reduceProp
+      });
+    }
+
+    return nextProps;
+  }, defaultProps);
+};
+
+const reducePropsToState = propsList => {
+  const reduceProps = {
+    interval: (0, _util.getOutermostProperty)(propsList, PROP_NAMES.INTERVAL),
+    staleLimit: (0, _util.getOutermostProperty)(propsList, PROP_NAMES.STALE_LIMIT),
+    level: (0, _util.getOutermostProperty)(propsList, PROP_NAMES.LEVEL),
+    includes: (0, _util.aggKeysFromPropsList)(propsList, PROP_NAMES.INCLUDES),
+    excludes: (0, _util.aggKeysFromPropsList)(propsList, PROP_NAMES.EXCLUDES),
+    fallback: (0, _util.getOutermostProperty)(propsList, PROP_NAMES.FALLBACK),
+    matches: (0, _util.aggMatchesFromPropsList)(propsList, PROP_NAMES.MATCHES)
+  };
+  return reduceProps;
+};
+
+function factory(Component) {
+  class Spr extends _react.default.Component {
+    static set canUseDOM(canUseDOM) {
+      Component.canUseDOM = canUseDOM;
+    }
+
+    static get canUseDOM() {
+      return Component.canUseDOM;
+    } // eslint-disable-next-line react/sort-comp
+
+
+    verify() {
+      return true;
+    }
+
+    render() {
+      const newProps = _objectSpread({}, this.props);
+
+      const validate = this.verify();
+
+      if (!validate) {
+        throw new Error('invalid props, check usage');
+      }
+
+      return /*#__PURE__*/(0, _react.createElement)(Component, _objectSpread({}, newProps));
+    }
+
+  }
+
+  _defineProperty(Spr, "peek", Component.peek);
+
+  _defineProperty(Spr, "rewind", Component.rewind);
+
+  _defineProperty(Spr, "config", () => {
+    const mappedState = Component.rewind();
+    return mappedState;
+  });
+
+  return Spr;
+}
+
+const NullComponent = () => null;
+
+const SprSideEffects = (0, _reactSideEffect.default)(reducePropsToState, handleClientStateChange, mapStateOnServer)(NullComponent);
+const PreRender = factory(SprSideEffects);
+exports.PreRender = PreRender;

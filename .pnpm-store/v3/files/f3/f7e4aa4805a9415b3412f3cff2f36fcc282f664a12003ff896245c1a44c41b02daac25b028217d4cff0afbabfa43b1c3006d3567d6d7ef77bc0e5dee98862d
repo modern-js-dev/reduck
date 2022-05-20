@@ -1,0 +1,115 @@
+import _createForOfIteratorHelper from "@babel/runtime/helpers/esm/createForOfIteratorHelper";
+var REQUEST_META = ['header', 'query'];
+export var getInnermostProperty = function getInnermostProperty(propsList, propName) {
+  for (var i = propsList.length - 1; i >= 0; i--) {
+    var props = propsList[i];
+
+    if (props.hasOwnProperty(propName)) {
+      return props[propName];
+    }
+  }
+
+  return null;
+};
+export var getOutermostProperty = function getOutermostProperty(propsList, propName) {
+  var _iterator = _createForOfIteratorHelper(propsList),
+      _step;
+
+  try {
+    for (_iterator.s(); !(_step = _iterator.n()).done;) {
+      var props = _step.value;
+
+      if (props.hasOwnProperty(propName)) {
+        return props[propName];
+      }
+    }
+  } catch (err) {
+    _iterator.e(err);
+  } finally {
+    _iterator.f();
+  }
+
+  return null;
+};
+export var aggKeysFromPropsList = function aggKeysFromPropsList(propsList, propName) {
+  var initResult = REQUEST_META.reduce(function (result, next) {
+    var key = next;
+    result[key] = [];
+    return result;
+  }, {});
+  var res = propsList.filter(function (props) {
+    return usefulObject(props[propName]);
+  }).reduce(function (result, next) {
+    REQUEST_META.forEach(function (key) {
+      var prop = next[propName];
+
+      if (prop !== null && prop !== void 0 && prop.hasOwnProperty(key) && usefulArray(prop[key])) {
+        result[key] = unique(result[key].concat(prop[key]));
+      }
+    });
+    return result;
+  }, initResult);
+  return REQUEST_META.reduce(function (result, next) {
+    var _result$key;
+
+    var key = next;
+
+    if (result[key] && ((_result$key = result[key]) === null || _result$key === void 0 ? void 0 : _result$key.length) === 0) {
+      delete result[key];
+    }
+
+    return result;
+  }, res);
+};
+export var aggMatchesFromPropsList = function aggMatchesFromPropsList(propsList, propName) {
+  var initResult = REQUEST_META.reduce(function (result, next) {
+    var key = next;
+    result[key] = {};
+    return result;
+  }, {});
+  var res = propsList.filter(function (props) {
+    return usefulObject(props[propName]);
+  }).reduce(function (result, next) {
+    REQUEST_META.forEach(function (key) {
+      var prop = next[propName]; // 这边目前是浅拷贝，越后渲染优先级越高
+
+      if (prop !== null && prop !== void 0 && prop.hasOwnProperty(key) && usefulObject(prop[key])) {
+        result[key] = Object.assign(result[key], prop[key]);
+      }
+    });
+    return result;
+  }, initResult);
+  return REQUEST_META.reduce(function (result, next) {
+    var key = next;
+
+    if (result[key] && Object.keys(result[key]).length === 0) {
+      delete result[key];
+    }
+
+    return result;
+  }, res);
+};
+
+function unique(arr) {
+  return Array.from(new Set(arr));
+}
+
+function usefulObject(target) {
+  if (!exist(target)) {
+    return false;
+  }
+
+  return target.constructor === Object && Object.keys(target).length > 0;
+}
+
+function usefulArray(target) {
+  if (!exist(target)) {
+    return false;
+  }
+
+  return Array.isArray(target) && target.length > 0;
+}
+
+export function exist(target) {
+  return target != null;
+}

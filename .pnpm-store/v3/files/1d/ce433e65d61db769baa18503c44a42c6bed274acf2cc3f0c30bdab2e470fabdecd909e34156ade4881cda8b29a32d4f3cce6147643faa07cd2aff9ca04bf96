@@ -1,0 +1,12 @@
+export declare function createSocketUrl(resourceQuery: string): string;
+export declare function formatURL({
+  port,
+  protocol,
+  hostname,
+  pathname
+}: {
+  port: string;
+  protocol: string;
+  hostname: string;
+  pathname: string;
+}): string;

@@ -1,0 +1,2 @@
+export declare const defaults: string[];
+export declare const getBrowserslist: (appDirectory: string) => string[];

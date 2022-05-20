@@ -1,0 +1,13 @@
+import { TestConfigOperator } from './config/testConfigOperator';
+export declare const jestConfigHook: import("@modern-js/plugin").AsyncPipeline<TestConfigOperator, TestConfigOperator>;
+export declare const afterTestHook: import("@modern-js/plugin").ParallelWorkflow<void, unknown>;
+export declare const testingHooks: {
+  jestConfig: import("@modern-js/plugin").AsyncPipeline<TestConfigOperator, TestConfigOperator>;
+  afterTest: import("@modern-js/plugin").ParallelWorkflow<void, unknown>;
+};
+declare module '@modern-js/core' {
+  interface Hooks {
+    jestConfig: typeof jestConfigHook;
+    afterTest: typeof afterTestHook;
+  }
+}

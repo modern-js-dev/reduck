@@ -1,0 +1,18 @@
+import { types as t } from '@babel/core';
+import type { NodePath, PluginPass } from '@babel/core';
+import type { ImportStyleType } from '../types';
+export interface IImportPathOpts {
+  appDirectory: string;
+  importStyle?: ImportStyleType;
+}
+export declare const isStaticFile: (file: string, filename: string) => boolean;
+declare const importPath: () => {
+  name: string;
+  visitor: {
+    Program(nodePath: NodePath<t.Program>, {
+      opts,
+      file
+    }: PluginPass): void;
+  };
+};
+export default importPath;

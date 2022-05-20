@@ -1,0 +1,100 @@
+import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
+import _toConsumableArray from "@babel/runtime/helpers/esm/toConsumableArray";
+import _objectSpread from "@babel/runtime/helpers/esm/objectSpread2";
+
+/**
+ * modified from https://github.com/farrow-js/farrow/tree/master/packages/farrow-pipeline
+ * license at https://github.com/farrow-js/farrow/blob/master/LICENSE
+ */
+import { createContext, createContainer, fromContainer, runHooks, useContainer, runWithContainer } from "./context";
+import { createCounter } from "./counter";
+export { createContext, createContainer, useContainer, runWithContainer };
+export var isPipeline = function isPipeline(input) {
+  return Boolean(input === null || input === void 0 ? void 0 : input[PipelineSymbol]);
+};
+var PipelineSymbol = Symbol["for"]('MODERN_PIPELINE');
+
+var getMiddleware = function getMiddleware(input) {
+  if (typeof input === 'function') {
+    return input;
+  } else if (input && typeof input.middleware === 'function') {
+    return input.middleware;
+  }
+
+  throw new Error("".concat(input, " is not a Middleware"));
+};
+
+export var createPipeline = function createPipeline(options) {
+  var _pipeline;
+
+  var config = _objectSpread({}, options);
+
+  var middlewares = [];
+
+  var use = function use() {
+    for (var _len = arguments.length, inputs = new Array(_len), _key = 0; _key < _len; _key++) {
+      inputs[_key] = arguments[_key];
+    }
+
+    middlewares.push.apply(middlewares, _toConsumableArray(inputs.map(getMiddleware)));
+    return pipeline;
+  };
+
+  var createCurrentCounter = function createCurrentCounter(hooks, onLast, onLastWithContext) {
+    return createCounter(function (index, input, next) {
+      if (index >= middlewares.length) {
+        if (onLast) {
+          if (onLastWithContext) {
+            return runHooks(function () {
+              return onLast(input);
+            }, hooks);
+          }
+
+          return onLast(input);
+        }
+
+        throw new Error("Expect returning a value, but all middlewares just calling next()");
+      }
+
+      return runHooks(function () {
+        return middlewares[index](input, next);
+      }, hooks);
+    });
+  };
+
+  var currentContainer = createContainer(config.contexts);
+  var currentHooks = fromContainer(currentContainer);
+  var currentCounter = createCurrentCounter(currentHooks);
+
+  var getCounter = function getCounter(options) {
+    if (!options) {
+      return currentCounter;
+    }
+
+    if (options !== null && options !== void 0 && options.container) {
+      var hooks = fromContainer(options === null || options === void 0 ? void 0 : options.container);
+      return options !== null && options !== void 0 && options.onLast ? createCurrentCounter(hooks, options.onLast, typeof options.onLastWithContext === 'boolean' ? options.onLastWithContext : true) : createCurrentCounter(hooks);
+    }
+
+    return options !== null && options !== void 0 && options.onLast ? createCurrentCounter(currentHooks, options.onLast, typeof options.onLastWithContext === 'boolean' ? options.onLastWithContext : true) : createCurrentCounter(currentHooks);
+  };
+
+  var run = function run(input, options) {
+    return getCounter(options).start(input);
+  };
+
+  var middleware = function middleware(input, next) {
+    var container = useContainer();
+    return run(input, {
+      container: container,
+      onLast: next
+    });
+  };
+
+  var pipeline = (_pipeline = {}, _defineProperty(_pipeline, PipelineSymbol, true), _defineProperty(_pipeline, "use", use), _defineProperty(_pipeline, "run", run), _defineProperty(_pipeline, "middleware", middleware), _pipeline);
+  return pipeline;
+};
+export var createAsyncPipeline = function createAsyncPipeline(options) {
+  var pipeline = createPipeline(options);
+  return _objectSpread({}, pipeline);
+};

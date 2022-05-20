@@ -1,0 +1,182 @@
+export declare const server: {
+    type: string;
+    additionalProperties: boolean;
+    properties: {
+        port: {
+            type: string;
+        };
+        ssr: {
+            if: {
+                type: string;
+            };
+            then: {
+                properties: {
+                    disableLoadable: {
+                        type: string;
+                    };
+                    disableHelmet: {
+                        type: string;
+                    };
+                    disableRedirect: {
+                        type: string;
+                    };
+                    enableAsyncData: {
+                        type: string;
+                    };
+                    enableProductWarning: {
+                        type: string;
+                    };
+                    timeout: {
+                        type: string;
+                    };
+                    asyncDataTimeout: {
+                        type: string;
+                    };
+                };
+            };
+            else: {
+                type: string;
+            };
+        };
+        ssrByEntries: {
+            type: string;
+            patternProperties: {
+                "^[a-zA-Z0-9_-]+$": {
+                    if: {
+                        type: string;
+                    };
+                    then: {
+                        properties: {
+                            disableLoadable: {
+                                type: string;
+                            };
+                            disableHelmet: {
+                                type: string;
+                            };
+                            disableRedirect: {
+                                type: string;
+                            };
+                            enableProductWarning: {
+                                type: string;
+                            };
+                            enableAsyncData: {
+                                type: string;
+                            };
+                            timeout: {
+                                type: string;
+                            };
+                            asyncDataTimeout: {
+                                type: string;
+                            };
+                        };
+                        additionalProperties: boolean;
+                    };
+                    else: {
+                        type: string;
+                    };
+                };
+            };
+        };
+        routes: {
+            type: string;
+            patternProperties: {
+                "^[a-zA-Z0-9_-]+$": {
+                    if: {
+                        type: string;
+                    };
+                    then: {
+                        properties: {
+                            route: {
+                                oneOf: ({
+                                    type: string;
+                                    properties: {
+                                        path: {
+                                            type: string;
+                                        };
+                                        headers: {
+                                            type: string;
+                                        };
+                                    };
+                                    additionalProperties: boolean;
+                                } | {
+                                    type: string;
+                                    items?: undefined;
+                                } | {
+                                    type: string;
+                                    items: {
+                                        oneOf: ({
+                                            type: string;
+                                            properties: {
+                                                path: {
+                                                    type: string;
+                                                };
+                                                headers: {
+                                                    type: string;
+                                                };
+                                            };
+                                            additionalProperties: boolean;
+                                        } | {
+                                            type: string;
+                                        })[];
+                                    };
+                                })[];
+                            };
+                            disableSpa: {
+                                type: string;
+                            };
+                        };
+                        additionalProperties: boolean;
+                    };
+                    else: {
+                        oneOf: ({
+                            type: string;
+                            items?: undefined;
+                        } | {
+                            type: string;
+                            items: {
+                                type: string;
+                            };
+                        })[];
+                    };
+                };
+            };
+        };
+        publicRoutes: {
+            type: string;
+            patternProperties: {
+                "^[a-zA-Z0-9_-]+$": {
+                    type: string[];
+                };
+            };
+        };
+        baseUrl: {
+            oneOf: ({
+                type: string;
+                items?: undefined;
+            } | {
+                type: string;
+                items: {
+                    type: string;
+                }[];
+            })[];
+        };
+        middleware: {
+            instanceof: string[];
+        };
+        renderHook: {
+            instanceof: string;
+        };
+        logger: {
+            type: string[];
+        };
+        metrics: {
+            type: string[];
+        };
+        proxy: {
+            type: string;
+        };
+        enableMicroFrontendDebug: {
+            type: string;
+        };
+    };
+};

@@ -1,0 +1,20 @@
+import { TestConfigOperator } from '@modern-js/testing';
+import type { CliPlugin } from '@modern-js/core';
+export declare const setJestConfigForBFF: ({
+  pwd,
+  userConfig,
+  plugins,
+  routes,
+  utils
+}: {
+  pwd: string;
+  userConfig: any;
+  plugins: any[];
+  routes: any[];
+  utils: TestConfigOperator;
+}) => Promise<void>;
+
+declare const _default: () => CliPlugin;
+
+export default _default;
+export { request as testBff } from './utils';

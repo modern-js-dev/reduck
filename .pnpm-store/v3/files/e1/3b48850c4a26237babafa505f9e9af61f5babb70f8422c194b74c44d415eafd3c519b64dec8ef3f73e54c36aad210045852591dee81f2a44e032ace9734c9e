@@ -1,0 +1,53 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getRouteName = void 0;
+
+var _path = _interopRequireDefault(require("path"));
+
+var _utils = require("../utils");
+
+var _constant = require("../constant");
+
+var _result = require("./result");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+const getRouteName = (resourcePath, apiDir) => {
+  if (!_path.default.isAbsolute(apiDir)) {
+    return (0, _result.Err)(`API dir path: ${apiDir} is not absolute`);
+  }
+
+  if (!_path.default.isAbsolute(resourcePath)) {
+    return (0, _result.Err)(`API file path: ${resourcePath} is not absolute`);
+  }
+
+  const lambdaDir = (0, _utils.getLambdaDir)(apiDir);
+  const allApis = (0, _utils.getAllAPIFiles)(lambdaDir);
+
+  if (resourcePath.startsWith(lambdaDir)) {
+    if (!allApis.includes(resourcePath)) {
+      return (0, _result.Err)('Invalid API definition file');
+    }
+
+    const absoluteName = resourcePath.split('.').slice(0, -1).join('.');
+    const relativeName = absoluteName.substring(lambdaDir.length);
+    const draftName = relativeName.split(_path.default.sep).map(item => {
+      if (item.length > 2) {
+        if (item.startsWith('[') && item.endsWith(']')) {
+          return `:${item.substring(1, item.length - 1)}`;
+        }
+      }
+
+      return item;
+    }).join('/');
+    const name = draftName.endsWith(_constant.INDEX_SUFFIX) ? draftName.substring(0, draftName.length - _constant.INDEX_SUFFIX.length - 1) : draftName;
+    return (0, _result.Ok)(name);
+  } else {
+    return (0, _result.Err)(`API file is not in API dir: ${lambdaDir}`);
+  }
+};
+
+exports.getRouteName = getRouteName;

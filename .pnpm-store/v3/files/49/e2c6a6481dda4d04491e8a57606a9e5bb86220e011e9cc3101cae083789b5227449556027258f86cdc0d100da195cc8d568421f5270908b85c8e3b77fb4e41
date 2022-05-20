@@ -1,0 +1,6 @@
+export declare const isCssRule: (file: string) => boolean;
+export declare const isCssModuleRule: (file: string) => boolean;
+export declare const isLessRule: (file: string) => boolean;
+export declare const isLessModuleRule: (file: string) => boolean;
+export declare const isSassRule: (file: string) => boolean;
+export declare const isSassModuleRule: (file: string) => boolean;

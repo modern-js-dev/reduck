@@ -1,0 +1,146 @@
+export declare const output: {
+    type: string;
+    additionalProperties: boolean;
+    properties: {
+        assetPrefix: {
+            type: string;
+        };
+        path: {
+            type: string;
+        };
+        jsPath: {
+            type: string;
+        };
+        cssPath: {
+            type: string;
+        };
+        htmlPath: {
+            type: string;
+        };
+        mediaPath: {
+            type: string;
+        };
+        mountId: {
+            type: string;
+        };
+        favicon: {
+            type: string;
+        };
+        faviconByEntries: {
+            type: string;
+            patternProperties: {
+                "^[a-zA-Z0-9_-]+$": {
+                    type: string;
+                };
+            };
+        };
+        title: {
+            type: string;
+        };
+        titleByEntries: {
+            type: string;
+            patternProperties: {
+                "^[a-zA-Z0-9_-]+$": {
+                    type: string;
+                };
+            };
+        };
+        meta: {
+            type: string;
+        };
+        metaByEntries: {
+            type: string;
+            patternProperties: {
+                "^[a-zA-Z0-9_-]+$": {
+                    type: string;
+                };
+            };
+        };
+        inject: {
+            enum: (string | boolean)[];
+        };
+        injectByEntries: {
+            type: string;
+            patternProperties: {
+                "^[a-zA-Z0-9_-]+$": {
+                    enum: (string | boolean)[];
+                };
+            };
+        };
+        copy: {
+            type: string;
+        };
+        scriptExt: {
+            type: string;
+        };
+        disableTsChecker: {
+            type: string;
+        };
+        disableHtmlFolder: {
+            type: string;
+        };
+        disableCssModuleExtension: {
+            type: string;
+        };
+        disableCssExtract: {
+            type: string;
+        };
+        enableCssModuleTSDeclaration: {
+            type: string;
+        };
+        disableMinimize: {
+            type: string;
+        };
+        enableInlineStyles: {
+            type: string;
+        };
+        enableInlineScripts: {
+            type: string;
+        };
+        disableSourceMap: {
+            type: string;
+        };
+        disableInlineRuntimeChunk: {
+            type: string;
+        };
+        disableAssetsCache: {
+            type: string;
+        };
+        enableLatestDecorators: {
+            type: string;
+        };
+        enableTsLoader: {
+            type: string;
+        };
+        dataUriLimit: {
+            type: string;
+        };
+        templateParameters: {
+            type: string;
+        };
+        templateParametersByEntries: {
+            type: string;
+            patternProperties: {
+                "^[a-zA-Z0-9_-]+$": {
+                    type: string;
+                };
+            };
+        };
+        polyfill: {
+            type: string;
+            enum: string[];
+        };
+        cssModuleLocalIdentName: {
+            type: string;
+        };
+        federation: {
+            type: string;
+        };
+        disableNodePolyfill: {
+            type: string;
+        };
+        enableModernMode: {
+            type: string;
+        };
+    };
+};

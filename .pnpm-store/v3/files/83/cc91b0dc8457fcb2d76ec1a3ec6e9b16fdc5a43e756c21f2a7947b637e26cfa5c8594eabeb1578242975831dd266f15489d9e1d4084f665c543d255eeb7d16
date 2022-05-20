@@ -1,0 +1,26 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.reset = exports.impl = exports.asyncHooks = void 0;
+
+/**
+ * modified from https://github.com/farrow-js/farrow/tree/master/packages/farrow-pipeline
+ * license at https://github.com/farrow-js/farrow/blob/master/LICENSE
+ */
+// eslint-disable-next-line import/no-mutable-exports
+let asyncHooks;
+exports.asyncHooks = asyncHooks;
+
+const impl = implimentations => {
+  exports.asyncHooks = asyncHooks = implimentations;
+};
+
+exports.impl = impl;
+
+const reset = () => {
+  exports.asyncHooks = asyncHooks = undefined;
+};
+
+exports.reset = reset;

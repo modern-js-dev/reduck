@@ -1,0 +1,59 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.initAppContext = exports.useResolvedConfigContext = exports.useConfigContext = exports.useAppContext = exports.setAppContext = exports.ResolvedConfigContext = exports.ConfigContext = exports.AppContext = void 0;
+const path_1 = __importDefault(require("path"));
+const utils_1 = require("@modern-js/utils");
+const plugin_1 = require("@modern-js/plugin");
+exports.AppContext = (0, plugin_1.createContext)({});
+exports.ConfigContext = (0, plugin_1.createContext)({});
+exports.ResolvedConfigContext = (0, plugin_1.createContext)({});
+/**
+ * Set app context.
+ * @param value new app context. It will override previous app context.
+ */
+const setAppContext = (value) => exports.AppContext.set(value);
+exports.setAppContext = setAppContext;
+/**
+ * Get app context, including directories, plugins and some static infos.
+ */
+const useAppContext = () => exports.AppContext.use().value;
+exports.useAppContext = useAppContext;
+/**
+ * Get original content of user config.
+ */
+const useConfigContext = () => exports.ConfigContext.use().value;
+exports.useConfigContext = useConfigContext;
+/**
+ * Get normalized content of user config.
+ */
+const useResolvedConfigContext = () => exports.ResolvedConfigContext.use().value;
+exports.useResolvedConfigContext = useResolvedConfigContext;
+const initAppContext = ({ appDirectory, plugins, configFile, options, serverConfigFile, }) => {
+    const { metaName = 'modern-js', srcDir = 'src', distDir = '', sharedDir = 'shared', } = options || {};
+    return {
+        metaName,
+        appDirectory,
+        configFile,
+        serverConfigFile,
+        ip: utils_1.address.ip(),
+        port: 0,
+        packageName: require(path_1.default.resolve(appDirectory, './package.json')).name,
+        srcDirectory: path_1.default.resolve(appDirectory, srcDir),
+        distDirectory: distDir,
+        sharedDirectory: path_1.default.resolve(appDirectory, sharedDir),
+        nodeModulesDirectory: path_1.default.resolve(appDirectory, './node_modules'),
+        internalDirectory: path_1.default.resolve(appDirectory, `./node_modules/.${metaName}`),
+        plugins,
+        htmlTemplates: {},
+        serverRoutes: [],
+        entrypoints: [],
+        checkedEntries: [],
+        apiOnly: false,
+        internalDirAlias: `@_${metaName.replace(/-/g, '_')}_internal`,
+        internalSrcAlias: `@_${metaName.replace(/-/g, '_')}_src`,
+    };
+};
+exports.initAppContext = initAppContext;

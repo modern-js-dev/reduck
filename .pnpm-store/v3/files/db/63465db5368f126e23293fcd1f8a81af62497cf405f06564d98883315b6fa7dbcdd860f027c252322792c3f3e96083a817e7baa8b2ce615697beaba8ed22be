@@ -1,0 +1,8 @@
+import type { TransformOptions } from '@babel/core';
+import type { BabelChain } from '@modern-js/babel-chain';
+import type { IModulePresetOption, ISyntaxOption } from './types';
+export declare const getBabelConfig: (modulePresetOption: IModulePresetOption, syntaxOption: ISyntaxOption) => TransformOptions;
+export declare const getModuleBabelChain: (modulePresetOption: IModulePresetOption, syntaxOption: ISyntaxOption) => BabelChain;
+export declare const getFinalBabelConfig: (chain: BabelChain) => TransformOptions;
+export * from './types';
+export { getBabelUtils } from '@modern-js/babel-preset-lib';

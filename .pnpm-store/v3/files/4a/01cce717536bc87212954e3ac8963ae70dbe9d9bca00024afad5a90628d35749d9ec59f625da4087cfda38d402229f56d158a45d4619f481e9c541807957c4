@@ -1,0 +1,34 @@
+import React from 'react';
+import ReactDOM from 'react-dom';
+import { runtime } from "./plugin";
+export const initialRender = (plugins, manager = runtime) => {
+  manager.usePlugin(...plugins);
+  return {
+    clientRender: (props, rootElement) => clientRender(props, rootElement, manager),
+    serverRender: props => serverRender(props, manager)
+  };
+};
+export const clientRender = ({
+  App
+}, rootElement, manager = runtime) => {
+  const runner = manager.init({});
+  return runner.client({
+    App,
+    rootElement
+  }, {
+    onLast: async ({
+      App,
+      rootElement
+    }) => {
+      ReactDOM.render( /*#__PURE__*/React.createElement(App), rootElement);
+    }
+  });
+};
+export const serverRender = ({
+  App
+}, manager = runtime) => {
+  const runner = manager.init({});
+  return runner.server({
+    App
+  });
+};

@@ -1,0 +1,3 @@
+export const errorLog = (...rest) => {
+  throw new Error(rest.join('\n'));
+};

@@ -1,0 +1,70 @@
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+import { useContext } from 'react';
+import { RuntimeReactContext } from '@modern-js/runtime-core';
+import { createStore } from '@modern-js-reduck/store';
+import { Provider } from '@modern-js-reduck/react';
+import hoistNonReactStatics from 'hoist-non-react-statics';
+import { jsx as _jsx } from "react/jsx-runtime";
+
+const state = config => ({
+  name: '@modern-js/plugin-state',
+  setup: () => {
+    return {
+      hoc({
+        App
+      }, next) {
+        const getStateApp = props => {
+          // eslint-disable-next-line react-hooks/rules-of-hooks
+          const context = useContext(RuntimeReactContext);
+          return /*#__PURE__*/_jsx(Provider, {
+            store: context.store,
+            config: config,
+            children: /*#__PURE__*/_jsx(App, _objectSpread({}, props))
+          });
+        };
+
+        return next({
+          App: hoistNonReactStatics(getStateApp, App)
+        });
+      },
+
+      init({
+        context
+      }, next) {
+        const storeConfig = config || {};
+
+        if (typeof window !== 'undefined') {
+          var _window, _window$_SSR_DATA, _window$_SSR_DATA$dat;
+
+          storeConfig.initialState = storeConfig.initialState || ((_window = window) === null || _window === void 0 ? void 0 : (_window$_SSR_DATA = _window._SSR_DATA) === null || _window$_SSR_DATA === void 0 ? void 0 : (_window$_SSR_DATA$dat = _window$_SSR_DATA.data) === null || _window$_SSR_DATA$dat === void 0 ? void 0 : _window$_SSR_DATA$dat.storeState) || {};
+        }
+
+        context.store = createStore(storeConfig);
+        next({
+          context
+        });
+      },
+
+      pickContext({
+        context,
+        pickedContext
+      }, next) {
+        return next({
+          context,
+          pickedContext: _objectSpread(_objectSpread({}, pickedContext), {}, {
+            store: context.store
+          })
+        });
+      }
+
+    };
+  }
+});
+
+export default state;
+export * from "../plugins";

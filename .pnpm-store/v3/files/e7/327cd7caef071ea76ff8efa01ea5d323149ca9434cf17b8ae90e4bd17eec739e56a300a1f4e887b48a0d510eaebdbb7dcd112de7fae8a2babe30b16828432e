@@ -1,0 +1,4 @@
+import * as path from 'path';
+export function addSourceMappingUrl(code, loc) {
+  return `${code}\n//# sourceMappingURL=${path.normalize(path.basename(loc))}`;
+}

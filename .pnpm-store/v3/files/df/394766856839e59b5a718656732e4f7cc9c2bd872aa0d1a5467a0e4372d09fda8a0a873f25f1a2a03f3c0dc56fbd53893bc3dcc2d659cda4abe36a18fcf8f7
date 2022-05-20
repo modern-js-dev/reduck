@@ -1,0 +1,18 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.WORKSPACE_FILE = exports.LOCK_FILE = void 0;
+const WORKSPACE_FILE = {
+  LERNA: 'lerna.json',
+  YARN: 'package.json',
+  PNPM: 'pnpm-workspace.yaml'
+};
+exports.WORKSPACE_FILE = WORKSPACE_FILE;
+const LOCK_FILE = {
+  YARN: 'yarn.lock',
+  PNPM: 'pnpm-lock.yaml',
+  NPM: 'package-lock.json'
+};
+exports.LOCK_FILE = LOCK_FILE;

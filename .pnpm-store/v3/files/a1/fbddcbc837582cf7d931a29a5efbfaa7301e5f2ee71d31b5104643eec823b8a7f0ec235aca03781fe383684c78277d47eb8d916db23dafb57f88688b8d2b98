@@ -1,0 +1,9 @@
+import type { IAppContext, NormalizedConfig, PluginAPI } from '@modern-js/core';
+import type { Entrypoint, HtmlTemplates } from '@modern-js/types';
+export declare const getHtmlTemplate: (entrypoints: Entrypoint[], api: PluginAPI, {
+  appContext,
+  config
+}: {
+  appContext: IAppContext;
+  config: NormalizedConfig;
+}) => Promise<HtmlTemplates>;

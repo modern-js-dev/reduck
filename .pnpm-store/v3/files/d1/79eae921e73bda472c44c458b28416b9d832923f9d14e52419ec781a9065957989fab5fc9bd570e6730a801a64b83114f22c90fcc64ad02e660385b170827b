@@ -1,0 +1,93 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+var _exportNames = {};
+exports.default = void 0;
+
+var _path = _interopRequireDefault(require("path"));
+
+var _runtimeCore = require("@modern-js/runtime-core");
+
+var _prefetch = _interopRequireDefault(require("./prefetch"));
+
+var _utils = require("./utils");
+
+var _react = require("./react");
+
+Object.keys(_react).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;
+  if (key in exports && exports[key] === _react[key]) return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function () {
+      return _react[key];
+    }
+  });
+});
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+const registeredApps = new WeakSet();
+
+const plugin = () => ({
+  name: '@modern-js/plugin-ssr',
+  setup: () => {
+    return {
+      server: async ({
+        App,
+        context
+      }) => {
+        if (!registeredApps.has(App)) {
+          (0, _runtimeCore.registerPrefetch)(App, _context => (0, _prefetch.default)(App, _context));
+          registeredApps.add(App);
+        }
+
+        if (typeof window === 'undefined') {
+          const html = await require("./serverRender").render(context, (context === null || context === void 0 ? void 0 : context.ssrContext.distDir) || _path.default.join(process.cwd(), 'dist'), App);
+          return html;
+        }
+
+        return null;
+      },
+
+      init({
+        context
+      }, next) {
+        const {
+          request
+        } = context.ssrContext;
+        context.ssrContext.request = (0, _utils.formatServer)(request);
+        return next({
+          context
+        });
+      },
+
+      pickContext: ({
+        context,
+        pickedContext
+      }, next) => {
+        const {
+          request
+        } = context === null || context === void 0 ? void 0 : context.ssrContext;
+        return next({
+          context,
+          pickedContext: _objectSpread(_objectSpread({}, pickedContext), {}, {
+            request
+          })
+        });
+      }
+    };
+  }
+});
+
+var _default = plugin;
+exports.default = _default;

@@ -1,0 +1,10 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.isBrowser = exports.isNodeJS = void 0;
+const isNodeJS = () => typeof process !== 'undefined' &&
+    process.versions != null &&
+    process.versions.node != null &&
+    process.versions.electron == null;
+exports.isNodeJS = isNodeJS;
+const isBrowser = () => typeof window !== 'undefined';
+exports.isBrowser = isBrowser;

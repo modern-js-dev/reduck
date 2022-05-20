@@ -1,0 +1,1 @@
+export declare const errorLog: (...rest: string[]) => never;

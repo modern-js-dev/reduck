@@ -1,0 +1,8 @@
+/**
+ * Require function compatible with esm and cjs module.
+ * @param filePath - File to required.
+ * @returns module export object.
+ */
+export declare const compatRequire: (filePath: string) => any;
+export declare const requireExistModule: (filename: string, extensions?: string[]) => any;
+export declare const cleanRequireCache: (filelist: string[]) => void;

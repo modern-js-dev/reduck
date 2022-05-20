@@ -1,0 +1,65 @@
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+import path from 'path';
+import { registerPrefetch } from '@modern-js/runtime-core';
+import prefetch from "./prefetch";
+import { formatServer } from "./utils";
+const registeredApps = new WeakSet();
+
+const plugin = () => ({
+  name: '@modern-js/plugin-ssr',
+  setup: () => {
+    return {
+      server: async ({
+        App,
+        context
+      }) => {
+        if (!registeredApps.has(App)) {
+          registerPrefetch(App, _context => prefetch(App, _context));
+          registeredApps.add(App);
+        }
+
+        if (typeof window === 'undefined') {
+          const html = await require("./serverRender").render(context, (context === null || context === void 0 ? void 0 : context.ssrContext.distDir) || path.join(process.cwd(), 'dist'), App);
+          return html;
+        }
+
+        return null;
+      },
+
+      init({
+        context
+      }, next) {
+        const {
+          request
+        } = context.ssrContext;
+        context.ssrContext.request = formatServer(request);
+        return next({
+          context
+        });
+      },
+
+      pickContext: ({
+        context,
+        pickedContext
+      }, next) => {
+        const {
+          request
+        } = context === null || context === void 0 ? void 0 : context.ssrContext;
+        return next({
+          context,
+          pickedContext: _objectSpread(_objectSpread({}, pickedContext), {}, {
+            request
+          })
+        });
+      }
+    };
+  }
+});
+
+export default plugin;
+export * from "./react";

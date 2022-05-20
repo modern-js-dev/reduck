@@ -1,0 +1,13 @@
+export declare class ModuleScopePlugin {
+    appSrcs: Array<string | RegExp>;
+    allowedFiles: Set<string>;
+    allowedDirs: string[];
+    allowedPatterns: RegExp[];
+    relativeAllowedDirs: string[];
+    cache: Map<string, boolean>;
+    constructor({ appSrc, allowedFiles, }: {
+        appSrc: string | Array<string | RegExp>;
+        allowedFiles?: string[];
+    });
+    apply(resolver: any): void;
+}

@@ -1,0 +1,5 @@
+import { execa } from '@modern-js/utils';
+export declare function execaWithStreamLog(command: string, args: string[], options: Record<string, any>): execa.ExecaChildProcess<string>;
+export declare function npmInstall(cwd: string, registryUrl?: string): Promise<execa.ExecaReturnValue<string>>;
+export declare function yarnInstall(cwd: string, registryUrl?: string): Promise<execa.ExecaReturnValue<string>>;
+export declare function pnpmInstall(cwd: string, registryUrl?: string): Promise<execa.ExecaReturnValue<string>>;

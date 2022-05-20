@@ -1,0 +1,96 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.copyTask = void 0;
+
+var path = _interopRequireWildcard(require("path"));
+
+var _utils = require("@modern-js/utils");
+
+const _excluded = ["glob"];
+
+function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
+
+function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+
+function _objectWithoutProperties(source, excluded) { if (source == null) return {}; var target = _objectWithoutPropertiesLoose(source, excluded); var key, i; if (Object.getOwnPropertySymbols) { var sourceSymbolKeys = Object.getOwnPropertySymbols(source); for (i = 0; i < sourceSymbolKeys.length; i++) { key = sourceSymbolKeys[i]; if (excluded.indexOf(key) >= 0) continue; if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue; target[key] = source[key]; } } return target; }
+
+function _objectWithoutPropertiesLoose(source, excluded) { if (source == null) return {}; var target = {}; var sourceKeys = Object.keys(source); var key, i; for (i = 0; i < sourceKeys.length; i++) { key = sourceKeys[i]; if (excluded.indexOf(key) >= 0) continue; target[key] = source[key]; } return target; }
+
+const normalizePath = _utils.Import.lazy('normalize-path', require);
+
+const copyTask = async option => {
+  const {
+    modernConfig,
+    appContext
+  } = option;
+  const {
+    appDirectory
+  } = appContext;
+  const {
+    output: {
+      copy,
+      path: outputPath = 'dist',
+      jsPath = 'js'
+    }
+  } = modernConfig;
+  const copyDistDir = path.join(outputPath, jsPath);
+
+  if (!copy) {
+    return;
+  }
+
+  try {
+    // 类型暂时这样处理，待之后优化copy的逻辑
+    for (const copyOption of copy) {
+      // 在原来的基础上，引入了类似于 copy-webpack-plugin 的 context 属性，可以设置项目根路径
+      const {
+        context = appDirectory,
+        from,
+        globOptions,
+        to: toOrigin
+      } = copyOption;
+      let fromOrigin = from; // 获取 glob 规则
+
+      let glob = '';
+      let options = {};
+
+      if (fromOrigin !== null && typeof fromOrigin === 'object') {
+        var _fromOrigin = fromOrigin;
+        ({
+          glob
+        } = _fromOrigin);
+        options = _objectWithoutProperties(_fromOrigin, _excluded);
+        _fromOrigin;
+        fromOrigin = glob;
+      } else if (globOptions && typeof globOptions === 'object') {
+        options = globOptions;
+      }
+
+      glob = path.isAbsolute(fromOrigin) ? fromOrigin : path.posix.join(_utils.fastGlob.escapePath(normalizePath(path.resolve(context))), fromOrigin); // 计算 glob，获取目标文件
+
+      const paths = await (0, _utils.globby)(glob, options);
+
+      if (!paths.length) {
+        return;
+      }
+
+      const to = path.normalize(toOrigin ? toOrigin : '');
+      const isToDirectory = path.extname(to) === '';
+      paths.forEach(item => {
+        const relativeFrom = path.relative(context, item); // 如果 to 是目录，通过相对路径计算完整的产物路径；如果 to 是文件，直接作为最终产物路径
+
+        const fileName = isToDirectory ? path.join(to, relativeFrom) : to;
+        const finalToPath = path.resolve(copyDistDir, fileName);
+
+        _utils.fs.copySync(item, finalToPath);
+      });
+    }
+  } catch (e) {
+    console.error(`copy error: ${e.message}`);
+  }
+};
+
+exports.copyTask = copyTask;

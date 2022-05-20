@@ -1,0 +1,67 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.build = void 0;
+
+var _path = _interopRequireDefault(require("path"));
+
+var _utils = require("@modern-js/utils");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+const buildFeature = _utils.Import.lazy('./build', require);
+
+const buildWatchFeature = _utils.Import.lazy('./build-watch', require);
+
+const bp = _utils.Import.lazy('./build-platform', require);
+
+const build = async (api, config, modernConfig) => {
+  const {
+    appDirectory,
+    enableWatchMode,
+    platform,
+    clear = true,
+    isTsProject
+  } = config;
+  const {
+    output: {
+      path: outputPath = 'dist'
+    }
+  } = modernConfig; // TODO: maybe need watch mode in build platform
+
+  if (typeof platform === 'boolean' && platform) {
+    if (process.env.RUN_PLATFORM) {
+      await bp.buildPlatform(api, {
+        platform: 'all',
+        isTsProject
+      });
+    }
+
+    return;
+  }
+
+  if (typeof platform === 'string') {
+    if (process.env.RUN_PLATFORM) {
+      await bp.buildPlatform(api, {
+        platform,
+        isTsProject
+      });
+    }
+
+    return;
+  }
+
+  if (clear) {
+    _utils.fs.removeSync(_path.default.join(appDirectory, outputPath));
+  }
+
+  if (enableWatchMode) {
+    await buildWatchFeature.buildInWatchMode(api, config, modernConfig);
+  } else {
+    await buildFeature.buildSourceCode(api, config, modernConfig);
+  }
+};
+
+exports.build = build;

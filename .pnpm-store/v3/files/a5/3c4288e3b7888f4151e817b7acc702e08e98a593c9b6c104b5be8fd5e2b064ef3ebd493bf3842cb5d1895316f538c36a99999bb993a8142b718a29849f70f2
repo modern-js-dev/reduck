@@ -1,0 +1,292 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.DagOperator = void 0;
+
+var _pMap = _interopRequireDefault(require("p-map"));
+
+var _error = require("../log/error");
+
+var _task = require("./task");
+
+var _edgeManager = require("./edge-manager");
+
+var _utils = require("./utils");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+class DagOperator {
+  // 排序好的项目列表
+  constructor(projects, projectsMap) {
+    _defineProperty(this, "_projects", void 0);
+
+    _defineProperty(this, "_projectsMap", void 0);
+
+    _defineProperty(this, "_sortedProjects", void 0);
+
+    _defineProperty(this, "_createTask", (project, task) => async (stopTask = () => undefined) => {
+      await task(project, project.dependency || [], () => stopTask());
+      return project.name;
+    });
+
+    this._projects = projects;
+    this._projectsMap = projectsMap;
+    this._sortedProjects = [];
+  }
+
+  checkNodeDataExist(name) {
+    return this._projectsMap.has(name);
+  }
+
+  getNodeData(name, option = {
+    checkExist: false
+  }) {
+    if (option.checkExist) {
+      if (this._projectsMap.has(name)) {
+        return this._projectsMap.get(name);
+      } else {
+        (0, _error.errorLog)(`No '${name}' project exist`);
+      }
+    }
+
+    return this._projectsMap.get(name);
+  }
+
+  getNodeDependencyData(name) {
+    var _this$_projectsMap$ge;
+
+    return ((_this$_projectsMap$ge = this._projectsMap.get(name)) === null || _this$_projectsMap$ge === void 0 ? void 0 : _this$_projectsMap$ge.dependency) || [];
+  }
+
+  getNodeDependentData(name) {
+    var _this$_projectsMap$ge2;
+
+    return ((_this$_projectsMap$ge2 = this._projectsMap.get(name)) === null || _this$_projectsMap$ge2 === void 0 ? void 0 : _this$_projectsMap$ge2.dependent) || [];
+  }
+
+  getNodeAllDependencyData(name, option = {
+    skipCircleCheck: false
+  }) {
+    const {
+      skipCircleCheck
+    } = option;
+
+    if (!skipCircleCheck) {
+      this.checkCircle();
+    }
+
+    if (!this._projectsMap.has(name)) {
+      (0, _error.errorLog)(`No '${name}' project exist`);
+    }
+
+    const currentNode = this._projectsMap.get(name);
+
+    return (0, _utils.recursiveGetDependency)(currentNode, skipCircleCheck);
+  }
+
+  setNodeData(name, task) {
+    if (this._projectsMap.has(name)) {
+      task(this._projectsMap.get(name));
+    } else {
+      (0, _error.errorLog)(`No '${name}' project exist`);
+    }
+  }
+
+  async traverseAllNodes(task) {
+    const sortedNodes = this._sortedProjects.length > 0 ? this._sortedProjects : (0, _utils.sortProjects)(this._projects);
+    const finishTaskHash = {};
+    let preNodes = [];
+    let earlyFinish = false;
+
+    for (const projects of sortedNodes) {
+      if (earlyFinish) {
+        break;
+      }
+
+      await (0, _pMap.default)(projects, // eslint-disable-next-line @typescript-eslint/no-loop-func
+      async project => {
+        if (!finishTaskHash[project.name]) {
+          finishTaskHash[project.name] = true;
+          await task(project, this._getProjectPreviousNode(project.dependent || [], preNodes), () => earlyFinish = true);
+        }
+      }, {
+        concurrency: projects.length
+      });
+      preNodes = [...projects];
+    }
+  }
+
+  checkCircle() {
+    // this._sortedProjects = sortProjects(this._projects);
+    this._checkForCyclicDependencies(this._projects, [], new Set());
+  }
+
+  async traverseDependenciesToProjectToDependent(name, task, config = {}) {
+    await this.traverseDependenciesToProject(name, task, config);
+    await this.traverseProjectToDependent(name, task, _objectSpread(_objectSpread({}, config), {}, {
+      withSelf: false
+    }));
+  }
+  /**
+   * 1. 把目标节点当做叶子节点集合 A 中的元素
+   * 2. 当叶子节点集合中某个 a 元素结束任务的时候进行如下操作：
+   * 2.1 剪(去额外的)枝：获取 a 元素的 dependent集合，将该集合中元素的依赖列表进行过滤，过滤条件为：排除 a 以及 a 元素的 dependent集合以外的元素。
+   * 2.2 入度减一：对 a 元素的 dependent 集合元素的 dependencyEdge 减一
+   * 3. 检查是否存在 dependencyEdge === 0 的节点，加入叶子节点集合 A中。
+   * 4. 根据情况（是否存在空闲的进程）选择是否执行新加入的节点对应的任务。
+   */
+
+
+  async traverseProjectToDependent(name, task, {
+    withSelf = false,
+    runTaskConcurrency
+  } = {}) {
+    if (!this._projectsMap.has(name)) {
+      (0, _error.errorLog)(`No '${name}' project exist`);
+    }
+
+    const traverseTargetNode = this._projectsMap.get(name);
+
+    const leafNodeTasks = [withSelf ? this._createTask(traverseTargetNode, task) : async () => Promise.resolve(traverseTargetNode.name)];
+    const taskRunner = new _task.TaskRunner(leafNodeTasks, {
+      concurrency: runTaskConcurrency
+    });
+    const edgeManager = new _edgeManager.EdgeManager();
+    taskRunner.on(_task.TaskRunner.TASK_FINISH, projectName => {
+      const projectNode = this.getNodeData(projectName);
+      const dependent = projectNode.dependent || [];
+
+      for (const dependentProject of dependent) {
+        const dependency = dependentProject.dependency || [];
+        const removeNodes = dependency.filter(dependencyProject => ![projectName, ...dependent.map(p => p.name)].includes(dependencyProject.name));
+        edgeManager.reduceEdges(dependentProject, removeNodes.length + 1); // 变成叶子节点，就加入执行任务的队列中
+
+        if (edgeManager.getEdge(dependentProject) === 0) {
+          taskRunner.addTask(this._createTask(dependentProject, task));
+        }
+      }
+    });
+    await taskRunner.run();
+  }
+  /**
+   * 1. 找到叶子节点集合 A
+   * 2. 找到直接连接叶子节点的节点集合 B
+   * 3. 当有某个叶子节点结束任务，则对该节点的直接连接的节点（或者理解成dependent）的枝数（或者叫入度）减一。
+   * 4. 检查 B 集合中是否存在入度为0的节点，则此节点为叶子节点，并加入叶子节点集合 A
+   * 5. 根据情况（是否存在空闲的进程）选择是否执行新加入的节点对应的任务。
+   */
+  // TODO: 执行顺序还需要再确定一下
+
+
+  async traverseDependenciesToProject(name, task, {
+    withSelf = false,
+    runTaskConcurrency
+  } = {}) {
+    if (!this._projectsMap.has(name)) {
+      (0, _error.errorLog)(`No '${name}' project exist`);
+    }
+
+    const traverseTargetNode = this._projectsMap.get(name);
+
+    const leafNodes = this._getDependencyLeafNodes(traverseTargetNode);
+
+    if ((leafNodes === null || leafNodes === void 0 ? void 0 : leafNodes.length) === 0) {
+      await this._createTask(traverseTargetNode, task)();
+      return;
+    }
+
+    const leafNodeTasks = leafNodes.map(project => this._createTask(project, task));
+    const taskRunner = new _task.TaskRunner(leafNodeTasks, {
+      concurrency: runTaskConcurrency
+    });
+    const edgeManager = new _edgeManager.EdgeManager();
+    taskRunner.on(_task.TaskRunner.TASK_FINISH, projectName => {
+      const projectNode = this.getNodeData(projectName);
+      const dependent = projectNode.dependent || [];
+
+      for (const dependentProject of dependent) {
+        // 只处理在叶子节点/目标项目的所有依赖集合的节点
+        if (![traverseTargetNode, ...leafNodes].some(n => n.name === dependentProject.name)) {
+          continue;
+        }
+
+        edgeManager.reduceOneEdge(dependentProject);
+
+        if (dependentProject.name === traverseTargetNode.name && !withSelf) {
+          continue;
+        } // 变成叶子节点，就加入执行任务的队列中
+
+
+        if (edgeManager.getEdge(dependentProject) === 0) {
+          taskRunner.addTask(this._createTask(dependentProject, task));
+        }
+      }
+    });
+    await taskRunner.run();
+  }
+  /**
+   * Copyright (c) Microsoft Corporation. All rights reserved.
+   *
+   * This source code is licensed under the MIT license found in the
+   * LICENSE file at
+   * https://github.com/microsoft/rushstack/blob/master/apps/rush-lib/LICENSE
+   *
+  /**
+   * Checks for projects that indirectly depend on themselves.
+   */
+
+
+  _checkForCyclicDependencies(projects, dependencyChain, alreadyCheckedProjects) {
+    for (const project of projects) {
+      if (dependencyChain.includes(project.name)) {
+        throw new Error(`${'A cyclic dependency was encountered:\n'}    ${[...dependencyChain, project.name].reverse().join('\n  -> ')}\n`);
+      }
+
+      if (!alreadyCheckedProjects.has(project.name)) {
+        alreadyCheckedProjects.add(project.name);
+        dependencyChain.push(project.name);
+
+        this._checkForCyclicDependencies(project.dependent, dependencyChain, alreadyCheckedProjects);
+
+        dependencyChain.pop();
+      }
+    }
+  }
+
+  _getDependencyLeafNodes(node) {
+    const dependency = node.dependency;
+
+    if (dependency.length === 0) {
+      return [];
+    }
+
+    let leafNodes = [...dependency];
+
+    for (const dependencyNode of dependency) {
+      leafNodes = [...leafNodes, ...this._getDependencyLeafNodes(dependencyNode)];
+    }
+
+    return leafNodes;
+  }
+
+  _getProjectPreviousNode(searchProjects, preNodes) {
+    return searchProjects.filter(p => preNodes.map(preP => preP.name).includes(p.name));
+  } // public async getOrderTasks() {
+  //     // Precalculate the number of dependent packages
+  //   for (const project of this._projects) {
+  //     calculateCriticalPaths(project);
+  //   }
+  // }
+
+
+}
+
+exports.DagOperator = DagOperator;

@@ -1,0 +1,21 @@
+interface ITaskConfig {
+  srcRootDir: string;
+  willCompilerDirOrFile: string;
+  distDir: string;
+  appDirectory: string;
+  sourceMaps: boolean;
+  syntax: 'es5' | 'es6+';
+  type: 'module' | 'commonjs';
+  tsconfigPath: string;
+  copyDirs?: string;
+  compiler?: 'babel' | 'esbuild' | 'swc';
+  watch: boolean;
+}
+export declare const initEnv: ({
+  syntax,
+  type
+}: {
+  syntax: ITaskConfig['syntax'];
+  type: ITaskConfig['type'];
+}) => "" | "CJS_ES6" | "ESM_ES6" | "ESM_ES5";
+export {};

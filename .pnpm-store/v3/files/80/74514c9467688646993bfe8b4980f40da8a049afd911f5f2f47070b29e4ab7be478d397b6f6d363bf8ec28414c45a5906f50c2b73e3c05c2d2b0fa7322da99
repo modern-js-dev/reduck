@@ -1,0 +1,21 @@
+declare type AliasOption = Record<string, string> | ((aliases: Record<string, string>) => Record<string, unknown>) | Record<string, string> | undefined;
+interface NormalizedConfig {
+    source: {
+        alias?: AliasOption | Array<AliasOption>;
+    };
+}
+interface IAliasConfig {
+    absoluteBaseUrl: string;
+    paths?: Record<string, string | string[]>;
+    isTsPath?: boolean;
+    isTsProject?: boolean;
+}
+export declare const validAlias: <T extends NormalizedConfig>(modernConfig: T, { tsconfigPath }: {
+    tsconfigPath: string;
+}) => string | null;
+export declare const getAlias: (aliasOption: AliasOption | Array<AliasOption>, option: {
+    appDirectory: string;
+    tsconfigPath: string;
+}) => IAliasConfig;
+export declare const getUserAlias: (alias?: Record<string, string | string[]>) => Record<string, string | string[]>;
+export {};

@@ -1,0 +1,7 @@
+import { createAsyncPipeline, createParallelWorkflow } from '@modern-js/plugin';
+export var jestConfigHook = createAsyncPipeline();
+export var afterTestHook = createParallelWorkflow();
+export var testingHooks = {
+  jestConfig: createAsyncPipeline(),
+  afterTest: createParallelWorkflow()
+};

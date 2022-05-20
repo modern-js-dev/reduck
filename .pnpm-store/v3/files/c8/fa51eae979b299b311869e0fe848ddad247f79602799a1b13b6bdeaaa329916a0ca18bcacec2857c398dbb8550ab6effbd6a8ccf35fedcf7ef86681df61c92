@@ -1,0 +1,7 @@
+/**
+ * Get available free port.
+ * @param port - Current port want to use.
+ * @param tryLimits - Maximum number of retries.
+ * @returns Available port number.
+ */
+export declare const getPort: (port: string | number, tryLimits?: number) => Promise<number>;

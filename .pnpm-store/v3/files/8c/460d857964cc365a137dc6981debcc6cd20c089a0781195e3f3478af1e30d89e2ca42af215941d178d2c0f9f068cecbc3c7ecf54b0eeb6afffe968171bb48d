@@ -1,0 +1,9 @@
+import { DagOperator } from '../../dag/operator';
+import { PackageManagerType } from '../../parse-config';
+interface IDeployConfig {
+  rootPath: string;
+  packageManager: PackageManagerType;
+  deployPath?: string;
+}
+export declare const deploy: (deployProjectNames: string[], operator: DagOperator, config: IDeployConfig) => Promise<void>;
+export {};

@@ -1,0 +1,17 @@
+import { createStore, Store } from '@modern-js-reduck/store';
+import type { Plugin } from '@modern-js/runtime-core';
+declare module '@modern-js/runtime-core' {
+  interface RuntimeContext {
+    store: Store;
+  }
+  interface TRuntimeContext {
+    store: Store;
+  }
+  interface SSRData {
+    storeState: any;
+  }
+}
+declare type PluginProps = Parameters<typeof createStore>[0];
+declare const state: (config: PluginProps) => Plugin;
+export default state;
+export * from '../plugins';

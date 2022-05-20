@@ -1,0 +1,16 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.clearCli = void 0;
+
+var _commands = require("../commands");
+
+const clearCli = (program, api) => {
+  program.command('clear [projects...]').usage('[options]').option('--remove-dirs [dirs...]', 'remove dirs, default is node_modules').description('clear project dirs').action(async (targetProjectNames, option) => {
+    await (0, _commands.clear)(targetProjectNames, option, api);
+  });
+};
+
+exports.clearCli = clearCli;

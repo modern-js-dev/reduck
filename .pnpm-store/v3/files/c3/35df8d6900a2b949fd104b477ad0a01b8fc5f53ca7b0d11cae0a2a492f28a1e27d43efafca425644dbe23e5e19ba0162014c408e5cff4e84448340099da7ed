@@ -1,0 +1,4 @@
+import type { SuperTest, Test } from 'supertest';
+declare function request(): SuperTest<Test>;
+declare function request<T extends (...argss: any[]) => any>(fn: T, ...args: Parameters<T>): Test;
+export { request };

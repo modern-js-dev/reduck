@@ -1,0 +1,23 @@
+import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
+
+var _MonorepoNewActionCon;
+
+import { SubSolutionSchema, SubSolution } from "../../common";
+export var MonorepoNewActionSchema = {
+  key: 'monorepo_new_action',
+  isObject: true,
+  items: [SubSolutionSchema]
+};
+export var MonorepoNewActionConfig = (_MonorepoNewActionCon = {}, _defineProperty(_MonorepoNewActionCon, SubSolution.MWA, {
+  isMonorepoSubProject: true,
+  isTest: false
+}), _defineProperty(_MonorepoNewActionCon, SubSolution.MWATest, {
+  isMonorepoSubProject: true,
+  isTest: true
+}), _defineProperty(_MonorepoNewActionCon, SubSolution.Module, {
+  isMonorepoSubProject: true,
+  isPublic: true
+}), _defineProperty(_MonorepoNewActionCon, SubSolution.InnerModule, {
+  isMonorepoSubProject: true,
+  isPublic: false
+}), _MonorepoNewActionCon);

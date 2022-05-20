@@ -1,0 +1,54 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+Object.defineProperty(exports, "CSS_EXTENSIONS", {
+  enumerable: true,
+  get: function () {
+    return _constants.CSS_EXTENSIONS;
+  }
+});
+exports.transformStyle = transformStyle;
+
+var _constants = require("./constants");
+
+var _resolveFiles = require("./resolveFiles");
+
+var _utils = require("./utils");
+
+async function transformStyle(option) {
+  const {
+    projectDir,
+    stylesDir,
+    outDir,
+    enableVirtualDist = false,
+    compilerOption = _constants.defaultCompilerOptions
+  } = option; // get style files
+
+  const files = (0, _utils.getFiles)({
+    stylesDir,
+    extensions: _constants.CSS_EXTENSIONS
+  });
+
+  if (enableVirtualDist) {
+    return (0, _resolveFiles.resolveFiles)({
+      files,
+      projectDir,
+      stylesDir,
+      outDir,
+      enableVirtualDist,
+      options: compilerOption
+    });
+  } else {
+    await (0, _resolveFiles.resolveFiles)({
+      files,
+      projectDir,
+      stylesDir,
+      outDir,
+      enableVirtualDist,
+      options: compilerOption
+    });
+    return undefined;
+  }
+}

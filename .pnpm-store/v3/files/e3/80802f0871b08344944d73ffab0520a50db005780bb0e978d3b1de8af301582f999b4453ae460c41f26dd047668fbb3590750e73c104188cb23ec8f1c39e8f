@@ -1,0 +1,14 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.addSchema = void 0;
+
+var _source = require("./source");
+
+var _output = require("./output");
+
+const addSchema = () => [..._source.sourceSchema, ..._output.outputSchema];
+
+exports.addSchema = addSchema;

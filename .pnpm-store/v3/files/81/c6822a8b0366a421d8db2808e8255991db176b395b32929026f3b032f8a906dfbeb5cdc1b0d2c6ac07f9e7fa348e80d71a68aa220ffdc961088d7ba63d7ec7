@@ -1,0 +1,18 @@
+import { MaybeAsync } from '../farrow-pipeline';
+import type { RunWorkflowOptions } from './sync';
+declare const ASYNC_WORKFLOW_SYMBOL: unique symbol;
+export declare type AsyncWorker<I, O> = (I: I) => MaybeAsync<O>;
+export declare type AsyncWorkers<I, O> = AsyncWorker<I, O>[];
+export declare type AsyncWorkflow<I, O> = {
+  run: (input: I, options?: RunWorkflowOptions) => MaybeAsync<O[]>;
+  use: (...I: AsyncWorkers<I, O>) => AsyncWorkflow<I, O>;
+  [ASYNC_WORKFLOW_SYMBOL]: true;
+};
+export declare type AsyncWorkflow2AsyncWorker<W extends AsyncWorkflow<any, any>> = W extends AsyncWorkflow<infer I, infer O> ? AsyncWorker<I, O> : never;
+export declare type AsyncWorkflowRecord = Record<string, AsyncWorkflow<any, any>>;
+export declare type AsyncWorkflows2AsyncWorkers<PS extends AsyncWorkflowRecord | void> = { [K in keyof PS]: PS[K] extends AsyncWorkflow<any, any> ? AsyncWorkflow2AsyncWorker<PS[K]> : PS[K] extends void ? void : never };
+export declare type RunnerFromAsyncWorkflow<W extends AsyncWorkflow<any, any>> = W extends AsyncWorkflow<infer I, infer O> ? AsyncWorkflow<I, O>['run'] : never;
+export declare type AsyncWorkflows2Runners<PS extends AsyncWorkflowRecord | void> = { [K in keyof PS]: PS[K] extends AsyncWorkflow<any, any> ? RunnerFromAsyncWorkflow<PS[K]> : PS[K] extends void ? void : never };
+export declare const isAsyncWorkflow: (input: any) => input is AsyncWorkflow<any, any>;
+export declare const createAsyncWorkflow: <I = void, O = unknown>() => AsyncWorkflow<I, O>;
+export {};

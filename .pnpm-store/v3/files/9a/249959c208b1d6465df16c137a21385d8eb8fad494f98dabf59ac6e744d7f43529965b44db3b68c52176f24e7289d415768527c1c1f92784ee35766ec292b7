@@ -1,0 +1,30 @@
+import path from 'path';
+import { fs } from '@modern-js/utils';
+import { IMAGE_EXT_LIST } from "./constants";
+export const FS_RESOURCE = '_codesmith_core_fs_resource';
+export class FsResource {
+  constructor(filePath, resourceKey) {
+    this._type = FS_RESOURCE;
+    this.filePath = void 0;
+    this.resourceKey = void 0;
+    this.filePath = filePath;
+    this.resourceKey = resourceKey;
+  }
+
+  async value() {
+    const resourceFileExt = path.extname(this.filePath);
+
+    if (IMAGE_EXT_LIST.includes(resourceFileExt)) {
+      const buffer = await fs.readFile(path.resolve(this.filePath));
+      return {
+        content: buffer
+      };
+    } else {
+      const text = await fs.readFile(path.resolve(this.filePath), 'utf8');
+      return {
+        content: text
+      };
+    }
+  }
+
+}

@@ -1,0 +1,175 @@
+import _toConsumableArray from "@babel/runtime/helpers/esm/toConsumableArray";
+import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
+
+var _SolutionText, _SubSolutionText, _SolutionGenerator, _SubSolutionGenerator;
+
+import { i18n, localeKeys } from "../locale";
+export var Solution;
+
+(function (Solution) {
+  Solution["MWA"] = "mwa";
+  Solution["Module"] = "module";
+  Solution["Monorepo"] = "monorepo";
+})(Solution || (Solution = {}));
+
+export var SubSolution;
+
+(function (SubSolution) {
+  SubSolution["MWA"] = "mwa";
+  SubSolution["MWATest"] = "mwa_test";
+  SubSolution["Module"] = "module";
+  SubSolution["InnerModule"] = "inner_module";
+})(SubSolution || (SubSolution = {}));
+
+export var SolutionText = (_SolutionText = {}, _defineProperty(_SolutionText, Solution.MWA, function () {
+  return i18n.t(localeKeys.solution.mwa);
+}), _defineProperty(_SolutionText, Solution.Module, function () {
+  return i18n.t(localeKeys.solution.module);
+}), _defineProperty(_SolutionText, Solution.Monorepo, function () {
+  return i18n.t(localeKeys.solution.monorepo);
+}), _SolutionText);
+export var SubSolutionText = (_SubSolutionText = {}, _defineProperty(_SubSolutionText, SubSolution.MWA, function () {
+  return i18n.t(localeKeys.sub_solution.mwa);
+}), _defineProperty(_SubSolutionText, SubSolution.MWATest, function () {
+  return i18n.t(localeKeys.sub_solution.mwa_test);
+}), _defineProperty(_SubSolutionText, SubSolution.Module, function () {
+  return i18n.t(localeKeys.sub_solution.module);
+}), _defineProperty(_SubSolutionText, SubSolution.InnerModule, function () {
+  return i18n.t(localeKeys.sub_solution.inner_module);
+}), _SubSolutionText);
+export var SolutionSchema = {
+  key: 'solution_schema',
+  isObject: true,
+  items: [{
+    key: 'solution',
+    label: function label() {
+      return i18n.t(localeKeys.solution.self);
+    },
+    type: ['string'],
+    mutualExclusion: true,
+    items: function items(_data, extra) {
+      var _extra$customPlugin, _extra$customPlugin$c;
+
+      var items = Object.values(Solution).map(function (solution) {
+        return {
+          key: solution,
+          label: SolutionText[solution]
+        };
+      });
+
+      if (extra !== null && extra !== void 0 && (_extra$customPlugin = extra.customPlugin) !== null && _extra$customPlugin !== void 0 && (_extra$customPlugin$c = _extra$customPlugin.custom) !== null && _extra$customPlugin$c !== void 0 && _extra$customPlugin$c.length) {
+        return [].concat(_toConsumableArray(items), [{
+          key: 'custom',
+          label: i18n.t(localeKeys.solution.custom)
+        }]);
+      }
+
+      return items;
+    }
+  }, {
+    key: 'scenes',
+    label: function label() {
+      return i18n.t(localeKeys.scenes.self);
+    },
+    type: ['string'],
+    mutualExclusion: true,
+    when: function when(data, extra) {
+      return (extra === null || extra === void 0 ? void 0 : extra.customPlugin) && extra.customPlugin[data.solution] && extra.customPlugin[data.solution].length > 0;
+    },
+    items: function items(data, extra) {
+      var items = (extra !== null && extra !== void 0 && extra.customPlugin ? (extra === null || extra === void 0 ? void 0 : extra.customPlugin[data.solution]) || [] : []).map(function (plugin) {
+        return {
+          key: plugin.key,
+          label: plugin.name
+        };
+      });
+
+      if (data.solution && data.solution !== 'custom') {
+        items.unshift({
+          key: data.solution,
+          label: "".concat(SolutionText[data.solution](), "(").concat(i18n.t(localeKeys.solution["default"]), ")")
+        });
+      }
+
+      return items;
+    }
+  }]
+};
+export function getSolutionNameFromSubSolution(solution) {
+  if (solution === SubSolution.MWATest) {
+    return Solution.MWA;
+  }
+
+  if (solution === SubSolution.InnerModule) {
+    return Solution.Module;
+  }
+
+  return solution;
+}
+export var SubSolutionSchema = {
+  key: 'sub_solution_schema',
+  isObject: true,
+  items: [{
+    key: 'solution',
+    label: function label() {
+      return i18n.t(localeKeys.sub_solution.self);
+    },
+    type: ['string'],
+    mutualExclusion: true,
+    items: function items(_data, extra) {
+      var _extra$customPlugin2, _extra$customPlugin2$;
+
+      var items = Object.values(SubSolution).map(function (solution) {
+        return {
+          key: solution,
+          label: SubSolutionText[solution]
+        };
+      });
+
+      if (extra !== null && extra !== void 0 && (_extra$customPlugin2 = extra.customPlugin) !== null && _extra$customPlugin2 !== void 0 && (_extra$customPlugin2$ = _extra$customPlugin2.custom) !== null && _extra$customPlugin2$ !== void 0 && _extra$customPlugin2$.length) {
+        return [].concat(_toConsumableArray(items), [{
+          key: 'custom',
+          label: i18n.t(localeKeys.solution.custom)
+        }]);
+      }
+
+      return items;
+    }
+  }, {
+    key: 'scenes',
+    label: function label() {
+      return i18n.t(localeKeys.scenes.self);
+    },
+    type: ['string'],
+    mutualExclusion: true,
+    when: function when(data, extra) {
+      return (extra === null || extra === void 0 ? void 0 : extra.customPlugin) && extra.customPlugin[getSolutionNameFromSubSolution(data.solution)] && extra.customPlugin[getSolutionNameFromSubSolution(data.solution)].length > 0;
+    },
+    items: function items(data, extra) {
+      var solution = getSolutionNameFromSubSolution(data.solution);
+      var items = (extra !== null && extra !== void 0 && extra.customPlugin ? (extra === null || extra === void 0 ? void 0 : extra.customPlugin[solution]) || [] : []).map(function (plugin) {
+        return {
+          key: plugin.key,
+          label: plugin.name
+        };
+      });
+
+      if (data.solution && data.solution !== 'custom') {
+        items.unshift({
+          key: data.solution,
+          label: "".concat(SubSolutionText[data.solution](), "(").concat(i18n.t(localeKeys.solution["default"]), ")")
+        });
+      }
+
+      return items;
+    }
+  }]
+};
+export var BaseGenerator = '@modern-js/base-generator';
+export var SolutionGenerator = (_SolutionGenerator = {}, _defineProperty(_SolutionGenerator, Solution.MWA, '@modern-js/mwa-generator'), _defineProperty(_SolutionGenerator, Solution.Module, '@modern-js/module-generator'), _defineProperty(_SolutionGenerator, Solution.Monorepo, '@modern-js/monorepo-generator'), _SolutionGenerator);
+export var SubSolutionGenerator = (_SubSolutionGenerator = {}, _defineProperty(_SubSolutionGenerator, SubSolution.MWA, '@modern-js/mwa-generator'), _defineProperty(_SubSolutionGenerator, SubSolution.MWATest, '@modern-js/mwa-generator'), _defineProperty(_SubSolutionGenerator, SubSolution.Module, '@modern-js/module-generator'), _defineProperty(_SubSolutionGenerator, SubSolution.InnerModule, '@modern-js/module-generator'), _SubSolutionGenerator);
+export var ChangesetGenerator = '@modern-js/changeset-generator';
+export var DependenceGenerator = '@modern-js/dependence-generator';
+export var EntryGenerator = '@modern-js/entry-generator';
+export var ElectronGenerator = '@modern-js/electron-generator';
+export var EslintGenerator = '@modern-js/eslint-generator';

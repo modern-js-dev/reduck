@@ -1,0 +1,4 @@
+import type { NormalizedConfig, IAppContext } from '@modern-js/core';
+import type { Entrypoint } from '@modern-js/types';
+export type { Entrypoint };
+export declare const getFileSystemEntry: (appContext: IAppContext, config: NormalizedConfig) => Entrypoint[];

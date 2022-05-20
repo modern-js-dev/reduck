@@ -1,0 +1,79 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.runTscWatchTitle = exports.runTscTitle = exports.runStyleCompilerTitle = exports.runBabelCompilerTitle = exports.clearFlag = exports.PACKAGE_MODES = exports.DEFAULT_PACKAGE_MODE = void 0;
+// Universal JS 的默认选择，三份构建产物，支持 Node.js，对现代浏览器有优化
+const universalJs = [{
+  type: 'module',
+  syntax: 'es5',
+  outDir: 'treeshaking'
+}, {
+  type: 'commonjs',
+  syntax: 'es6+',
+  outDir: 'node'
+}, {
+  type: 'module',
+  syntax: 'es6+',
+  outDir: 'modern'
+}]; // Universal JS 的优化选择，两份构建产物，对现代浏览器无优化
+
+const universalJsLite = [{
+  type: 'module',
+  syntax: 'es5',
+  outDir: 'treeshaking'
+}, {
+  type: 'commonjs',
+  syntax: 'es6+',
+  outDir: 'node',
+  copyDirs: ['modern']
+}]; // 纯前端代码的默认选择，两份构建产物
+
+const browserJs = [{
+  type: 'module',
+  syntax: 'es5',
+  outDir: 'treeshaking',
+  copyDirs: ['node']
+}, {
+  type: 'module',
+  syntax: 'es6+',
+  outDir: 'modern'
+}]; // 纯前端代码的优化选择，单份构建产物，对现代浏览器无优化
+
+const browserJsLite = [{
+  type: 'module',
+  syntax: 'es5',
+  outDir: 'treeshaking',
+  copyDirs: ['modern', 'node']
+}]; // 纯 Node.js 代码的默认选择，两份构建产物
+
+const nodeJs = [{
+  type: 'commonjs',
+  syntax: 'es6+',
+  outDir: 'node'
+}, {
+  type: 'module',
+  syntax: 'es6+',
+  outDir: 'modern'
+}];
+const DEFAULT_PACKAGE_MODE = 'universal-js';
+exports.DEFAULT_PACKAGE_MODE = DEFAULT_PACKAGE_MODE;
+const PACKAGE_MODES = {
+  'universal-js': universalJs,
+  'universal-js-lite': universalJsLite,
+  'browser-js': browserJs,
+  'browser-js-lite': browserJsLite,
+  'node-js': nodeJs
+};
+exports.PACKAGE_MODES = PACKAGE_MODES;
+const runBabelCompilerTitle = 'Run babel compiler code log';
+exports.runBabelCompilerTitle = runBabelCompilerTitle;
+const runTscWatchTitle = 'Run `tsc -w` log';
+exports.runTscWatchTitle = runTscWatchTitle;
+const runTscTitle = 'Run `tsc` log';
+exports.runTscTitle = runTscTitle;
+const runStyleCompilerTitle = 'Run style compiler code log';
+exports.runStyleCompilerTitle = runStyleCompilerTitle;
+const clearFlag = '\x1Bc';
+exports.clearFlag = clearFlag;

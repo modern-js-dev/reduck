@@ -1,0 +1,98 @@
+import _asyncToGenerator from "@babel/runtime/helpers/esm/asyncToGenerator";
+import _classCallCheck from "@babel/runtime/helpers/esm/classCallCheck";
+import _createClass from "@babel/runtime/helpers/esm/createClass";
+import _assertThisInitialized from "@babel/runtime/helpers/esm/assertThisInitialized";
+import _inherits from "@babel/runtime/helpers/esm/inherits";
+import _createSuper from "@babel/runtime/helpers/esm/createSuper";
+import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
+import _regeneratorRuntime from "@babel/runtime/regenerator";
+import NodeEnvironment from 'jest-environment-node';
+import { createApp } from "./app";
+import { bff_info_key } from "./constant";
+
+var _default = /*#__PURE__*/function (_NodeEnvironment) {
+  _inherits(_default, _NodeEnvironment);
+
+  var _super = _createSuper(_default);
+
+  function _default() {
+    var _this;
+
+    _classCallCheck(this, _default);
+
+    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+      args[_key] = arguments[_key];
+    }
+
+    _this = _super.call.apply(_super, [this].concat(args));
+
+    _defineProperty(_assertThisInitialized(_this), "app", void 0);
+
+    return _this;
+  }
+
+  _createClass(_default, [{
+    key: "setup",
+    value: function () {
+      var _setup = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee() {
+        var bff_info, plugins;
+        return _regeneratorRuntime.wrap(function _callee$(_context) {
+          while (1) {
+            switch (_context.prev = _context.next) {
+              case 0:
+                bff_info = this.global[bff_info_key];
+                plugins = bff_info.plugins; // eslint-disable-next-line no-multi-assign
+
+                _context.next = 4;
+                return createApp(bff_info.appDir, bff_info.modernUserConfig, plugins, bff_info.routes);
+
+              case 4:
+                this.global.app = this.app = _context.sent;
+
+              case 5:
+              case "end":
+                return _context.stop();
+            }
+          }
+        }, _callee, this);
+      }));
+
+      function setup() {
+        return _setup.apply(this, arguments);
+      }
+
+      return setup;
+    }()
+  }, {
+    key: "teardown",
+    value: function () {
+      var _teardown = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee2() {
+        var _this$app, _this$app$server;
+
+        return _regeneratorRuntime.wrap(function _callee2$(_context2) {
+          while (1) {
+            switch (_context2.prev = _context2.next) {
+              case 0:
+                _context2.next = 2;
+                return (_this$app = this.app) === null || _this$app === void 0 ? void 0 : (_this$app$server = _this$app.server) === null || _this$app$server === void 0 ? void 0 : _this$app$server.close();
+
+              case 2:
+              case "end":
+                return _context2.stop();
+            }
+          }
+        }, _callee2, this);
+      }));
+
+      function teardown() {
+        return _teardown.apply(this, arguments);
+      }
+
+      return teardown;
+    }()
+  }]);
+
+  return _default;
+}(NodeEnvironment);
+
+export { _default as default };

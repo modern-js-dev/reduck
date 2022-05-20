@@ -1,0 +1,5 @@
+import type { PluginAPI } from '@modern-js/core';
+export interface IDeployCommandOption {
+  deployPath?: string;
+}
+export declare const deploy: (api: PluginAPI, deployProjectNames: string[], option: IDeployCommandOption, ignoreMatchs?: string[]) => Promise<void>;

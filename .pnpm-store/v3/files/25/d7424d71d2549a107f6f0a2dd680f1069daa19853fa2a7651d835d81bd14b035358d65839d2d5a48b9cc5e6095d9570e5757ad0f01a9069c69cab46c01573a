@@ -1,0 +1,6 @@
+import { TestConfigOperator } from '../testConfigOperator';
+/**
+ * Map `TestConfig.transformer` to jest config
+ */
+
+export declare const patchTransformer: (testOperator: TestConfigOperator) => void;

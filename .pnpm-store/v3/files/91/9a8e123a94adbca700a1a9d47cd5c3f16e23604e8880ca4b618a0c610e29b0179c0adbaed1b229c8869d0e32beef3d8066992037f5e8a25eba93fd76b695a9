@@ -1,0 +1,110 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.MWANewAction = void 0;
+
+var _lodash = require("@modern-js/utils/lodash");
+
+var _codesmith = require("@modern-js/codesmith");
+
+var _codesmithApiApp = require("@modern-js/codesmith-api-app");
+
+var _generatorCommon = require("@modern-js/generator-common");
+
+var _generatorUtils = require("@modern-js/generator-utils");
+
+var _utils = require("./utils");
+
+const MWANewAction = async options => {
+  const {
+    locale = 'zh',
+    distTag = '',
+    debug = false,
+    registry = '',
+    config = '{}',
+    cwd = process.cwd()
+  } = options;
+  let UserConfig = {};
+
+  try {
+    UserConfig = JSON.parse(config);
+  } catch (e) {
+    throw new Error('config is not a valid json');
+  }
+
+  _generatorCommon.i18n.changeLanguage({
+    locale: UserConfig.locale || locale
+  });
+
+  const smith = new _codesmith.CodeSmith({
+    debug,
+    registryUrl: registry
+  });
+
+  if (!(0, _utils.alreadyRepo)(cwd)) {
+    smith.logger.warn('not valid modern.js repo');
+  }
+
+  const mockGeneratorCore = new _codesmith.GeneratorCore({
+    logger: smith.logger,
+    materialsManager: new _codesmith.MaterialsManager(),
+    outputPath: ''
+  });
+  const appAPI = new _codesmithApiApp.AppAPI({
+    materials: {},
+    config: {},
+    data: {},
+    current: null
+  }, mockGeneratorCore);
+  const schema = (0, _codesmithApiApp.forEach)(_generatorCommon.MWANewActionSchema, schemaItem => {
+    if (_generatorCommon.MWAActionFunctions.includes(schemaItem.key)) {
+      const enable = (0, _utils.hasEnabledFunction)(schemaItem.key, _generatorCommon.MWAActionFunctionsDependencies, _generatorCommon.MWAActionFunctionsDevDependencies, {}, cwd);
+      const {
+        when
+      } = schemaItem;
+      schemaItem.when = enable ? () => false : when;
+    }
+  });
+  const ans = await appAPI.getInputBySchema(schema, UserConfig);
+  const actionType = ans.actionType;
+  const action = ans[actionType];
+  let generator = _generatorCommon.MWANewActionGenerators[actionType][action];
+
+  if (!generator) {
+    throw new Error(`no valid option`);
+  }
+
+  if (distTag) {
+    generator = `${generator}@${distTag}`;
+  }
+
+  const devDependency = _generatorCommon.MWAActionFunctionsDevDependencies[action];
+  const dependency = _generatorCommon.MWAActionFunctionsDependencies[action];
+  const finalConfig = (0, _lodash.merge)(UserConfig, ans, {
+    locale: UserConfig.locale || locale,
+    packageManager: UserConfig.packageManager || (await (0, _generatorUtils.getPackageManager)(cwd))
+  }, {
+    devDependencies: devDependency ? {
+      [devDependency]: `^${await (0, _generatorUtils.getPackageVersion)(devDependency)}`
+    } : {},
+    dependencies: dependency ? {
+      [dependency]: `^${await (0, _generatorUtils.getPackageVersion)(dependency)}`
+    } : {},
+    appendTypeContent: _generatorCommon.MWAActionFunctionsAppendTypeContent[action]
+  });
+  const task = [{
+    name: generator,
+    config: finalConfig
+  }];
+  await smith.forge({
+    tasks: task.map(runner => ({
+      generator: runner.name,
+      config: runner.config
+    })),
+    pwd: cwd
+  });
+};
+
+exports.MWANewAction = MWANewAction;

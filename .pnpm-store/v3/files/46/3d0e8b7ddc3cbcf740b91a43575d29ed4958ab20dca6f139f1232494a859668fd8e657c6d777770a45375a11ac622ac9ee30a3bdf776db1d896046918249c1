@@ -1,0 +1,5 @@
+import type { NormalizedConfig, IAppContext } from '@modern-js/core';
+export declare const copyTask: (option: {
+  modernConfig: NormalizedConfig;
+  appContext: IAppContext;
+}) => Promise<void>;

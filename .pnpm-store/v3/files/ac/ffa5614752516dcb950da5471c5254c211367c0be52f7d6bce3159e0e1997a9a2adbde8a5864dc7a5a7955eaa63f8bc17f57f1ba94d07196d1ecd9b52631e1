@@ -1,0 +1,46 @@
+import { NormalizedConfig } from '@modern-js/core';
+import { LessOption, SassOptions } from '@modern-js/style-compiler';
+export interface PlatformBuildOption {
+  isTsProject: boolean;
+}
+export declare const platformBuild: import("@modern-js/plugin").ParallelWorkflow<PlatformBuildOption, {
+  name: string;
+  title: string;
+  taskPath: string;
+  params: string[];
+}>;
+export declare const moduleLessConfig: import("@modern-js/plugin").AsyncPipeline<{
+  modernConfig: NormalizedConfig;
+}, LessOption | undefined>;
+export declare const moduleSassConfig: import("@modern-js/plugin").AsyncPipeline<{
+  modernConfig: NormalizedConfig;
+}, SassOptions<"sync"> | undefined>;
+export declare const moduleTailwindConfig: import("@modern-js/plugin").AsyncPipeline<{
+  modernConfig: NormalizedConfig;
+}, any>;
+export declare const buildHooks: {
+  platformBuild: import("@modern-js/plugin").ParallelWorkflow<PlatformBuildOption, {
+    name: string;
+    title: string;
+    taskPath: string;
+    params: string[];
+  }>;
+  moduleLessConfig: import("@modern-js/plugin").AsyncPipeline<{
+    modernConfig: NormalizedConfig;
+  }, LessOption | undefined>;
+  moduleSassConfig: import("@modern-js/plugin").AsyncPipeline<{
+    modernConfig: NormalizedConfig;
+  }, SassOptions<"sync"> | undefined>;
+  moduleTailwindConfig: import("@modern-js/plugin").AsyncPipeline<{
+    modernConfig: NormalizedConfig;
+  }, any>;
+};
+export declare const lifecycle: () => void;
+declare module '@modern-js/core' {
+  interface Hooks {
+    platformBuild: typeof platformBuild;
+    moduleLessConfig: typeof moduleLessConfig;
+    moduleSassConfig: typeof moduleSassConfig;
+    moduleTailwindConfig: typeof moduleTailwindConfig;
+  }
+}

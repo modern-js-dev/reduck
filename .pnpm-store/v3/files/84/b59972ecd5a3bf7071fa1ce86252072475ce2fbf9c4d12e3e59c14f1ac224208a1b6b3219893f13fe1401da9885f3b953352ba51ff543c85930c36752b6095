@@ -1,0 +1,173 @@
+"use strict";
+
+var _utils = require("@modern-js/utils");
+
+var _initEnv = require("../utils/init-env");
+
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+const babelCompiler = _utils.Import.lazy('@modern-js/babel-compiler', require);
+
+const logger = _utils.Import.lazy('../features/build/logger', require);
+
+const ts = _utils.Import.lazy('../utils/tsconfig', require);
+
+const babel = _utils.Import.lazy('../utils/babel', require);
+
+const core = _utils.Import.lazy('@modern-js/core', require);
+
+const argv = _utils.Import.lazy('process.argv', require);
+
+const generatorRealFiles = virtualDists => {
+  for (const virtualDist of virtualDists) {
+    const {
+      distPath,
+      code,
+      sourcemap,
+      sourceMapPath
+    } = virtualDist;
+
+    _utils.fs.ensureFileSync(distPath);
+
+    _utils.fs.writeFileSync(distPath, code);
+
+    if (sourcemap.length > 0) {
+      _utils.fs.ensureFileSync(sourceMapPath);
+
+      _utils.fs.writeFileSync(sourceMapPath, sourcemap);
+    }
+  }
+};
+
+const runBabelCompiler = async (config, modernConfig) => {
+  const {
+    tsconfigPath
+  } = config;
+  const babelConfig = babel.resolveBabelConfig(config.appDirectory, modernConfig, {
+    sourceAbsDir: config.srcRootDir,
+    tsconfigPath,
+    syntax: config.syntax,
+    type: config.type
+  });
+  const tsconfig = ts.readTsConfig(tsconfigPath || '', {});
+  const isTs = Boolean(tsconfig);
+
+  const getExts = isTsProject => {
+    // TODO: 是否受控tsconfig.json 里的jsx配置
+    let exts = [];
+
+    if (isTsProject) {
+      var _tsconfig$compilerOpt;
+
+      exts = tsconfig !== null && tsconfig !== void 0 && (_tsconfig$compilerOpt = tsconfig.compilerOptions) !== null && _tsconfig$compilerOpt !== void 0 && _tsconfig$compilerOpt.allowJs ? ['.ts', '.tsx', '.js', '.jsx'] : ['.ts', '.tsx'];
+    } else {
+      exts = ['.js', '.jsx'];
+    }
+
+    return exts;
+  };
+
+  const emitter = await babelCompiler.compiler({
+    enableVirtualDist: true,
+    quiet: true,
+    enableWatch: true,
+    rootDir: config.srcRootDir,
+    distDir: config.distDir,
+    watchDir: config.srcRootDir,
+    extensions: getExts(isTs),
+    ignore: ['*.d.ts']
+  }, _objectSpread(_objectSpread({}, babelConfig), {}, {
+    sourceMaps: config.sourceMaps
+  }));
+  emitter.on(babelCompiler.BuildWatchEvent.compiling, () => {
+    console.info(logger.clearFlag, `Compiling...`);
+  });
+  emitter.on(babelCompiler.BuildWatchEvent.firstCompiler, result => {
+    if (result.code === 1) {
+      console.error(logger.clearFlag);
+      console.error(result.message);
+
+      for (const detail of result.messageDetails || []) {
+        console.error(detail.content);
+      }
+    } else {
+      generatorRealFiles(result.virtualDists);
+      console.info(logger.clearFlag, '[Babel Compiler]: Successfully');
+    }
+  });
+  emitter.on(babelCompiler.BuildWatchEvent.watchingCompiler, result => {
+    if (result.code === 1) {
+      var _result$virtualDists;
+
+      console.error(logger.clearFlag);
+      console.error(result.message);
+
+      for (const detail of result.messageDetails || []) {
+        console.error(detail.content);
+      }
+
+      if (Array.isArray(result.virtualDists) && ((_result$virtualDists = result.virtualDists) === null || _result$virtualDists === void 0 ? void 0 : _result$virtualDists.length) > 0) {
+        generatorRealFiles(result.virtualDists);
+      }
+    } else {
+      generatorRealFiles(result.virtualDists);
+      console.info(result.message);
+    }
+  });
+  await emitter.watch();
+};
+
+const buildSourceCode = async (config, modernConfig) => {
+  const {
+    compiler
+  } = config;
+
+  if (compiler === 'babel') {
+    await runBabelCompiler(config, modernConfig);
+  }
+};
+
+const taskMain = async ({
+  modernConfig
+}) => {
+  const processArgv = argv(process.argv.slice(2));
+  const config = processArgv({
+    srcRootDir: `${process.cwd()}/src`,
+    distDir: '',
+    compiler: 'babel',
+    appDirectory: '',
+    sourceMaps: false,
+    tsconfigPath: '',
+    syntax: 'es5',
+    type: 'module'
+  });
+  process.env.BUILD_FORMAT = (0, _initEnv.initEnv)(config);
+  await buildSourceCode(config, modernConfig);
+};
+
+(async () => {
+  let options;
+
+  if (process.env.CORE_INIT_OPTION_FILE) {
+    ({
+      options
+    } = require(process.env.CORE_INIT_OPTION_FILE));
+  }
+
+  const {
+    resolved
+  } = await core.cli.init([], options);
+  await core.manager.run(async () => {
+    try {
+      await taskMain({
+        modernConfig: resolved
+      });
+    } catch (e) {
+      console.error(e);
+    }
+  });
+})();

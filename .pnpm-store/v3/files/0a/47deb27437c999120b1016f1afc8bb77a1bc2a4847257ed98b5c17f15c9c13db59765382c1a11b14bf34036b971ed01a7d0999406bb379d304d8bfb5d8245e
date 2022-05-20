@@ -1,0 +1,75 @@
+"use strict";
+
+var _tsd = require("tsd");
+
+var _ = require("..");
+
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+const count1Model = (0, _.model)('count1').define({
+  state: {
+    value: 1
+  },
+  actions: {
+    add(state) {
+      return _objectSpread(_objectSpread({}, state), {}, {
+        value: state.value + 1
+      });
+    },
+
+    sub(state, n) {
+      return _objectSpread(_objectSpread({}, state), {}, {
+        value: state.value - n
+      });
+    }
+
+  }
+});
+const count2Model = (0, _.model)('count2').define({
+  state: {
+    value: 10
+  },
+  actions: {
+    add1(state) {
+      return _objectSpread(_objectSpread({}, state), {}, {
+        value: state.value + 1
+      });
+    },
+
+    sub1(state, n) {
+      return _objectSpread(_objectSpread({}, state), {}, {
+        value: state.value - n
+      });
+    }
+
+  }
+});
+describe('test selector', () => {
+  const store = (0, _.createStore)();
+  test('select state should works', () => {
+    const [state] = store.use(count1Model, count2Model, (state1, state2) => ({
+      one: state1.value,
+      two: state2.value
+    }));
+    (0, _tsd.expectType)(state);
+  });
+  test('select actions should works', () => {
+    const use = () => store.use(count1Model, count2Model, (state1, state2) => ({
+      one: state1.value,
+      two: state2.value
+    }), (actions1, actions2) => ({
+      oneAdd: actions1.add,
+      twoAdd: actions2.add1,
+      oneSub: actions1.sub,
+      twoSub: actions2.sub1
+    }));
+
+    const [state, actions] = use();
+    (0, _tsd.expectType)(state);
+    (0, _tsd.expectType)(actions);
+  });
+});

@@ -1,0 +1,38 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.isRegExp = exports.isPromise = exports.isPlainObject = exports.isObject = exports.isFunction = exports.isArray = exports.isUndefined = exports.isString = void 0;
+function isString(str) {
+    return typeof str === 'string';
+}
+exports.isString = isString;
+function isUndefined(obj) {
+    return typeof obj === 'undefined';
+}
+exports.isUndefined = isUndefined;
+function isArray(obj) {
+    return Array.isArray(obj);
+}
+exports.isArray = isArray;
+// eslint-disable-next-line @typescript-eslint/ban-types
+function isFunction(func) {
+    return typeof func === 'function';
+}
+exports.isFunction = isFunction;
+function isObject(obj) {
+    return obj !== null && typeof obj === 'object';
+}
+exports.isObject = isObject;
+function isPlainObject(obj) {
+    return (isObject(obj) && Object.prototype.toString.call(obj) === '[object Object]');
+}
+exports.isPlainObject = isPlainObject;
+function isPromise(obj) {
+    return (Boolean(obj) &&
+        (typeof obj === 'object' || typeof obj === 'function') &&
+        typeof obj.then === 'function');
+}
+exports.isPromise = isPromise;
+function isRegExp(obj) {
+    return Object.prototype.toString.call(obj) === '[object RegExp]';
+}
+exports.isRegExp = isRegExp;

@@ -1,0 +1,143 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.logger = exports.Logger = void 0;
+const chalk_1 = __importDefault(require("../compiled/chalk"));
+const { grey, underline } = chalk_1.default;
+const LOG_LEVEL = {
+    error: 0,
+    warn: 1,
+    info: 2,
+    debug: 3,
+    log: 4,
+};
+const LOG_TYPES = {
+    error: {
+        color: 'red',
+        label: 'error',
+        level: 'error',
+    },
+    info: {
+        color: 'blue',
+        label: 'info',
+        level: 'info',
+    },
+    warn: {
+        color: 'yellow',
+        label: 'warning',
+        level: 'warn',
+    },
+    debug: {
+        color: 'red',
+        label: 'debug',
+        level: 'debug',
+    },
+    log: { level: 'log' },
+};
+const DEFAULT_CONFIG = {
+    displayLabel: true,
+    underlineLabel: true,
+    uppercaseLabel: false,
+};
+class Logger {
+    constructor(options = {}) {
+        this.logCount = 200;
+        this.history = {};
+        this.level = options.level || LOG_TYPES.log.level;
+        this.config = { ...DEFAULT_CONFIG, ...(options.config || {}) };
+        this.types = {
+            ...LOG_TYPES,
+            ...(options.types || {}),
+        };
+        this.longestLabel = this.getLongestLabel();
+        Object.keys(this.types).forEach(type => {
+            this[type] = this._log.bind(this, type);
+        });
+    }
+    retainLog(type, message) {
+        if (!this.history[type]) {
+            this.history[type] = [];
+        }
+        this.history[type].push(message);
+        while (this.history[type].length > this.logCount) {
+            this.history[type].shift();
+        }
+    }
+    _log(type, message, ...args) {
+        if (message === undefined) {
+            // eslint-disable-next-line no-console
+            console.log();
+            return;
+        }
+        if (LOG_LEVEL[type] > LOG_LEVEL[this.level]) {
+            return;
+        }
+        let label = '';
+        let text = '';
+        const logType = this.types[type];
+        if (this.config.displayLabel && logType.label) {
+            label = this.config.uppercaseLabel
+                ? logType.label.toUpperCase()
+                : logType.label;
+            if (this.config.underlineLabel) {
+                label = underline(label).padEnd(this.longestUnderlinedLabel.length + 1);
+            }
+            else {
+                label = label.padEnd(this.longestLabel.length + 1);
+            }
+            label = logType.color ? chalk_1.default[logType.color](label) : label;
+        }
+        if (message instanceof Error) {
+            if (message.stack) {
+                const [name, ...rest] = message.stack.split('\n');
+                text = `${name}\n${grey(rest.join('\n'))}`;
+            }
+            else {
+                text = message.message;
+            }
+        }
+        else {
+            text = `${message}`;
+        }
+        // only retain logs of warn/error level
+        if (logType.level === 'warn' || logType.level === 'error') {
+            // retain log text without label
+            this.retainLog(type, text);
+        }
+        const log = label.length > 0 ? `${label}  ${text}` : text;
+        // eslint-disable-next-line no-console
+        console.log(log, ...args);
+    }
+    getLongestLabel() {
+        let longestLabel = '';
+        Object.keys(this.types).forEach(type => {
+            const { label = '' } = this.types[type];
+            if (label.length > longestLabel.length) {
+                longestLabel = label;
+            }
+        });
+        return longestLabel;
+    }
+    get longestUnderlinedLabel() {
+        return underline(this.longestLabel);
+    }
+    getRetainedLogs(type) {
+        return this.history[type] || [];
+    }
+    clearRetainedLogs(type) {
+        if (type) {
+            if (this.history[type]) {
+                this.history[type] = [];
+            }
+        }
+        else {
+            this.history = {};
+        }
+    }
+}
+exports.Logger = Logger;
+const logger = new Logger();
+exports.logger = logger;
+logger.Logger = Logger;

@@ -1,0 +1,4 @@
+import type { IImportCheckOpts } from './import-check';
+import type { IImportPathOpts } from './import-path';
+export declare type BuiltInOptsType = IImportCheckOpts & IImportPathOpts;
+export declare const getBuildInPlugins: (opts: BuiltInOptsType) => import("@modern-js/babel-chain").BabelChain;

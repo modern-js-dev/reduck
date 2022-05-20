@@ -1,0 +1,118 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.resolveAlias = exports.getTscBinPath = exports.generatorTsConfig = void 0;
+
+var path = _interopRequireWildcard(require("path"));
+
+var _utils = require("@modern-js/utils");
+
+var _lodash = require("@modern-js/utils/lodash");
+
+function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
+
+function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+const babel = _utils.Import.lazy('../../utils/babel', require);
+
+const tsPathsTransform = _utils.Import.lazy('../../utils/tspaths-transform', require);
+
+const constants = _utils.Import.lazy('../constants', require);
+
+const generatorTsConfig = (projectTsconfig, {
+  appDirectory,
+  distDir,
+  sourceDir: _sourceDir = 'src'
+}) => {
+  var _projectTsconfig$comp, _projectTsconfig$comp2, _projectTsconfig$incl, _projectTsconfig$excl;
+
+  const tempPath = path.resolve(appDirectory, './node_modules');
+  const resolvePath = path.relative(tempPath, appDirectory); // const rootDir = projectTsconfig.compilerOptions?.rootDir
+  //   ? path.join(resolvePath, projectTsconfig.compilerOptions?.rootDir)
+  //   : resolvePath;
+  // 目前限制 rootDir 的路径为 sourceDir
+
+  const rootDir = path.join(resolvePath, _sourceDir);
+  const baseUrl = (_projectTsconfig$comp = projectTsconfig.compilerOptions) !== null && _projectTsconfig$comp !== void 0 && _projectTsconfig$comp.baseUrl ? path.join(appDirectory, (_projectTsconfig$comp2 = projectTsconfig.compilerOptions) === null || _projectTsconfig$comp2 === void 0 ? void 0 : _projectTsconfig$comp2.baseUrl) : appDirectory; // if include = ['src'], final include should be ['../src']
+
+  const include = (_projectTsconfig$incl = projectTsconfig.include) === null || _projectTsconfig$incl === void 0 ? void 0 : _projectTsconfig$incl.map(includePath => path.join(resolvePath, includePath));
+  const exclude = (_projectTsconfig$excl = projectTsconfig.exclude) === null || _projectTsconfig$excl === void 0 ? void 0 : _projectTsconfig$excl.map(excludePath => path.join(resolvePath, excludePath));
+  const resetConfig = {
+    compilerOptions: {
+      rootDir,
+      baseUrl,
+      // Ensure that .d.ts files are created by tsc, but not .js files
+      declaration: true,
+      emitDeclarationOnly: true,
+      outDir: distDir
+    },
+    include,
+    exclude
+  };
+  const recommendOption = {
+    // Ensure that Babel can safely transpile files in the TypeScript project
+    compilerOptions: {
+      isolatedModules: true
+    }
+  };
+  const tempTsconfigPath = path.join(tempPath, constants.tempTsconfigName);
+
+  _utils.fs.ensureFileSync(tempTsconfigPath);
+
+  _utils.fs.writeJSONSync(tempTsconfigPath, (0, _lodash.merge)(recommendOption, projectTsconfig, // 此处是必须要覆盖用户默认配置
+  resetConfig));
+
+  return tempTsconfigPath;
+};
+
+exports.generatorTsConfig = generatorTsConfig;
+
+const resolveAlias = (modernConfig, config, watchFilenames = []) => {
+  const {
+    output
+  } = modernConfig;
+  const defaultPaths = {
+    '@': ['./src']
+  };
+  const dtsDistPath = `${config.distDir}/**/*.d.ts`;
+  const dtsFilenames = watchFilenames.length > 0 ? watchFilenames : _utils.glob.sync(dtsDistPath, {
+    absolute: true
+  });
+  const alias = babel.getFinalAlias(modernConfig, {
+    appDirectory: config.projectData.appDirectory,
+    tsconfigPath: config.tsconfigPath || path.join(config.projectData.appDirectory, './tsconfig.json'),
+    sourceAbsDir: config.distDir
+  });
+  const mergedPaths = alias.isTsPath ? alias.paths || {} : _objectSpread(_objectSpread({}, defaultPaths), alias.paths || {});
+  const result = tsPathsTransform.transformDtsAlias({
+    filenames: dtsFilenames,
+    baseUrl: path.join(config.projectData.appDirectory, output.path || 'dist'),
+    paths: mergedPaths
+  });
+
+  for (const r of result) {
+    _utils.fs.writeFileSync(r.path, r.content);
+  }
+};
+
+exports.resolveAlias = resolveAlias;
+
+const getTscBinPath = appDirectory => {
+  const tscBinFile = path.join(appDirectory, './node_modules/.bin/tsc');
+
+  if (!_utils.fs.existsSync(tscBinFile)) {
+    throw new Error('Failed to excute the `tsc` command, please check if `typescript` is installed correctly in the current directory.');
+  }
+
+  return tscBinFile;
+};
+
+exports.getTscBinPath = getTscBinPath;

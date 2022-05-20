@@ -1,0 +1,6 @@
+interface ChangeOptions {
+  empty: boolean;
+  open: boolean;
+}
+export declare function change(options: ChangeOptions): Promise<void>;
+export {};

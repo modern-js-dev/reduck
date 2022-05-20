@@ -1,0 +1,7 @@
+import type { PluginAPI } from '@modern-js/core';
+export declare type Platform = 'all' | 'docs' | 'storybook';
+export interface IBuildPlatformOption {
+  platform: Platform;
+  isTsProject?: boolean;
+}
+export declare const buildPlatform: (api: PluginAPI, option: IBuildPlatformOption) => Promise<void>;

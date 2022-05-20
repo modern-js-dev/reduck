@@ -1,0 +1,4 @@
+export declare const safeParse: (jsonString: string) => {
+  code: number;
+  value: any;
+};

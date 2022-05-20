@@ -1,0 +1,101 @@
+import _createForOfIteratorHelper from "@babel/runtime/helpers/esm/createForOfIteratorHelper";
+import _typeof from "@babel/runtime/helpers/esm/typeof";
+import nodeFetch from 'node-fetch';
+import { compile, pathToRegexp } from 'path-to-regexp';
+import { useHeaders } from '@modern-js/utils/ssr';
+import qs from 'query-string';
+import { handleRes } from "./handleRes";
+var realRequest;
+var realAllowedHeaders = [];
+
+var originFetch = function originFetch() {
+  return nodeFetch.apply(void 0, arguments).then(handleRes);
+};
+
+export var configure = function configure(options) {
+  var request = options.request,
+      interceptor = options.interceptor,
+      allowedHeaders = options.allowedHeaders;
+  realRequest = request || originFetch;
+
+  if (interceptor && !request) {
+    realRequest = interceptor(nodeFetch);
+  }
+
+  if (Array.isArray(allowedHeaders)) {
+    realAllowedHeaders = allowedHeaders;
+  }
+};
+export var createRequest = function createRequest(path, method, port) {
+  var fetch = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : nodeFetch;
+  var getFinalPath = compile(path, {
+    encode: encodeURIComponent
+  });
+  var keys = [];
+  pathToRegexp(path, keys);
+
+  var sender = function sender() {
+    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+      args[_key] = arguments[_key];
+    }
+
+    var webRequestHeaders = useHeaders();
+    var payload = _typeof(args[args.length - 1]) === 'object' ? args[args.length - 1] : {};
+    payload.params = payload.params || {};
+    keys.forEach(function (key, index) {
+      payload.params[key.name] = args[index];
+    });
+    var plainPath = getFinalPath(payload.params);
+    var finalPath = payload.query ? "".concat(plainPath, "?").concat(qs.stringify(payload.query)) : plainPath;
+    var headers = payload.headers || {};
+    var body;
+
+    var _iterator = _createForOfIteratorHelper(realAllowedHeaders),
+        _step;
+
+    try {
+      for (_iterator.s(); !(_step = _iterator.n()).done;) {
+        var key = _step.value;
+
+        if (typeof webRequestHeaders[key] !== 'undefined') {
+          headers[key] = webRequestHeaders[key];
+        }
+      }
+    } catch (err) {
+      _iterator.e(err);
+    } finally {
+      _iterator.f();
+    }
+
+    if (payload.data) {
+      headers['Content-Type'] = 'application/json';
+      body = _typeof(payload.data) === 'object' ? JSON.stringify(payload.data) : payload.body;
+    } else if (payload.body) {
+      headers['Content-Type'] = 'text/plain'; // eslint-disable-next-line prefer-destructuring
+
+      body = payload.body;
+    } else if (payload.formData) {
+      body = payload.formData; // https://stackoverflow.com/questions/44919424/bad-content-type-header-no-multipart-boundary-nodejs
+      // need multipart boundary auto attached by node-fetch when multipart is true
+      // headers['Content-Type'] = 'multipart/form-data';
+    } else if (payload.formUrlencoded) {
+      headers['Content-Type'] = 'application/x-www-form-urlencoded';
+
+      if (_typeof(payload.formUrlencoded) === 'object') {
+        body = qs.stringify(payload.formUrlencoded);
+      } else {
+        body = payload.formUrlencoded;
+      }
+    }
+
+    var url = "http://localhost:".concat(port).concat(finalPath);
+    var fetcher = realRequest || originFetch;
+    return fetcher(url, {
+      method: method,
+      body: body,
+      headers: headers
+    });
+  };
+
+  return sender;
+};

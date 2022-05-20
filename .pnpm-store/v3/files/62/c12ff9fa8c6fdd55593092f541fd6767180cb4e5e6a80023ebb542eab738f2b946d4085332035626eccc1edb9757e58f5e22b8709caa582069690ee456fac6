@@ -1,0 +1,32 @@
+{
+  "name": "extra",
+  "version": "0.2.1",
+  "description": "parse extra arguments to a command after \"--\"",
+  "main": "index.js",
+  "dependencies": {},
+  "devDependencies": {
+    "mocha": "*",
+    "commander": "~1.2.0"
+  },
+  "scripts": {
+    "test": "make test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/carlos8f/extra.git"
+  },
+  "homepage": "https://github.com/carlos8f/extra",
+  "keywords": [
+    "cmd",
+    "commander",
+    "argv",
+    "args"
+  ],
+  "author": "Carlos Rodriguez <carlos@s8f.org> (http://s8f.org/)",
+  "license": "MIT",
+  "readmeFilename": "README.md",
+  "gitHead": "9f4964130c92913ed6adb70b0f2837784e545a16",
+  "bugs": {
+    "url": "https://github.com/carlos8f/extra/issues"
+  }
+}

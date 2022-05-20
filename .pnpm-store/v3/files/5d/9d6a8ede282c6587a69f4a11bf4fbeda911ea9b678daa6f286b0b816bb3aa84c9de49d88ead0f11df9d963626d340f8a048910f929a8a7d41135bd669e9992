@@ -1,0 +1,19 @@
+import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
+
+var _SolutionDefaultConfi, _SolutionSchemas;
+
+import { BaseSchemas } from "./base";
+import { Solution } from "./common";
+import { ModuleDefaultConfig, ModuleSchemas } from "./module";
+import { MonorepoDefaultConfig, MonorepoSchemas } from "./monorepo";
+import { MWADefaultConfig, MWASchemas } from "./mwa";
+export * from "./locale";
+export * from "./common";
+export * from "./newAction";
+export * from "./mwa";
+export * from "./module";
+export * from "./monorepo";
+export * from "./expand";
+export * from "./base";
+export var SolutionDefaultConfig = (_SolutionDefaultConfi = {}, _defineProperty(_SolutionDefaultConfi, Solution.MWA, MWADefaultConfig), _defineProperty(_SolutionDefaultConfi, Solution.Module, ModuleDefaultConfig), _defineProperty(_SolutionDefaultConfi, Solution.Monorepo, MonorepoDefaultConfig), _SolutionDefaultConfi);
+export var SolutionSchemas = (_SolutionSchemas = {}, _defineProperty(_SolutionSchemas, Solution.MWA, MWASchemas), _defineProperty(_SolutionSchemas, Solution.Module, ModuleSchemas), _defineProperty(_SolutionSchemas, Solution.Monorepo, MonorepoSchemas), _defineProperty(_SolutionSchemas, "custom", BaseSchemas), _SolutionSchemas);

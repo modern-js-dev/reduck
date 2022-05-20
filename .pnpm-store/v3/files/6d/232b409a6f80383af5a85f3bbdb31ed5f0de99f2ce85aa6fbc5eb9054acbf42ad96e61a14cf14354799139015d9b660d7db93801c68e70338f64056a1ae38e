@@ -1,0 +1,43 @@
+import { RUN_MODE } from '@modern-js/prod-server';
+import { ModernDevServer } from "./dev-server";
+export class ModernSSRDevServer extends ModernDevServer {
+  prepareAPIHandler(_m, _) {
+    return null;
+  }
+
+  filterRoutes(routes) {
+    return routes.filter(route => route.isSSR);
+  }
+
+  async setupBeforeProdMiddleware() {
+    if (this.runMode === RUN_MODE.FULL) {
+      await super.setupBeforeProdMiddleware();
+    }
+  }
+
+  async emitRouteHook(_, _input) {
+    if (this.runMode === RUN_MODE.FULL) {
+      await super.emitRouteHook(_, _input);
+    }
+  }
+
+}
+export class ModernAPIDevServer extends ModernDevServer {
+  prepareWebHandler(_) {
+    return null;
+  }
+
+  filterRoutes(routes) {
+    return routes.filter(route => route.isApi);
+  }
+
+  async setupBeforeProdMiddleware() {
+    if (this.runMode === RUN_MODE.FULL) {
+      await super.setupBeforeProdMiddleware();
+    }
+  }
+
+  async emitRouteHook(_, _input) {// empty
+  }
+
+}

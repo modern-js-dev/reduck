@@ -1,0 +1,6 @@
+import type { IProjectNode } from '../../projects/get-projects';
+import type { MultitasksLogger } from '../../log/multi-tasks-log';
+import { BuildWatchCmdsType } from './cmds';
+import type { IBuildWatchConfig } from '.';
+export declare const createDependenciesTask: (config: IBuildWatchConfig, taskCmds: BuildWatchCmdsType | undefined, taskLogger: MultitasksLogger) => (project: IProjectNode) => Promise<void>;
+export declare const createDevTask: (config: IBuildWatchConfig, taskCmds: BuildWatchCmdsType | undefined, taskLogger: MultitasksLogger) => (project: IProjectNode) => Promise<void>;

@@ -1,0 +1,14 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.isProjectFile = void 0;
+
+// 判断是否通过 ./、../的方式引用文件
+const isProjectFile = filePath => {
+  const tests = [/^\.\//, /^\.\.\//];
+  return tests.some(regex => regex.test(filePath));
+};
+
+exports.isProjectFile = isProjectFile;

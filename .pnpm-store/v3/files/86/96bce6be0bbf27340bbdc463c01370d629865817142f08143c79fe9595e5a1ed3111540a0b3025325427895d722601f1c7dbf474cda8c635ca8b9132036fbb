@@ -1,0 +1,144 @@
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+import * as path from 'path';
+import { createAsyncWaterfall } from '@modern-js/plugin';
+import { createDebugger, fs, isApiOnly } from '@modern-js/utils';
+import { cloneDeep } from '@modern-js/utils/lodash';
+import { isRouteComponentFile } from "./utils";
+const debug = createDebugger('plugin-analyze');
+export const modifyEntryImports = createAsyncWaterfall();
+export const modifyEntryExport = createAsyncWaterfall();
+export const addRuntimeExports = createAsyncWaterfall();
+export const modifyEntryRuntimePlugins = createAsyncWaterfall();
+export const modifyEntryRenderFunction = createAsyncWaterfall();
+export const modifyFileSystemRoutes = createAsyncWaterfall();
+export const modifyServerRoutes = createAsyncWaterfall();
+export const htmlPartials = createAsyncWaterfall();
+export const beforeGenerateRoutes = createAsyncWaterfall();
+export const addDefineTypes = createAsyncWaterfall();
+export default (() => ({
+  name: '@modern-js/plugin-analyze',
+  registerHook: {
+    modifyEntryImports,
+    modifyEntryExport,
+    modifyEntryRuntimePlugins,
+    modifyEntryRenderFunction,
+    modifyFileSystemRoutes,
+    modifyServerRoutes,
+    htmlPartials,
+    addRuntimeExports,
+    beforeGenerateRoutes,
+    addDefineTypes
+  },
+  setup: api => {
+    let pagesDir = [];
+    let originEntrypoints = [];
+    return {
+      async prepare() {
+        const appContext = api.useAppContext();
+        const resolvedConfig = api.useResolvedConfigContext();
+        const hookRunners = api.useHookRunners();
+
+        try {
+          fs.emptydirSync(appContext.internalDirectory);
+        } catch (_unused) {// FIXME:
+        }
+
+        const apiOnly = await isApiOnly(appContext.appDirectory);
+        await hookRunners.addRuntimeExports();
+
+        if (apiOnly) {
+          const {
+            routes
+          } = await hookRunners.modifyServerRoutes({
+            routes: []
+          });
+          debug(`server routes: %o`, routes);
+          api.setAppContext(_objectSpread(_objectSpread({}, appContext), {}, {
+            apiOnly,
+            serverRoutes: routes
+          }));
+          return;
+        }
+
+        const [{
+          getBundleEntry
+        }, {
+          getServerRoutes
+        }, {
+          generateCode
+        }, {
+          getHtmlTemplate
+        }] = await Promise.all([import("./getBundleEntry"), import("./getServerRoutes"), import("./generateCode"), import("./getHtmlTemplate")]);
+        const entrypoints = getBundleEntry(appContext, resolvedConfig);
+        const defaultChecked = entrypoints.map(point => point.entryName);
+        debug(`entrypoints: %o`, entrypoints);
+        const initialRoutes = getServerRoutes(entrypoints, {
+          appContext,
+          config: resolvedConfig
+        });
+        const {
+          routes
+        } = await hookRunners.modifyServerRoutes({
+          routes: initialRoutes
+        });
+        debug(`server routes: %o`, routes);
+        api.setAppContext(_objectSpread(_objectSpread({}, appContext), {}, {
+          entrypoints,
+          serverRoutes: routes
+        }));
+        pagesDir = entrypoints.map(point => point.entry);
+        originEntrypoints = cloneDeep(entrypoints);
+        await generateCode(appContext, resolvedConfig, entrypoints, api);
+        const htmlTemplates = await getHtmlTemplate(entrypoints, api, {
+          appContext,
+          config: resolvedConfig
+        });
+        debug(`html templates: %o`, htmlTemplates);
+        await hookRunners.addDefineTypes();
+        debug(`add Define Types`);
+        api.setAppContext(_objectSpread(_objectSpread({}, appContext), {}, {
+          entrypoints,
+          checkedEntries: defaultChecked,
+          apiOnly,
+          serverRoutes: routes,
+          htmlTemplates
+        }));
+      },
+
+      watchFiles() {
+        return pagesDir;
+      },
+
+      async fileChange(e) {
+        const appContext = api.useAppContext();
+        const {
+          appDirectory
+        } = appContext;
+        const {
+          filename,
+          eventType
+        } = e;
+
+        const isPageFile = name => pagesDir.some(pageDir => name.includes(pageDir));
+
+        const absoluteFilePath = path.resolve(appDirectory, filename);
+        const isRouteComponent = isPageFile(absoluteFilePath) && isRouteComponentFile(absoluteFilePath);
+
+        if (isRouteComponent && (eventType === 'add' || eventType === 'unlink')) {
+          const resolvedConfig = api.useResolvedConfigContext();
+          const {
+            generateCode
+          } = await import("./generateCode");
+          const entrypoints = cloneDeep(originEntrypoints);
+          generateCode(appContext, resolvedConfig, entrypoints, api);
+        }
+      }
+
+    };
+  }
+}));

@@ -1,0 +1,51 @@
+import React from 'react';
+import { History, BrowserHistoryBuildOptions, HashHistoryBuildOptions } from 'history';
+import { RouteProps } from 'react-router-dom';
+import type { Plugin } from '@modern-js/runtime-core';
+declare global {
+  interface Window {
+    _SERVER_DATA?: {
+      router: {
+        baseUrl: string;
+        params: Record<string, string>;
+      };
+    };
+  }
+}
+export declare type SingleRouteConfig = RouteProps & {
+  redirect?: string;
+  routes?: SingleRouteConfig[];
+  key?: string;
+  /**
+   * layout component
+   */
+
+  layout?: React.ComponentType;
+  /**
+   * component would be rendered when route macthed.
+   */
+
+  component?: React.ComponentType;
+};
+export declare type HistoryConfig = {
+  supportHtml5History: true;
+  historyOptions: BrowserHistoryBuildOptions;
+} | {
+  supportHtml5History: false;
+  historyOptions: HashHistoryBuildOptions;
+};
+export declare type RouterConfig = Partial<HistoryConfig> & {
+  routesConfig?: {
+    globalApp?: React.ComponentType<any>;
+    routes?: SingleRouteConfig[];
+  };
+  history?: History;
+  serverBase?: string[];
+};
+export declare const routerPlugin: ({
+  serverBase,
+  history: customHistory,
+  supportHtml5History,
+  routesConfig,
+  historyOptions
+}: RouterConfig) => Plugin;

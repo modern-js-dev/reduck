@@ -1,0 +1,92 @@
+{
+  "name": "@modern-js/plugin-jarvis",
+  "description": "The meta-framework suite designed from scratch for frontend-focused modern web development.",
+  "homepage": "https://modernjs.dev",
+  "bugs": "https://github.com/modern-js-dev/modern.js/issues",
+  "repository": "modern-js-dev/modern.js",
+  "license": "MIT",
+  "keywords": [
+    "react",
+    "framework",
+    "modern",
+    "modern.js"
+  ],
+  "version": "1.2.12",
+  "jsnext:source": "./src/index.ts",
+  "types": "./dist/types/index.d.ts",
+  "main": "./dist/js/node/index.js",
+  "module": "./dist/js/treeshaking/index.js",
+  "jsnext:modern": "./dist/js/modern/index.js",
+  "exports": {
+    ".": {
+      "node": {
+        "jsnext:source": "./src/index.ts",
+        "import": "./dist/js/modern/index.js",
+        "require": "./dist/js/node/index.js"
+      },
+      "default": "./dist/js/treeshaking/index.js"
+    },
+    "./cli": {
+      "jsnext:source": "./src/index.ts",
+      "default": "./dist/js/node/index.js"
+    }
+  },
+  "dependencies": {
+    "@babel/runtime": "^7.15.3",
+    "@modern-js-app/eslint-config": "^1.2.12",
+    "@modern-js/eslint-config": "^1.2.6",
+    "@modern-js/tsconfig": "^1.2.0",
+    "@modern-js/utils": "^1.7.4",
+    "cross-spawn": "^7.0.1",
+    "eslint": "^7.32.0",
+    "husky": "4.3.8",
+    "lint-staged": "^11.2.3"
+  },
+  "devDependencies": {
+    "@modern-js/core": "1.10.3",
+    "@scripts/build": "0.0.0",
+    "@scripts/jest-config": "0.0.0",
+    "@types/cross-spawn": "^6.0.2",
+    "@types/jest": "^27",
+    "@types/node": "^14",
+    "@types/react": "^17",
+    "@types/react-dom": "^17",
+    "jest": "^27",
+    "typescript": "^4"
+  },
+  "modernConfig": {},
+  "sideEffects": false,
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public",
+    "types": "./dist/types/index.d.ts"
+  },
+  "wireit": {
+    "build": {
+      "command": "modern build",
+      "files": [
+        "src/**/*",
+        "tsconfig.json",
+        "package.json"
+      ],
+      "output": [
+        "dist/**/*"
+      ]
+    },
+    "test": {
+      "command": "jest --passWithNoTests",
+      "files": [
+        "src/**/*",
+        "tsconfig.json",
+        "package.json",
+        "tests/**/*"
+      ],
+      "output": []
+    }
+  },
+  "scripts": {
+    "new": "modern new",
+    "build": "wireit",
+    "test": "wireit"
+  }
+}

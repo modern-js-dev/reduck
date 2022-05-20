@@ -1,0 +1,3 @@
+export declare const removeLeadingSlash: (s: string) => string;
+export declare const removeTailSlash: (s: string) => string;
+export declare const removeSlash: (s: string) => string;

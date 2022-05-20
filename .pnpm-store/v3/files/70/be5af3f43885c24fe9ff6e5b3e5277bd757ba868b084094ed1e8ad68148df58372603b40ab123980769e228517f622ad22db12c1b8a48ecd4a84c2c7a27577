@@ -1,0 +1,14 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.normalizeToPosixPath = exports.normalizeOutputPath = exports.isRelativePath = void 0;
+const path_1 = __importDefault(require("path"));
+const compiled_1 = require("./compiled");
+const isRelativePath = (test) => /^\.\.?($|[\\/])/.test(test);
+exports.isRelativePath = isRelativePath;
+const normalizeOutputPath = (s) => s.replace(/\\/g, '\\\\');
+exports.normalizeOutputPath = normalizeOutputPath;
+const normalizeToPosixPath = (p) => compiled_1.upath.normalizeSafe(path_1.default.normalize(p));
+exports.normalizeToPosixPath = normalizeToPosixPath;

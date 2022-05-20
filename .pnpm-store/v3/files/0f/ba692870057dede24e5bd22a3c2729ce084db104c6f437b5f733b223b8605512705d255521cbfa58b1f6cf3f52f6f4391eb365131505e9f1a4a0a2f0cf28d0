@@ -1,0 +1,86 @@
+export const createBabelPluginChain = () => {
+  let plugins = [];
+  const blacks = [];
+
+  const plugin = name => {
+    const pluginExist = plugins.find(plugin => plugin.name === name);
+    const isExist = Boolean(pluginExist);
+    const plugin = pluginExist || {
+      name,
+      options: []
+    };
+
+    const tap = options => {
+      plugin.options = options;
+      set();
+    };
+
+    const options = () => plugin.options;
+
+    const del = () => {
+      if (isExist) {
+        plugins = plugins.filter(plugin => !plugin.name.includes(name));
+      }
+    };
+
+    const ban = () => {
+      if (!blacks.includes(name)) {
+        blacks.push(name);
+      }
+
+      del();
+    };
+
+    const set = () => {
+      if (blacks.includes(name)) {
+        throw new Error(`Plugin: ${name} has been banned!, You can't set it.`);
+      } // merge preset with replacing
+      // see https://babeljs.io/docs/en/configuration#how-babel-merges-config-items
+
+
+      if (!isExist) {
+        plugins.push(plugin);
+      }
+    };
+
+    const use = (path, options) => {
+      plugin.path = path;
+      plugin.options = options || [];
+      set();
+    };
+
+    return {
+      tap,
+      delete: del,
+      ban,
+      options,
+      filter: plugins.filter,
+      use
+    };
+  };
+
+  const toJSON = () => plugins.map(plugin => plugin.options ? [plugin.path || plugin.name, ...plugin.options] : plugin.path || plugin.name); // merge preset with replacing
+  // see https://babeljs.io/docs/en/configuration#how-babel-merges-config-items
+
+
+  const merge = other => {
+    for (const plugin of other.plugins) {
+      if (plugin.path) {
+        chain.plugin(plugin.name).use(plugin.path, plugin.options);
+      } else {
+        chain.plugin(plugin.name).tap(plugin.options);
+      }
+    }
+
+    return chain;
+  };
+
+  const chain = {
+    plugin,
+    plugins,
+    blacks,
+    toJSON,
+    merge
+  };
+  return chain;
+};

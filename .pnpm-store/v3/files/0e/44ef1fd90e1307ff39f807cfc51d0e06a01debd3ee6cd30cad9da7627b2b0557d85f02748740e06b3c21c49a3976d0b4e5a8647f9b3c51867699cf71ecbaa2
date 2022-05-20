@@ -1,0 +1,35 @@
+"use strict";
+
+var _constant = require("./constant");
+
+var _mockAPI = _interopRequireDefault(require("./mockAPI"));
+
+var _utils = require("./utils");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+let uped = false;
+
+const setup = () => {
+  var _bff_info$modernUserC, _bff_info$modernUserC2;
+
+  if (uped) {
+    return;
+  }
+
+  uped = true;
+  const bff_info = global[_constant.bff_info_key];
+  const prefix = bff_info === null || bff_info === void 0 ? void 0 : (_bff_info$modernUserC = bff_info.modernUserConfig) === null || _bff_info$modernUserC === void 0 ? void 0 : (_bff_info$modernUserC2 = _bff_info$modernUserC.bff) === null || _bff_info$modernUserC2 === void 0 ? void 0 : _bff_info$modernUserC2.prefix;
+  const apiInfos = (0, _utils.getAllAPIInfos)(bff_info.appDir, prefix);
+  const apiInfosByFile = apiInfos.reduce((res, apiInfo) => {
+    if (!res[apiInfo.apiFile]) {
+      res[apiInfo.apiFile] = [];
+    }
+
+    res[apiInfo.apiFile].push(apiInfo);
+    return res;
+  }, {});
+  (0, _mockAPI.default)(apiInfosByFile, global.app);
+};
+
+setup();

@@ -1,0 +1,17 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _utils = require("@modern-js/utils");
+
+var _browser = require("./browser");
+
+var _node = require("./node");
+
+const createRequest = (...args) => (0, _utils.isBrowser)() ? (0, _browser.createRequest)(...args) : (0, _node.createRequest)(...args);
+
+var _default = createRequest;
+exports.default = _default;

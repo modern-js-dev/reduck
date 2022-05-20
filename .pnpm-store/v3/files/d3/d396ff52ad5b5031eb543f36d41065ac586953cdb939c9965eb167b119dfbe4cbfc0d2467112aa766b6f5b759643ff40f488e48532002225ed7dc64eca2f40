@@ -1,0 +1,34 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.getPostcssConfig = void 0;
+const utils_1 = require("@modern-js/utils");
+const util_1 = require("./util");
+/**
+ *
+ * @param autoprefixer - Enable autoprefixer config.
+ * @returns Base PostCSS config options for app or library.
+ */
+const getPostcssConfig = (appDirectory, config, autoprefixer = true) => {
+    var _a, _b;
+    return (0, utils_1.applyOptionsChain)({
+        postcssOptions: {
+            plugins: [
+                require('../compiled/postcss-flexbugs-fixes'),
+                require('../compiled/postcss-custom-properties'),
+                require('../compiled/postcss-initial'),
+                require('../compiled/postcss-page-break'),
+                require('../compiled/postcss-font-variant'),
+                require('../compiled/postcss-media-minmax'),
+                require('../compiled/postcss-nesting'),
+                autoprefixer
+                    ? require('../compiled/autoprefixer')((0, utils_1.applyOptionsChain)({
+                        flexbox: 'no-2009',
+                        overrideBrowserslist: (0, utils_1.getBrowserslist)(appDirectory),
+                    }, (_a = config.tools) === null || _a === void 0 ? void 0 : _a.autoprefixer))
+                    : false,
+            ].filter(Boolean),
+        },
+        sourceMap: (0, util_1.shouldUseSourceMap)(config),
+    }, (_b = config.tools) === null || _b === void 0 ? void 0 : _b.postcss);
+};
+exports.getPostcssConfig = getPostcssConfig;

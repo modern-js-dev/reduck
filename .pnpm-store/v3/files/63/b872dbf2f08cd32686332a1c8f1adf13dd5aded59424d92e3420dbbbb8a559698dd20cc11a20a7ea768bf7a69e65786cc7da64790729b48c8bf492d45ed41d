@@ -1,0 +1,22 @@
+import type { NormalizedConfig } from '@modern-js/core';
+import type { WebpackChain } from '../compiled';
+export declare const enableCssExtract: (config: NormalizedConfig) => boolean;
+interface CSSLoaderOptions {
+    modules?: boolean | string | {
+        localIdentName: string;
+        exportLocalsConvention: 'camelCase' | 'asIs' | 'camelCaseOnly' | 'dashes' | 'dashesOnly';
+    };
+    importLoaders: number;
+    esModule?: boolean;
+    sourceMap: boolean;
+}
+export declare const createCSSRule: (chain: WebpackChain, { appDirectory, config }: {
+    config: NormalizedConfig;
+    appDirectory: string;
+}, { name, test, exclude, genTSD, }: {
+    name: string;
+    test: RegExp | RegExp[];
+    exclude?: RegExp[] | undefined;
+    genTSD?: boolean | undefined;
+}, options: CSSLoaderOptions) => void;
+export {};

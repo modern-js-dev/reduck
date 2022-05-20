@@ -1,0 +1,114 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.RouteMatcher = void 0;
+
+var _utils = require("@modern-js/utils");
+
+var _pathToRegexp = require("path-to-regexp");
+
+var _utils2 = require("../../utils");
+
+var _route = require("./route");
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+// eslint-disable-next-line no-useless-escape
+const regCharsDetector = /[^a-zA-Z\-_0-9\/\.]/;
+
+class RouteMatcher {
+  constructor(spec) {
+    _defineProperty(this, "spec", void 0);
+
+    _defineProperty(this, "urlPath", '');
+
+    _defineProperty(this, "urlMatcher", void 0);
+
+    _defineProperty(this, "urlReg", void 0);
+
+    this.spec = spec;
+    this.setupUrlPath();
+  } // generate modern route object
+
+
+  generate(url) {
+    const route = new _route.ModernRoute(this.spec);
+
+    if (this.urlPath) {
+      const params = this.parseURLParams(url);
+      route.urlPath = (0, _utils2.toPath)(route.urlPath, params);
+      route.params = params;
+    }
+
+    return route;
+  }
+
+  parseURLParams(pathname) {
+    if (!this.urlMatcher) {
+      return {};
+    } else {
+      const matchResult = this.urlMatcher(pathname);
+      return matchResult.params;
+    }
+  } // get match url length
+
+
+  matchLength(pathname) {
+    if (!this.urlReg) {
+      return this.urlPath.length;
+    } else {
+      var _result$;
+
+      const result = this.urlReg.exec(pathname);
+      return (result === null || result === void 0 ? void 0 : (_result$ = result[0]) === null || _result$ === void 0 ? void 0 : _result$.length) || null;
+    }
+  } // if match url path
+
+
+  matchUrlPath(requestUrl) {
+    const urlWithoutSlash = requestUrl.endsWith('/') && requestUrl !== '/' ? requestUrl.slice(0, -1) : requestUrl;
+
+    if (this.urlMatcher) {
+      return Boolean(this.urlMatcher(urlWithoutSlash));
+    } else {
+      if (urlWithoutSlash.startsWith(this.urlPath)) {
+        // avoid /abcd match /a
+        if (this.urlPath !== '/' && urlWithoutSlash.length > this.urlPath.length && !urlWithoutSlash.startsWith(`${this.urlPath}/`)) {
+          return false;
+        }
+
+        return true;
+      }
+
+      return false;
+    }
+  }
+
+  matchEntry(entryName) {
+    return this.spec.entryName === entryName;
+  } // compiler urlPath to regexp if necessary
+
+
+  setupUrlPath() {
+    const {
+      urlPath
+    } = this.spec;
+    this.urlPath = urlPath === '/' ? urlPath : (0, _utils.removeTailSlash)(urlPath);
+    const useReg = regCharsDetector.test(urlPath);
+
+    if (useReg) {
+      this.urlMatcher = (0, _pathToRegexp.match)(urlPath, {
+        end: false,
+        decode: decodeURIComponent
+      });
+      this.urlReg = (0, _pathToRegexp.pathToRegexp)(urlPath, [], {
+        end: false
+      });
+    }
+  }
+
+}
+
+exports.RouteMatcher = RouteMatcher;

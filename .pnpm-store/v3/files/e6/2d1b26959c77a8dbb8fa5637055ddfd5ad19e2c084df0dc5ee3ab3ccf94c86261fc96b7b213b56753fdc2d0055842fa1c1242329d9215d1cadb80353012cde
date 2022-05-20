@@ -1,0 +1,27 @@
+/// <reference types="node" />
+/**
+ * Copyright (c) 2015-present, Facebook, Inc.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ * modified from https://github.com/facebook/create-react-app/blob/master/packages/react-dev-utils/InlineChunkHtmlPlugin.js
+ */
+import HtmlWebpackPlugin, { HtmlTagObject } from 'html-webpack-plugin';
+import { Compiler, Compilation } from 'webpack';
+export declare class InlineChunkHtmlPlugin {
+    htmlWebpackPlugin: typeof HtmlWebpackPlugin;
+    tests: RegExp[];
+    constructor(htmlWebpackPlugin: typeof HtmlWebpackPlugin, tests: RegExp[]);
+    getInlinedScriptTag(publicPath: string, assets: Compilation['assets'], tag: HtmlTagObject): HtmlWebpackPlugin.HtmlTagObject | {
+        tagName: string;
+        innerHTML: string | Buffer;
+        closeTag: boolean;
+    };
+    getInlinedCSSTag(publicPath: string, assets: Compilation['assets'], tag: HtmlTagObject): HtmlWebpackPlugin.HtmlTagObject | {
+        tagName: string;
+        innerHTML: string | Buffer;
+        closeTag: boolean;
+    };
+    getInlinedTag(publicPath: string, assets: Compilation['assets'], tag: HtmlTagObject): HtmlWebpackPlugin.HtmlTagObject;
+    apply(compiler: Compiler): void;
+}

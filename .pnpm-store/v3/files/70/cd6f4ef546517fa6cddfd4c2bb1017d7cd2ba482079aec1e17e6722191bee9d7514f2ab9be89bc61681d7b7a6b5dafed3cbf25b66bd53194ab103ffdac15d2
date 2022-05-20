@@ -1,0 +1,20 @@
+import lint from "./lint";
+import preCommit from "./pre-commit";
+export default (function () {
+  return {
+    name: '@modern-js/plugin-jarvis',
+    setup: function setup() {
+      return {
+        commands: function commands(_ref) {
+          var program = _ref.program;
+          program.command('lint [...files]').allowUnknownOption().description('lint and fix source files').option('--no-fix', 'disable auto fix source file').action(function () {
+            lint();
+          });
+          program.command('pre-commit').description('auto run modern lint before commit').action(function () {
+            preCommit();
+          });
+        }
+      };
+    }
+  };
+});

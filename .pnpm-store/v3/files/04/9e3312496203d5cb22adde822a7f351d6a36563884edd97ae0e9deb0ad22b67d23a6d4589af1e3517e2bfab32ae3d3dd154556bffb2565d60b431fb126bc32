@@ -1,0 +1,6 @@
+import { ResolveItemParams, SingleFileCompilerResult } from '../types';
+export declare const postcssResolve: (css: string, params: ResolveItemParams, {
+  sourcemapContent
+}?: {
+  sourcemapContent?: string | undefined;
+}) => Promise<SingleFileCompilerResult>;

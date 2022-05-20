@@ -1,0 +1,47 @@
+{
+  "name": "process.argv",
+  "description": "light-weight CLI arguments parser",
+  "version": "0.6.0",
+  "author": "@kawanet",
+  "bugs": {
+    "url": "https://github.com/kawanet/process.argv/issues"
+  },
+  "dependencies": {
+    "obop": "^0.2.0"
+  },
+  "devDependencies": {
+    "jshint": "^2.12.0",
+    "mocha": "^8.2.0"
+  },
+  "files": [
+    "LICENSE",
+    "README.md",
+    "process.argv.js",
+    "types/process.argv.d.ts"
+  ],
+  "homepage": "https://github.com/kawanet/process.argv#readme",
+  "jshintConfig": {
+    "esversion": 6,
+    "mocha": true,
+    "node": true,
+    "undef": true
+  },
+  "keywords": [
+    "cli",
+    "commander",
+    "options"
+  ],
+  "license": "MIT",
+  "main": "process.argv.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kawanet/process.argv.git"
+  },
+  "scripts": {
+    "fixpack": "fixpack",
+    "jshint": "./node_modules/.bin/jshint *.js *.json test/*.js",
+    "mocha": "./node_modules/.bin/mocha -R spec test/*.*.js",
+    "test": "npm run jshint && npm run mocha"
+  },
+  "typings": "./types/process.argv.d.ts"
+}

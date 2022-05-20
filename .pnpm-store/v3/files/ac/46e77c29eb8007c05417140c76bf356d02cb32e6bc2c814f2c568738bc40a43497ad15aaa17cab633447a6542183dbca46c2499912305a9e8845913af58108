@@ -1,0 +1,12 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.errorLog = void 0;
+
+const errorLog = (...rest) => {
+  throw new Error(rest.join('\n'));
+};
+
+exports.errorLog = errorLog;

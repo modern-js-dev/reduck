@@ -1,0 +1,14 @@
+import { GlobOptions } from '@modern-js/utils';
+import { Extensions, ExtensionsFunc, ICompilerOptions, IFinaleCompilerOptions } from './type';
+export declare const getGlobPattern: (dir: string, extensions: Extensions) => string;
+export declare const getFinalExtensions: (extensions: Extensions | ExtensionsFunc | undefined) => string[];
+export declare const getFilesFromDir: ({
+  dir,
+  finalExt,
+  ignore
+}: {
+  dir: string;
+  finalExt?: string[] | undefined;
+  ignore?: GlobOptions['ignore'];
+}) => string[];
+export declare const getFinalCompilerOption: (option: ICompilerOptions) => IFinaleCompilerOptions;

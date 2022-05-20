@@ -1,0 +1,39 @@
+export declare const tools: {
+    type: string;
+    additionalProperties: boolean;
+    properties: {
+        webpack: {
+            typeof: string[];
+        };
+        webpackChain: {
+            typeof: string[];
+        };
+        babel: {
+            typeof: string[];
+        };
+        postcss: {
+            typeof: string[];
+        };
+        lodash: {
+            typeof: string[];
+        };
+        devServer: {
+            type: string;
+        };
+        tsLoader: {
+            typeof: string[];
+        };
+        autoprefixer: {
+            typeof: string[];
+        };
+        terser: {
+            typeof: string[];
+        };
+        minifyCss: {
+            typeof: string[];
+        };
+        styledComponents: {
+            typeof: string[];
+        };
+    };
+};

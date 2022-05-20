@@ -1,0 +1,6 @@
+import { clear } from "../commands";
+export const clearCli = (program, api) => {
+  program.command('clear [projects...]').usage('[options]').option('--remove-dirs [dirs...]', 'remove dirs, default is node_modules').description('clear project dirs').action(async (targetProjectNames, option) => {
+    await clear(targetProjectNames, option, api);
+  });
+};

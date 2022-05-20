@@ -1,0 +1,297 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.createCache = createCache;
+exports.destroyCache = destroyCache;
+
+var _crypto = _interopRequireDefault(require("crypto"));
+
+var _lruCache = _interopRequireDefault(require("lru-cache"));
+
+var _utils = require("@modern-js/utils");
+
+var _util = require("./util");
+
+var _pageCaches = require("./page-caches");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+const MAX_CACHE_EACH_REQ = Number(process.env.ROUTE_CACHE_LIMIT) || 10;
+const MAX_SIZE_EACH_CLUSTER = Number(process.env.CLUSTER_CACHE_LIMIT) || 100;
+const BASE_LEVEL = 0;
+const QUERY_LEVEL = 1;
+const HEADER_LEVEL = 2;
+const QUERY_HEADER_LEVEL = 3;
+
+class CacheManager {
+  constructor(cacheOptions) {
+    _defineProperty(this, "cache", void 0);
+
+    _defineProperty(this, "cacheOptions", void 0);
+
+    _defineProperty(this, "find", (() => {
+      {
+        // eslint-disable-next-line consistent-this,@typescript-eslint/no-this-alias
+        const _this = this;
+
+        return {
+          [(0, _util.fname)(BASE_LEVEL)](context, cacheKey // data: CacheContent,
+          ) {
+            return _this.md5(cacheKey);
+          },
+
+          [(0, _util.fname)(QUERY_LEVEL)](context, cacheKey, data) {
+            const queryFactor = _this.queryFactor(context, data);
+
+            if (!queryFactor) {
+              return null;
+            }
+
+            return _this.md5((0, _util.connectFactor)(cacheKey, queryFactor));
+          },
+
+          [(0, _util.fname)(HEADER_LEVEL)](context, cacheKey, data) {
+            const headerFactor = _this.headerFactor(context, data);
+
+            if (!headerFactor) {
+              return null;
+            }
+
+            return _this.md5((0, _util.connectFactor)(cacheKey, headerFactor));
+          },
+
+          [(0, _util.fname)(QUERY_HEADER_LEVEL)](context, cacheKey, data) {
+            const queryFactor = _this.queryFactor(context, data);
+
+            const headerFactor = _this.headerFactor(context, data);
+
+            if (!queryFactor || !headerFactor) {
+              return null;
+            }
+
+            return _this.md5((0, _util.connectFactor)(cacheKey, headerFactor, queryFactor));
+          }
+
+        };
+      }
+    })());
+
+    this.cacheOptions = cacheOptions;
+    this.cache = new _lruCache.default({
+      max: Math.min(MAX_SIZE_EACH_CLUSTER, 600) * 1024 * 1024,
+
+      // 默认存 100M，最大 600M
+      length(n) {
+        const len = n.caches.keys().reduce((total, cur) => {
+          var _n$caches$peek;
+
+          return total + (((_n$caches$peek = n.caches.peek(cur)) === null || _n$caches$peek === void 0 ? void 0 : _n$caches$peek.size) || 0);
+        }, 1);
+        return len;
+      }
+
+    });
+  }
+
+  md5(content) {
+    const md5 = _crypto.default.createHash('md5');
+
+    return md5.update(content).digest('hex');
+  }
+
+  generateRequestKey(context) {
+    const {
+      pathname,
+      entry
+    } = context;
+    return this.md5(`${pathname}_${entry}`);
+  }
+
+  replaceValue(value, matcher) {
+    let final = value;
+    Object.keys(matcher).some(replacer => {
+      const reg = new RegExp(matcher[replacer]);
+
+      if (reg.test(value)) {
+        final = replacer;
+        return true;
+      }
+
+      return false;
+    });
+    return final;
+  }
+
+  factor(keys, obj, matches = {}) {
+    keys.sort();
+    const getValue = (0, _util.valueFactory)(obj);
+    const factorAry = keys.reduce((ary, key) => {
+      let value = getValue(key) || '';
+      const matcher = matches[key];
+
+      if (matcher) {
+        value = this.replaceValue(value, matcher);
+      }
+
+      return ary.concat([key, value]);
+    }, []);
+    return factorAry.join(',');
+  }
+
+  queryFactor(context, data) {
+    var _data$includes, _data$matches;
+
+    const queryKeys = (_data$includes = data.includes) === null || _data$includes === void 0 ? void 0 : _data$includes.query;
+    const queryMatches = (_data$matches = data.matches) === null || _data$matches === void 0 ? void 0 : _data$matches.query;
+
+    if (!queryKeys || queryKeys.length === 0) {
+      return null;
+    }
+
+    const requestQuery = context.query;
+    const queryFactor = this.factor(queryKeys, requestQuery, queryMatches);
+    return queryFactor;
+  }
+
+  headerFactor(context, data) {
+    var _data$includes2, _data$matches2;
+
+    const headerKeys = (_data$includes2 = data.includes) === null || _data$includes2 === void 0 ? void 0 : _data$includes2.header;
+    const headerMatches = (_data$matches2 = data.matches) === null || _data$matches2 === void 0 ? void 0 : _data$matches2.header;
+
+    if (!headerKeys || headerKeys.length === 0) {
+      return null;
+    }
+
+    const requestHeader = context.headers;
+    const headerFactor = this.factor(headerKeys, requestHeader, headerMatches);
+    return headerFactor;
+  }
+
+  async best(context, cacheKey, data) {
+    const {
+      level
+    } = data;
+    const cacheHash = this.find[(0, _util.fname)(level)](context, cacheKey, data);
+
+    if (!cacheHash) {
+      return null;
+    }
+
+    return data.caches.get(cacheHash);
+  }
+
+  createCacheContent(config, caches) {
+    return {
+      level: config.level,
+      interval: config.interval,
+      includes: config.includes || null,
+      limit: config.staleLimit,
+      matches: config.matches || null,
+      caches
+    };
+  }
+
+  async get(context) {
+    const cacheKey = this.generateRequestKey(context);
+    const data = this.cache.get(cacheKey); // no cache key matched
+
+    if (!data) {
+      return null;
+    }
+
+    const dest = await this.best(context, cacheKey, data); // no cache for current page with current config
+
+    if (!dest) {
+      return null;
+    }
+
+    const {
+      expireTime,
+      limitTime,
+      html,
+      cacheHash
+    } = dest;
+    const isStale = Date.now() - expireTime > 0;
+    const isGarbage = limitTime ? Date.now() - limitTime > 0 : false;
+    return {
+      content: html || '',
+      contentType: _utils.mime.contentType('html'),
+      isStale,
+      isGarbage,
+      hash: cacheHash
+    };
+  }
+
+  async set(context, html, cacheConfig, sync = false) {
+    if (!cacheConfig) {
+      return false;
+    } // each version with route is a separate cache
+
+
+    const cacheKey = this.generateRequestKey(context);
+    let data = this.cache.get(cacheKey);
+
+    if (!data) {
+      const caches = await (0, _pageCaches.createPageCaches)(MAX_CACHE_EACH_REQ);
+      data = this.createCacheContent(cacheConfig, caches);
+    }
+
+    const cacheHash = this.find[(0, _util.fname)(cacheConfig.level)](context, cacheKey, data); // if cacheHash is null, maybe level not match meta key, do not cache
+
+    if (!cacheHash) {
+      return false;
+    }
+
+    const cacheSyncOrAsync = async () => {
+      const next = data;
+      const limit = cacheConfig.staleLimit;
+      const storeHTML = (0, _util.cacheAddition)(html, cacheHash);
+      const size = storeHTML.length;
+      await next.caches.set(cacheHash, {
+        expireTime: Date.now() + cacheConfig.interval * 1000,
+        limitTime: typeof limit === 'number' ? Date.now() + limit * 1000 : null,
+        cacheHash,
+        html: storeHTML,
+        size
+      });
+      this.cache.set(cacheKey, next);
+      return true;
+    }; // cache set is async, each hash is cached only once at the same time
+
+
+    const doCache = (0, _util.withCoalescedInvoke)(cacheSyncOrAsync).bind(null, (0, _util.namespaceHash)('stream', cacheHash), []);
+    return (0, _util.maybeSync)(doCache)(sync);
+  }
+
+  async del(context, cacheHash) {
+    const cacheKey = this.generateRequestKey(context);
+    const data = this.cache.get(cacheKey);
+    data === null || data === void 0 ? void 0 : data.caches.del(cacheHash);
+  }
+
+}
+
+let manager;
+
+function createCache() {
+  if (manager) {
+    return manager;
+  }
+
+  manager = new CacheManager({
+    max: 0
+  });
+  return manager;
+}
+
+function destroyCache() {
+  manager = null;
+}
+/* eslint-enable no-lone-blocks */
+
+/* eslint-enable @typescript-eslint/member-ordering */

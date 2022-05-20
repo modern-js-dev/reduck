@@ -1,0 +1,9 @@
+import type { PluginAPI } from '@modern-js/core';
+export interface IDevConfig {
+  appDirectory: string;
+  isTsProject: boolean;
+}
+export declare type DevTaskType = 'storybook' | 'docsite' | 'unknown';
+export declare const showMenu: (api: PluginAPI, config: IDevConfig) => Promise<void>;
+export declare const devStorybook: (api: PluginAPI, config: IDevConfig) => Promise<void>;
+export declare const runSubCmd: (api: PluginAPI, subCmd: string, config: IDevConfig) => Promise<void>;

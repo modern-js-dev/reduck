@@ -1,0 +1,8 @@
+import type HtmlWebpackPlugin from 'html-webpack-plugin';
+import { Compiler } from 'webpack';
+export declare class BottomTemplatePlugin {
+    htmlWebpackPlugin: typeof HtmlWebpackPlugin;
+    name: string;
+    constructor(htmlWebpackPlugin: typeof HtmlWebpackPlugin);
+    apply(compiler: Compiler): void;
+}

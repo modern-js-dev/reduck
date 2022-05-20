@@ -1,0 +1,12 @@
+export declare const EN_LOCALE: {
+  command: {
+    new: {
+      describe: string;
+      debug: string;
+      config: string;
+      plugin: string;
+      distTag: string;
+      registry: string;
+    };
+  };
+};

@@ -1,0 +1,3 @@
+import { Package } from '../package';
+export declare const getProjectsByPackageConfig: (rootPath: string, packagesConfig: string[], ignoreConfigs: string[]) => Promise<Package[]>;
+export declare const syncGetProjectsByPackageConfig: (rootPath: string, packagesConfig: string[], ignoreConfigs: string[]) => Package[];

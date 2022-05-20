@@ -1,0 +1,7 @@
+import type { CliPlugin } from '@modern-js/core';
+import { TestConfigOperator } from '@modern-js/testing';
+export declare const mergeUserJestConfig: (testUtils: TestConfigOperator) => void;
+
+declare const _default: () => CliPlugin;
+
+export default _default;

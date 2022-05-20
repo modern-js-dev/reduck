@@ -1,0 +1,20 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.patchAssetsModule = void 0;
+
+/**
+ * Merge config from testConfig.jest
+ */
+const patchAssetsModule = testOperator => {
+  testOperator.mergeJestConfig({
+    moduleNameMapper: {
+      '\\.(css|less|scss|sass)$': require.resolve('identity-obj-proxy'),
+      '\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$': require.resolve("./filemock.js")
+    }
+  });
+};
+
+exports.patchAssetsModule = patchAssetsModule;

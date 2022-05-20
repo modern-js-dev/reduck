@@ -1,0 +1,22 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.localeKeys = exports.i18n = void 0;
+
+var _utils = require("@modern-js/utils");
+
+var _zh = require("./zh");
+
+var _en = require("./en");
+
+const i18nPlugin = _utils.Import.lazy('@modern-js/plugin-i18n', require);
+
+const i18n = new i18nPlugin.I18n();
+exports.i18n = i18n;
+const localeKeys = i18n.init('zh', {
+  zh: _zh.ZH_LOCALE,
+  en: _en.EN_LOCALE
+});
+exports.localeKeys = localeKeys;

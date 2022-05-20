@@ -1,0 +1,2 @@
+import { ProjectOption } from '../types';
+export declare const generateOutputFile: (file: string, css: string, projectOptions: ProjectOption) => void;

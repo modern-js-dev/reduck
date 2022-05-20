@@ -1,0 +1,6 @@
+import type { CliPlugin } from '@modern-js/core';
+export { defineConfig } from '@modern-js/core';
+
+declare const _default: () => CliPlugin;
+
+export default _default;

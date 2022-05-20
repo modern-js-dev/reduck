@@ -1,0 +1,31 @@
+export interface IFindSubProjectConfig {
+  packagesMatchs?: string[] | {
+    enableAutoFinder?: boolean;
+    workspaceFile?: string;
+  };
+  projectsConfig?: {
+    name: string;
+    path: string;
+  }[];
+  /**
+   * https://github.com/mrmlnc/fast-glob#ignore
+   */
+
+  packagesIgnoreMatchs?: string[];
+}
+export interface IProjectNode {
+  name: string;
+  dependency?: IProjectNode[];
+  dependent?: IProjectNode[];
+  extra: {
+    path: string;
+  } & Record<string, any>;
+  dependencyEdge: number;
+  dependentEdge: number;
+  checkedCircle: boolean;
+  circlePath: string[];
+  criticalPathLength?: number;
+}
+export declare type IMonorepoSubProject = IProjectNode;
+export declare const getProjects: (config: IFindSubProjectConfig, currentDir?: string) => Promise<IMonorepoSubProject[]>;
+export declare const syncGetProjects: (config: IFindSubProjectConfig, currentDir?: string) => IMonorepoSubProject[];

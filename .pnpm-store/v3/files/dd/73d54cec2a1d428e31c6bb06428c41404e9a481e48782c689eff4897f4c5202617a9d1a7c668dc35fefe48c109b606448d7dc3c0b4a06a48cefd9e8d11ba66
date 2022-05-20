@@ -1,0 +1,206 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _ws = _interopRequireDefault(require("ws"));
+
+var _utils = require("@modern-js/utils");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+class SocketServer {
+  constructor(options) {
+    _defineProperty(this, "wsServer", void 0);
+
+    _defineProperty(this, "sockets", []);
+
+    _defineProperty(this, "options", void 0);
+
+    _defineProperty(this, "app", void 0);
+
+    _defineProperty(this, "stats", void 0);
+
+    _defineProperty(this, "timer", null);
+
+    this.options = options;
+  } // create socket, install socket handler, bind socket event
+
+
+  prepare(app) {
+    this.app = app;
+    this.wsServer = new _ws.default.Server({
+      noServer: true,
+      path: this.options.client.path
+    }); // listen upgrade event to handle socket
+
+    this.app.on('upgrade', (req, sock, head) => {
+      if (!this.wsServer.shouldHandle(req)) {
+        return;
+      }
+
+      this.wsServer.handleUpgrade(req, sock, head, connection => {
+        this.wsServer.emit('connection', connection, req);
+      });
+    });
+    this.wsServer.on('error', err => {
+      // only dev server, use default logger
+      _utils.logger.error(err);
+    });
+    this.timer = setInterval(() => {
+      this.wsServer.clients.forEach(socket => {
+        const extWs = socket;
+
+        if (!extWs.isAlive) {
+          extWs.terminate();
+        } else {
+          extWs.isAlive = false;
+          extWs.ping(() => {// empty
+          });
+        }
+      });
+    }, 30000);
+    this.wsServer.on('connection', socket => {
+      this.onConnect(socket);
+    });
+  }
+
+  updateStats(stats) {
+    this.stats = stats;
+    this.sendStats();
+  } // write message to each socket
+
+
+  sockWrite(type, data) {
+    this.sockets.forEach(socket => {
+      this.send(socket, JSON.stringify({
+        type,
+        data
+      }));
+    });
+  }
+
+  singleWrite(socket, type, data) {
+    this.send(socket, JSON.stringify({
+      type,
+      data
+    }));
+  }
+
+  close() {
+    this.sockets.forEach(socket => {
+      socket.close();
+    });
+
+    if (this.timer) {
+      clearInterval(this.timer);
+      this.timer = null;
+    }
+  }
+
+  onConnect(socket) {
+    const connection = socket;
+    connection.isAlive = true;
+    connection.on('pong', () => {
+      connection.isAlive = true;
+    });
+
+    if (!connection) {
+      return;
+    }
+
+    this.sockets.push(connection);
+    connection.on('close', () => {
+      const idx = this.sockets.indexOf(connection);
+
+      if (idx >= 0) {
+        this.sockets.splice(idx, 1);
+      }
+    });
+
+    if (this.options.client.logging) {
+      this.singleWrite(connection, 'logging', this.options.client.logging);
+    }
+
+    if (this.options.hot || this.options.hot === 'only') {
+      this.singleWrite(connection, 'hot');
+    }
+
+    if (this.options.liveReload) {
+      this.singleWrite(connection, 'liveReload');
+    }
+
+    if (this.options.client.progress) {
+      this.singleWrite(connection, 'progress', this.options.client.progress);
+    }
+
+    if (this.options.client.overlay) {
+      this.singleWrite(connection, 'overlay', this.options.client.overlay);
+    } // send first stats to active client sock if stats exist
+
+
+    if (this.stats) {
+      this.sendStats(true);
+    }
+  } // get standard stats
+
+
+  getStats() {
+    const curStats = this.stats;
+
+    if (!curStats) {
+      return null;
+    }
+
+    const defaultStats = {
+      all: false,
+      hash: true,
+      assets: true,
+      warnings: true,
+      errors: true,
+      errorDetails: false
+    };
+    return curStats.toJson(defaultStats);
+  } // determine what message should send by stats
+
+
+  sendStats(force = false) {
+    const stats = this.getStats(); // this should never happened
+
+    if (!stats) {
+      return null;
+    }
+
+    const shouldEmit = !force && stats && (!stats.errors || stats.errors.length === 0) && stats.assets && stats.assets.every(asset => !asset.emitted);
+
+    if (shouldEmit) {
+      return this.sockWrite('still-ok');
+    }
+
+    this.sockWrite('hash', stats.hash);
+
+    if (stats.errors && stats.errors.length > 0) {
+      return this.sockWrite('errors', stats.errors);
+    } else if (stats.warnings && stats.warnings.length > 0) {
+      return this.sockWrite('warnings', stats.warnings);
+    } else {
+      return this.sockWrite('ok');
+    }
+  } // send message to connecting socket
+
+
+  send(connection, message) {
+    if (connection.readyState !== 1) {
+      return;
+    }
+
+    connection.send(message);
+  }
+
+}
+
+exports.default = SocketServer;

@@ -1,0 +1,18 @@
+import { Handler, SchemaHandler } from '@modern-js/bff-runtime';
+import { HttpMethod } from '../constant';
+export declare const extractAPIHandlers: (_apiDir: string) => APIHandlerInfo[];
+export declare type HandlerModule = Record<string, any>;
+export declare type ModuleInfo = {
+  filename: string;
+  module: HandlerModule;
+  name: string;
+};
+export declare const extractModuleInfoFromFilenames: (apiDir: string, filenames: string[]) => ModuleInfo[];
+export declare type APIHandlerInfo = {
+  handler: Handler<any, any> | SchemaHandler<any, any>;
+  method: string;
+  name: string;
+};
+export declare const extractAPIHandlersFromModuleInfos: (moduleInfos: ModuleInfo[]) => APIHandlerInfo[];
+export declare const getMethod: (name: string) => HttpMethod | string;
+export declare const getRouteName: (pwd: string, filename: string) => string;

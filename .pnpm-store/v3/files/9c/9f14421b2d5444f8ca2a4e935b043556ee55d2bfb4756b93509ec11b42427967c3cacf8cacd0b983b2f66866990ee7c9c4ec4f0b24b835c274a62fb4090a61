@@ -1,0 +1,56 @@
+/// <reference types="node" />
+import type { ChildProcess } from 'child_process';
+import EventEmitter from 'events';
+export declare const clearFlag = "\u001Bc";
+export declare const logTemplate: (title: string, messageStack: string[], maxLength: number, {
+  noBottomBorder,
+  bottomBorderText,
+  noLeftBorder,
+  leftBorder,
+  contentColor
+}?: {
+  noBottomBorder?: boolean | undefined;
+  bottomBorderText?: string | undefined;
+  noLeftBorder?: boolean | undefined;
+  leftBorder?: string | undefined;
+  contentColor?: ((s: string) => string) | undefined;
+}) => string;
+export declare type STDOUT = ChildProcess['stdout'] | NodeJS.ReadStream;
+export declare type STDERR = ChildProcess['stdout'] | NodeJS.ReadStream;
+export interface LoggerTextOption {
+  title: string;
+  maxLength: number;
+  contentConfig?: {
+    noBottomBorder?: boolean;
+    bottomBorderText?: string;
+    noLeftBorder?: boolean;
+    leftBorder?: string;
+    contentColor?: (s: string) => string;
+    replace?: string[];
+  };
+}
+export declare class LoggerText {
+  messages: string[];
+  option: LoggerTextOption;
+  constructor(option: LoggerTextOption);
+  append(message: string): void;
+  get value(): string;
+}
+interface IAddStdoutConfig {
+  event?: {
+    data?: boolean;
+    error?: boolean;
+  };
+  colors?: {
+    data?: (s: string) => string;
+    error?: (s: string) => string;
+    warning?: (s: string) => string;
+  };
+}
+export declare class LoggerManager extends EventEmitter {
+  createLoggerText(option: LoggerTextOption): LoggerText;
+  addStdout(loggerText: LoggerText, stdout: STDOUT, config?: IAddStdoutConfig): void;
+  addStderr(loggerText: LoggerText, stderr: STDERR): void;
+  show(loggerText: LoggerText): void;
+}
+export {};

@@ -1,0 +1,48 @@
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+import * as path from 'path';
+import { compatRequire, fs, DEFAULT_SERVER_CONFIG } from '@modern-js/utils';
+import mergeDeep from 'merge-deep';
+export const getServerConfigPath = (distDirectory, serverConfigFile = DEFAULT_SERVER_CONFIG) => {
+  const serverConfigPath = path.join(distDirectory, serverConfigFile);
+  return `${serverConfigPath}.js`;
+};
+export const requireConfig = serverConfigPath => {
+  if (fs.pathExistsSync(serverConfigPath)) {
+    return compatRequire(serverConfigPath);
+  }
+
+  return {};
+};
+/**
+ * 对配置进行合并，开发环境下,cliConfig 与 serverConfig 进行深合并
+ * 生产环境下，resolvedConfig 与 serverConfig 进行深合并
+ * resolvedConfigPath: 构建序列化后的 modern.config.js 文件路径
+ */
+
+export const loadConfig = ({
+  cliConfig,
+  serverConfig,
+  resolvedConfigPath
+}) => {
+  let config = null;
+
+  if (process.env.NODE_ENV === 'production') {
+    const resolvedConfig = requireConfig(resolvedConfigPath); // cli config has a higher priority,because it's an argument passed in.
+
+    config = mergeDeep(_objectSpread(_objectSpread({}, resolvedConfig), {}, {
+      plugins: [] // filter cli plugins
+
+    }), serverConfig, cliConfig);
+  } else {
+    config = mergeDeep(_objectSpread(_objectSpread({}, cliConfig), {}, {
+      plugins: []
+    }), serverConfig);
+  }
+
+  return config;
+};

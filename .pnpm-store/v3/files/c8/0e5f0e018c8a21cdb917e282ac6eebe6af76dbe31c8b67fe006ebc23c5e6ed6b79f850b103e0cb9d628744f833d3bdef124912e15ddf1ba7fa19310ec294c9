@@ -1,0 +1,28 @@
+import { validAlias } from '@modern-js/utils';
+export const valideBeforeTask = ({
+  modernConfig,
+  tsconfigPath
+}) => {
+  const modernConfigValidResult = modernConfigValid(modernConfig, {
+    tsconfigPath
+  });
+
+  if (modernConfigValidResult) {
+    console.error(modernConfigValidResult); // eslint-disable-next-line no-process-exit
+
+    process.exit(0);
+  }
+};
+export const modernConfigValid = (modernConfig, option) => {
+  const valids = [validAlias];
+
+  for (const validFn of valids) {
+    const result = validFn(modernConfig, option);
+
+    if (result) {
+      return result;
+    }
+  }
+
+  return null;
+};

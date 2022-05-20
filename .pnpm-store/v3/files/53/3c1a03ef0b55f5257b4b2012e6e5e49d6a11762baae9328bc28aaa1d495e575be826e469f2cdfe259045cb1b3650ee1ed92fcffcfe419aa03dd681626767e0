@@ -1,0 +1,124 @@
+import _objectSpread from "@babel/runtime/helpers/esm/objectSpread2";
+import _asyncToGenerator from "@babel/runtime/helpers/esm/asyncToGenerator";
+import _regeneratorRuntime from "@babel/runtime/regenerator";
+import { createManager, createContext, createPipeline, createAsyncPipeline } from '@modern-js/plugin';
+import { createLoaderManager } from "./loader/loaderManager";
+var hoc = createPipeline(); // eslint-disable-next-line @typescript-eslint/no-empty-interface
+
+var provide = createPipeline();
+export var AppComponentContext = createContext(null);
+export var useAppComponent = function useAppComponent() {
+  var AppComponent = AppComponentContext.use().value;
+
+  if (!AppComponent) {
+    throw new Error("Expect React.ComponentType, accept: null");
+  }
+
+  return AppComponent;
+};
+export var useRootElement = function useRootElement() {
+  var rootElement = AppComponentContext.use().value;
+
+  if (!rootElement) {
+    throw new Error("Expect HTMLElement, accept: null");
+  }
+
+  return rootElement;
+};
+var client = createAsyncPipeline();
+var server = createAsyncPipeline();
+var init = createAsyncPipeline();
+var pickContext = createPipeline();
+var runtimeHooks = {
+  hoc: hoc,
+  provide: provide,
+  client: client,
+  server: server,
+  init: init,
+  pickContext: pickContext
+};
+/** All hooks of runtime plugin. */
+
+export var createRuntime = function createRuntime() {
+  return createManager(runtimeHooks);
+};
+/**
+ * register init hook. It would be revoked both ssr and csr.
+ */
+
+var registerInit = function registerInit(App, _init) {
+  var originalInit = App.init;
+
+  App.init = /*#__PURE__*/function () {
+    var _ref = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee(context) {
+      return _regeneratorRuntime.wrap(function _callee$(_context) {
+        while (1) {
+          switch (_context.prev = _context.next) {
+            case 0:
+              if (!context.loaderManager) {
+                context.loaderManager = createLoaderManager({});
+              }
+
+              _context.next = 3;
+              return Promise.all([originalInit === null || originalInit === void 0 ? void 0 : originalInit(context), _init === null || _init === void 0 ? void 0 : _init(context)]);
+
+            case 3:
+            case "end":
+              return _context.stop();
+          }
+        }
+      }, _callee);
+    }));
+
+    return function (_x) {
+      return _ref.apply(this, arguments);
+    };
+  }();
+};
+/**
+ * register prefetch hook. It would be revoked both ssr and csr.
+ * But if ssr success, It wont exec in csr again.
+ * If ssr prefetch failed, It will fallback to exec in csr.
+ */
+
+
+var registerPrefetch = function registerPrefetch(App, prefetch) {
+  var originalPrefetch = App.prefetch;
+
+  App.prefetch = /*#__PURE__*/function () {
+    var _ref2 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee2(context) {
+      var originResult, result;
+      return _regeneratorRuntime.wrap(function _callee2$(_context2) {
+        while (1) {
+          switch (_context2.prev = _context2.next) {
+            case 0:
+              _context2.next = 2;
+              return originalPrefetch === null || originalPrefetch === void 0 ? void 0 : originalPrefetch(context);
+
+            case 2:
+              originResult = _context2.sent;
+              _context2.next = 5;
+              return prefetch === null || prefetch === void 0 ? void 0 : prefetch(context);
+
+            case 5:
+              result = _context2.sent;
+              return _context2.abrupt("return", _objectSpread(_objectSpread({}, originResult), result));
+
+            case 7:
+            case "end":
+              return _context2.stop();
+          }
+        }
+      }, _callee2);
+    }));
+
+    return function (_x2) {
+      return _ref2.apply(this, arguments);
+    };
+  }();
+};
+
+export var runtime = createRuntime();
+var createPlugin = runtime.createPlugin;
+export { createPlugin };
+export { registerInit, registerPrefetch };

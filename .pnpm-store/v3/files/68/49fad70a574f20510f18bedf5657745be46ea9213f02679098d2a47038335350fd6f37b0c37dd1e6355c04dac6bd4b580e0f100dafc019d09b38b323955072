@@ -1,0 +1,38 @@
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+export class EdgeManager {
+  constructor() {
+    _defineProperty(this, "_dependencyEdgeHash", void 0);
+
+    this._dependencyEdgeHash = {};
+  }
+
+  reduceOneEdge(project) {
+    if (!(project.name in this._dependencyEdgeHash)) {
+      this._dependencyEdgeHash[project.name] = project.dependencyEdge;
+    }
+
+    this._dependencyEdgeHash[project.name]--;
+  }
+
+  reduceEdges(project, edges) {
+    if (!(project.name in this._dependencyEdgeHash)) {
+      this._dependencyEdgeHash[project.name] = project.dependencyEdge;
+    }
+
+    this._dependencyEdgeHash[project.name] -= edges;
+  }
+
+  getEdge(project) {
+    if (project.name in this._dependencyEdgeHash) {
+      return this._dependencyEdgeHash[project.name];
+    }
+
+    return NaN;
+  }
+
+  setEdge(project) {
+    this._dependencyEdgeHash[project.name] = project.dependencyEdge;
+  }
+
+}

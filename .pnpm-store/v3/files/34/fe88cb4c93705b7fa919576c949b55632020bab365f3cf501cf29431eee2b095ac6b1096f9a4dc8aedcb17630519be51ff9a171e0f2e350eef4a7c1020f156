@@ -1,0 +1,6 @@
+import { buildWatch } from "../commands";
+export const buildWatchCli = (program, api) => {
+  program.command('build-watch [project]').usage('[options]').option('--only-self', 'build target project with nothing').option('-i, --init', 'init build beforebuild watch ').description('watch target project and target project’s dependencies').action(async (targetProjectName, option) => {
+    await buildWatch(targetProjectName, option, api);
+  });
+};

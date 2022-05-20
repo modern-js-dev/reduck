@@ -1,0 +1,116 @@
+import type { WebpackChain } from '../compiled';
+export declare const CHAIN_ID: {
+    /** Predefined rules */
+    readonly RULE: {
+        /** Rule for .mjs */
+        readonly MJS: "mjs";
+        /** Rule for predefined loaders */
+        readonly LOADERS: "loaders";
+    };
+    /** Predefined rule groups */
+    readonly ONE_OF: {
+        readonly JS: "js";
+        readonly TS: "ts";
+        readonly CSS: "css";
+        readonly LESS: "less";
+        readonly SASS: "sass";
+        readonly YAML: "yml";
+        readonly TOML: "toml";
+        readonly FALLBACK: "fallback";
+        readonly MARKDOWN: "markdown";
+        readonly BFF_CLIENT: "bff-client";
+        readonly CSS_MODULES: "css-modules";
+        readonly LESS_MODULES: "less-modules";
+        readonly SASS_MODULES: "sass-modules";
+        readonly SVG: "svg";
+        readonly SVG_URL: "svg-url";
+        readonly SVG_INLINE: "svg-inline";
+        readonly ASSETS: "assets";
+        readonly ASSETS_URL: "assets-url";
+        readonly ASSETS_INLINE: "assets-inline";
+    };
+    /** Predefined loaders */
+    readonly USE: {
+        /** ts-loader */
+        readonly TS: "ts";
+        /** css-loader */
+        readonly CSS: "css";
+        /** url-loader */
+        readonly URL: "url";
+        /** file-loader */
+        readonly FILE: "file";
+        /** @svgr/webpack */
+        readonly SVGR: "svgr";
+        /** yaml-loader */
+        readonly YAML: "yaml";
+        /** toml-loader */
+        readonly TOML: "toml";
+        /** html-loader */
+        readonly HTML: "html";
+        /** babel-loader */
+        readonly BABEL: "babel";
+        /** style-loader */
+        readonly STYLE: "style-loader";
+        /** postcss-loader */
+        readonly POSTCSS: "postcss";
+        /** markdown-loader */
+        readonly MARKDOWN: "markdown";
+        /** css-modules-typescript-loader */
+        readonly CSS_MODULES_TS: "css-modules-typescript";
+        /** mini-css-extract-plugin.loader */
+        readonly MINI_CSS_EXTRACT: "mini-css-extract";
+    };
+    /** Predefined plugins */
+    readonly PLUGIN: {
+        /** HotModuleReplacementPlugin */
+        readonly HMR: "hmr";
+        /** CopyWebpackPlugin */
+        readonly COPY: "copy";
+        /** DefinePlugin */
+        readonly DEFINE: "define";
+        /** IgnorePlugin */
+        readonly IGNORE: "ignore";
+        /** BannerPlugin */
+        readonly BANNER: "banner";
+        /** Webpackbar */
+        readonly PROGRESS: "progress";
+        /** AppIconPlugin */
+        readonly APP_ICON: "app-icon";
+        /** LoadableWebpackPlugin */
+        readonly LOADABLE: "loadable";
+        /** WebpackManifestPlugin */
+        readonly MANIFEST: "webpack-manifest";
+        /** ForkTsCheckerWebpackPlugin */
+        readonly TS_CHECKER: "ts-checker";
+        /** InlineChunkHtmlPlugin */
+        readonly INLINE_HTML: "inline-html";
+        /** WebpackBundleAnalyzer */
+        readonly BUNDLE_ANALYZER: "bundle-analyze";
+        /** BottomTemplatePlugin */
+        readonly BOTTOM_TEMPLATE: "bottom-template";
+        /** MiniCssExtractPlugin */
+        readonly MINI_CSS_EXTRACT: "mini-css-extract";
+        /** ReactFastRefreshPlugin */
+        readonly REACT_FAST_REFRESH: "react-fast-refresh";
+        /** ProvidePlugin for node polyfill */
+        readonly NODE_POLYFILL_PROVIDE: "node-polyfill-provide";
+    };
+    /** Predefined minimizers */
+    readonly MINIMIZER: {
+        /** TerserWebpackPlugin */
+        readonly JS: "js";
+        /** CssMinimizerWebpackPlugin */
+        readonly CSS: "css";
+        /** ESBuildPlugin */
+        readonly ESBUILD: "js-css";
+    };
+    /** Predefined resolve plugins */
+    readonly RESOLVE_PLUGIN: {
+        /** ModuleScopePlugin */
+        readonly MODULE_SCOPE: "module-scope";
+        /** TsConfigPathsPlugin */
+        readonly TS_CONFIG_PATHS: "ts-config-paths";
+    };
+};
+export declare type ChainIdentifier = typeof CHAIN_ID;
+export declare function enableBundleAnalyzer(config: WebpackChain, reportFilename: string): void;

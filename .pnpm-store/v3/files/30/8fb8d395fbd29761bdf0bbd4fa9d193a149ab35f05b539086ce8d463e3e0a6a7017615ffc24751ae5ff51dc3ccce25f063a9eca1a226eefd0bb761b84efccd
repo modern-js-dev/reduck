@@ -1,0 +1,22 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.cssResolve = void 0;
+
+var _utils = require("@modern-js/utils");
+
+var _postcss = require("./postcss");
+
+const cssResolve = async params => {
+  const {
+    file
+  } = params;
+
+  const originalCss = _utils.fs.readFileSync(file, 'utf-8');
+
+  return (0, _postcss.postcssResolve)(originalCss, params);
+};
+
+exports.cssResolve = cssResolve;

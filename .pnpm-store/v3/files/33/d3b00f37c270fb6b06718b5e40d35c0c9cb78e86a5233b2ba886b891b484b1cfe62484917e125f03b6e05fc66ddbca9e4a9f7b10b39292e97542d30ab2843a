@@ -1,0 +1,16 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.buildWatchCli = void 0;
+
+var _commands = require("../commands");
+
+const buildWatchCli = (program, api) => {
+  program.command('build-watch [project]').usage('[options]').option('--only-self', 'build target project with nothing').option('-i, --init', 'init build beforebuild watch ').description('watch target project and target project’s dependencies').action(async (targetProjectName, option) => {
+    await (0, _commands.buildWatch)(targetProjectName, option, api);
+  });
+};
+
+exports.buildWatchCli = buildWatchCli;

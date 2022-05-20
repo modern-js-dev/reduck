@@ -1,0 +1,66 @@
+import _asyncToGenerator from "@babel/runtime/helpers/esm/asyncToGenerator";
+import _toConsumableArray from "@babel/runtime/helpers/esm/toConsumableArray";
+import _regeneratorRuntime from "@babel/runtime/regenerator";
+import React from 'react';
+import ReactDOM from 'react-dom';
+import { runtime } from "./plugin";
+export var initialRender = function initialRender(plugins) {
+  var manager = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : runtime;
+  manager.usePlugin.apply(manager, _toConsumableArray(plugins));
+  return {
+    clientRender: function clientRender(props, rootElement) {
+      return _clientRender(props, rootElement, manager);
+    },
+    serverRender: function serverRender(props) {
+      return _serverRender(props, manager);
+    }
+  };
+};
+
+var _clientRender = function _clientRender(_ref, rootElement) {
+  var App = _ref.App;
+  var manager = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : runtime;
+  var runner = manager.init({});
+  return runner.client({
+    App: App,
+    rootElement: rootElement
+  }, {
+    onLast: function () {
+      var _onLast = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee(_ref2) {
+        var App, rootElement;
+        return _regeneratorRuntime.wrap(function _callee$(_context) {
+          while (1) {
+            switch (_context.prev = _context.next) {
+              case 0:
+                App = _ref2.App, rootElement = _ref2.rootElement;
+                ReactDOM.render( /*#__PURE__*/React.createElement(App), rootElement);
+
+              case 2:
+              case "end":
+                return _context.stop();
+            }
+          }
+        }, _callee);
+      }));
+
+      function onLast(_x) {
+        return _onLast.apply(this, arguments);
+      }
+
+      return onLast;
+    }()
+  });
+};
+
+export { _clientRender as clientRender };
+
+var _serverRender = function _serverRender(_ref3) {
+  var App = _ref3.App;
+  var manager = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : runtime;
+  var runner = manager.init({});
+  return runner.server({
+    App: App
+  });
+};
+
+export { _serverRender as serverRender };

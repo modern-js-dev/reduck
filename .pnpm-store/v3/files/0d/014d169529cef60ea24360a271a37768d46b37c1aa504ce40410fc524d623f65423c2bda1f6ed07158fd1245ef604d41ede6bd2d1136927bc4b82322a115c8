@@ -1,0 +1,52 @@
+import _asyncToGenerator from "@babel/runtime/helpers/esm/asyncToGenerator";
+import _regeneratorRuntime from "@babel/runtime/regenerator";
+import lintStaged from 'lint-staged';
+import { logger, chalk } from '@modern-js/utils';
+
+var printFormattedMsg = function printFormattedMsg(success) {
+  logger.log('');
+  logger.log('==============================');
+  logger.log('');
+
+  if (success) {
+    logger.log('[PRECOMMIT] Verified!');
+    logger.log('Please commit all autofixes caused by eslint, stylelint and prettier');
+  } else {
+    logger.log('[PRECOMMIT] failed!');
+    logger.log('');
+    logger.log('For TRULY URGENT case (like hotfix), you can skip the pre-commit checking:');
+    logger.log('git commit --no-verify -m "message"');
+    logger.log('Otherwise, you should solve all above issues one by one');
+  }
+
+  logger.log('');
+};
+
+export default /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee() {
+  var success;
+  return _regeneratorRuntime.wrap(function _callee$(_context) {
+    while (1) {
+      switch (_context.prev = _context.next) {
+        case 0:
+          _context.prev = 0;
+          _context.next = 3;
+          return lintStaged();
+
+        case 3:
+          success = _context.sent;
+          printFormattedMsg(success);
+          _context.next = 10;
+          break;
+
+        case 7:
+          _context.prev = 7;
+          _context.t0 = _context["catch"](0);
+          logger.error(chalk.red(_context.t0));
+
+        case 10:
+        case "end":
+          return _context.stop();
+      }
+    }
+  }, _callee, null, [[0, 7]]);
+}));

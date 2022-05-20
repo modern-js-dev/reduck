@@ -1,0 +1,2 @@
+import { ResolveItemParams } from '../types';
+export declare const cssResolve: (params: ResolveItemParams) => Promise<import("../types").SingleFileCompilerResult>;

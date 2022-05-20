@@ -1,0 +1,7 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.useHeaders = exports.run = void 0;
+const storage_1 = require("./storage");
+const { run, useContext: useHeaders } = (0, storage_1.createStorage)();
+exports.run = run;
+exports.useHeaders = useHeaders;

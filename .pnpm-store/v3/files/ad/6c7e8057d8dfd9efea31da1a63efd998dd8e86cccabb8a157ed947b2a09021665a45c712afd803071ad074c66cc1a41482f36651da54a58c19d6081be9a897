@@ -1,0 +1,4 @@
+import { CSS_EXTENSIONS } from './constants';
+import { IBuildOption } from './types';
+export { CSS_EXTENSIONS };
+export declare function transformStyle(option: IBuildOption): Promise<import("./types").ICompilerResult | undefined>;

@@ -1,0 +1,12 @@
+/**
+ * modified from https://github.com/farrow-js/farrow/tree/master/packages/farrow-pipeline
+ * license at https://github.com/farrow-js/farrow/blob/master/LICENSE
+ */
+// eslint-disable-next-line import/no-mutable-exports
+export let asyncHooks;
+export const impl = implimentations => {
+  asyncHooks = implimentations;
+};
+export const reset = () => {
+  asyncHooks = undefined;
+};

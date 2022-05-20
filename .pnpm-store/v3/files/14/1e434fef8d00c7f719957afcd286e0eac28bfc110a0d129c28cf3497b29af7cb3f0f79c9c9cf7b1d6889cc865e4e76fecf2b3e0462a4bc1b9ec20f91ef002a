@@ -1,0 +1,6 @@
+import { install } from "../commands";
+export const installCli = (program, api) => {
+  program.command('install [project...]').usage('[options]').description('install deps for some projects').action(async (installProjectNames, option) => {
+    await install(installProjectNames, option, api);
+  });
+};

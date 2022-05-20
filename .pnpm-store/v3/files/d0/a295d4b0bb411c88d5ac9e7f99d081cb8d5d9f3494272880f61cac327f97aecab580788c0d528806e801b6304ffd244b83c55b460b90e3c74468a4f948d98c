@@ -1,0 +1,11 @@
+import { transformStyle } from "./build";
+import { transformStyleInWatchMode } from "./build-watch";
+export * from "./types";
+export function styleCompiler(option) {
+  if (!option.watch) {
+    return transformStyle(option);
+  }
+
+  return transformStyleInWatchMode(option);
+}
+export { BuildWatchEvent } from "./build-watch";

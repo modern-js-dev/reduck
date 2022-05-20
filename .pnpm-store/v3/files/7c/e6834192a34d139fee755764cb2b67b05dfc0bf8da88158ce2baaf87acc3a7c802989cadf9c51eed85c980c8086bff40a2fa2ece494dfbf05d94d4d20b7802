@@ -1,0 +1,27 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.createCounter = void 0;
+
+/**
+ * modified from https://github.com/farrow-js/farrow/tree/master/packages/farrow-pipeline
+ * license at https://github.com/farrow-js/farrow/blob/master/LICENSE
+ */
+const createCounter = callback => {
+  const dispatch = (index, input) => {
+    const next = (nextInput = input) => dispatch(index + 1, nextInput);
+
+    return callback(index, input, next);
+  };
+
+  const start = input => dispatch(0, input);
+
+  return {
+    start,
+    dispatch
+  };
+};
+
+exports.createCounter = createCounter;

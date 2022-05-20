@@ -1,0 +1,41 @@
+{
+  "name": "farrow-pipeline",
+  "version": "1.12.0",
+  "description": "Type-Friendly middleware library",
+  "main": "dist/index.js",
+  "files": [
+    "src",
+    "dist",
+    "esm",
+    "asyncHooks.node.js",
+    "asyncHooks.node.d.ts"
+  ],
+  "keywords": [
+    "Web Framework",
+    "TypeScript",
+    "Functional Programming"
+  ],
+  "author": "Jade Gu",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Lucifier129/farrow.git"
+  },
+  "dependencies": {
+    "tslib": "^2.1.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^27.0.2",
+    "jest": "^27.2.2",
+    "ts-jest": "^27.0.5",
+    "typescript": "^4.5.4"
+  },
+  "scripts": {
+    "build": "pnpm run build:dist && pnpm run build:esm",
+    "build:dist": "tsc -b ./tsconfig.json",
+    "build:esm": "tsc -b ./tsconfig.esm.json",
+    "test": "jest",
+    "test:coverage": "jest --collectCoverage --coverage"
+  },
+  "readme": "# farrow-pipeline\n\nType-Friendly middleware library\n\n## Installation\n\n```shell\n# via npm\nnpm install --save farrow-pipeline\n\n# via yarn\nyarn add farrow-pipeline\n```\n\n## API\n\n```typescript\nimport {\n  createContext, // create injectable context\n  createContainer, // create context container\n  createPipeline, // create pipeline\n  usePipeline, // farrow-hooks for using pipeline in another pipeline's middleware\n} from 'farrow-pipeline'\n```\n\n## createPipeline<I, O>(options?: PipelineOptions) => Pipeline<I, O>\n\ncreate a pipeline\n\n```typescript\n// contexts for injecting to the pipeline\ntype PipelineOptions = {\n  contexts?: ContextStorage\n}\n\ntype Pipeline<I = unknown, O = unknown> = {\n  // add middlewares to pipeline and return pipeline\n  use: (...inputs: MiddlewareInput<I, O>[]) => Pipeline<I, O>\n  // run a pipeline by input and received its output\n  run: (input: I, options?: RunPipelineOptions<I, O>) => O\n  // pipeline.middleware can use in another pipeline.use(...) if their type is matched\n  middleware: Middleware<I, O>\n}\n\ntype RunPipelineOptions<I = unknown, O = unknown> = {\n  // container which store some contexts.if container is not given, pipeline will use its internal container\n  container?: Container\n  // if all middleware called next, then onLast would be called\n  onLast?: (input: I) => O\n}\n\nconst pipeline = createPipeline<number, number[]>()\n\npipeline.use((input, next) => {\n  return [input, ...next(1), 3]\n})\n\npipeline.use((input) => {\n  return [input, 2]\n})\n\nlet result = pipeline.run(0) // [0, 1, 2, 3]\n```\n\n## createContext<T>(defaultValue: T): Context<T>\n\ncreate a injectable context\n\ncreateContext is like `React.createContext`, we can use it injecting anything we want, and access `Context` in any middleware or custom-hooks function.\n\n```typescript\ntype Context<T = any> = {\n  id: symbol\n  [ContextSymbol]: T\n  // create a new context equipped a new value\n  create: (value: T) => Context<T>\n  // get context ref { value } for accessing context in current container of pipeline\n  use: () => {\n    value: T\n  }\n  // get context value\n  get: () => T\n  // set context value\n  set: (value: T) => void\n  // assert context value is not null or undefined and return context value\n  assert: () => Exclude<T, undefined | null>\n}\n\nconst Context0 = createContext(0)\n\nconst pipeline = createPipeline<number, number>({\n  contexts: {\n    // inject Context0 equipped 10 into pipeline\n    context0: Context0.create(10),\n  },\n})\n\npipeline.use((input, next) => {\n  return next(input) + Context0.get()\n})\n\npipeline.use((input) => {\n  Context0.set(Context0.get() + 1)\n  return input\n})\n\nlet result0 = pipeline.run(10) // return 21\nlet result1 = pipeline.run(20) // return 31\n```\n\n## createContainer(contexts?: ContextStorage): Container\n\ncreate a container to manage contexts\n\n```typescript\ntype ContextStorage = {\n  [key: string]: Context\n}\n\ntype Container = {\n  // read current value of Context\n  read: <V>(Context: Context<V>) => V\n  // write current value of Context\n  write: <V>(Context: Context<V>, value: V) => void\n}\n\nconst Context0 = createContext(0)\nconst Context1 = createContext<number[]>([])\n\nconst container = createContainer({\n  context0: Context0.create(10),\n  context1: Context1.create([10]),\n})\n\ncontainer.read(Context0) // 10\ncontainer.read(Context1) // [10]\n\ncontainer.write(Context0, 1)\ncontainer.write(Context1, [11])\n\ncontainer.read(Context0) // 1\ncontainer.read(Context1) // [11]\n\nconst pipeline = createPipeline<number, number>()\n\npipeline.run(10, {\n  // use container to replace pipeline's internal container\n  container: container,\n})\n\n// accessing value of Context0/Context1 after pipeline.run(...)\ncontainer.read(Context0) // current value of Context0\ncontainer.read(Context1) // current value of Context1\n```\n"
+}

@@ -1,0 +1,74 @@
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+import * as path from 'path';
+import { globby } from '@modern-js/utils';
+export class WatchedProjectsState {
+  constructor(fromNodes, config) {
+    _defineProperty(this, "_config", void 0);
+
+    _defineProperty(this, "_fromNodes", void 0);
+
+    _defineProperty(this, "_watchProjects", void 0);
+
+    _defineProperty(this, "_projectsFileMap", void 0);
+
+    this._fromNodes = fromNodes;
+    this._config = config;
+    this._projectsFileMap = new Map();
+    this._watchProjects = {};
+
+    this._initState();
+  }
+
+  _initState() {
+    const globOption = {
+      cwd: this._config.rootPath,
+      absolute: true,
+      expandDirectories: false,
+      followSymbolicLinks: false,
+      ignore: ['**/node_modules/**', '.project-memory/**', 'dist/**']
+    };
+    this._watchProjects = this._fromNodes.reduce((ret, node) => {
+      const files = globby.sync(`${node.extra.path}/**`, globOption);
+
+      for (const filePath of files) {
+        this._projectsFileMap.set(path.relative(this._config.rootPath, filePath), node.extra.path);
+      }
+
+      return _objectSpread(_objectSpread({}, ret), {}, {
+        [node.extra.path]: node
+      });
+    }, {});
+  }
+
+  getChangedProject(changedFilPath) {
+    if (this._projectsFileMap.has(changedFilPath)) {
+      const projectPath = this._projectsFileMap.get(changedFilPath);
+
+      return this._watchProjects[projectPath];
+    }
+
+    return undefined;
+  }
+
+  getWatchedProjectsPath() {
+    return Object.keys(this._watchProjects);
+  }
+
+  updateState() {
+    this._initState();
+  }
+
+  get watchProjects() {
+    return this._watchProjects;
+  }
+
+  get watchProjectsName() {
+    return Object.keys(this._watchProjects).map(projectPath => this._watchProjects[projectPath].name);
+  }
+
+}

@@ -1,0 +1,115 @@
+"use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __exportStar = (this && this.__exportStar) || function(m, exports) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.resolveConfig = exports.loadUserConfig = exports.defineConfig = exports.addServerConfigToDeps = exports.mergeConfig = exports.defaultsConfig = void 0;
+const load_config_1 = require("@modern-js/load-config");
+const utils_1 = require("@modern-js/utils");
+const lodash_1 = require("@modern-js/utils/lodash");
+const ajv_1 = __importDefault(require("../../compiled/ajv"));
+const ajv_keywords_1 = __importDefault(require("../../compiled/ajv-keywords"));
+const better_ajv_errors_1 = __importDefault(require("../../compiled/better-ajv-errors"));
+const repeatKeyWarning_1 = require("../utils/repeatKeyWarning");
+const defaults_1 = require("./defaults");
+Object.defineProperty(exports, "defaultsConfig", { enumerable: true, get: function () { return defaults_1.defaults; } });
+const mergeConfig_1 = require("./mergeConfig");
+Object.defineProperty(exports, "mergeConfig", { enumerable: true, get: function () { return mergeConfig_1.mergeConfig; } });
+const schema_1 = require("./schema");
+const debug = (0, utils_1.createDebugger)('resolve-config');
+__exportStar(require("./types"), exports);
+const addServerConfigToDeps = async (dependencies, appDirectory, serverConfigFile) => {
+    const serverConfig = await (0, utils_1.getServerConfig)(appDirectory, serverConfigFile);
+    if (serverConfig) {
+        dependencies.push(serverConfig);
+    }
+};
+exports.addServerConfigToDeps = addServerConfigToDeps;
+const defineConfig = (config) => config;
+exports.defineConfig = defineConfig;
+const loadUserConfig = async (appDirectory, filePath, packageJsonConfig) => {
+    const loaded = await (0, load_config_1.loadConfig)(appDirectory, filePath, packageJsonConfig);
+    const config = !loaded
+        ? {}
+        : await (typeof loaded.config === 'function'
+            ? loaded.config(0)
+            : loaded.config);
+    return {
+        config: (0, lodash_1.mergeWith)({}, config || {}, (loaded === null || loaded === void 0 ? void 0 : loaded.pkgConfig) || {}),
+        jsConfig: config || {},
+        pkgConfig: ((loaded === null || loaded === void 0 ? void 0 : loaded.pkgConfig) || {}),
+        filePath: loaded === null || loaded === void 0 ? void 0 : loaded.path,
+        dependencies: (loaded === null || loaded === void 0 ? void 0 : loaded.dependencies) || [],
+    };
+};
+exports.loadUserConfig = loadUserConfig;
+const showAdditionalPropertiesError = async (error) => {
+    if (error.keyword === 'additionalProperties' &&
+        error.params.additionalProperty) {
+        const target = [
+            error.instancePath.slice(1),
+            error.params.additionalProperty,
+        ]
+            .filter(Boolean)
+            .join('.');
+        const name = Object.keys(utils_1.PLUGIN_SCHEMAS).find(key => utils_1.PLUGIN_SCHEMAS[key].some((schemaItem) => schemaItem.target === target));
+        if (name) {
+            const packageManager = await (0, utils_1.getPackageManager)();
+            utils_1.signale.warn(`The configuration of ${utils_1.chalk.bold(target)} is provided by plugin ${utils_1.chalk.bold(name)}. Please use ${utils_1.chalk.bold(`${packageManager} run new`)} to enable the corresponding capability.\n`);
+        }
+    }
+};
+const resolveConfig = async (loaded, configs, schemas, restartWithExistingPort, argv, onSchemaError = showAdditionalPropertiesError) => {
+    var _a, _b;
+    const { config: userConfig, jsConfig, pkgConfig } = loaded;
+    const ajv = new ajv_1.default({ $data: true, strict: false });
+    (0, ajv_keywords_1.default)(ajv);
+    const validateSchema = (0, schema_1.patchSchema)(schemas);
+    const validate = ajv.compile(validateSchema);
+    (0, repeatKeyWarning_1.repeatKeyWarning)(validateSchema, jsConfig, pkgConfig);
+    // validate user config.
+    const valid = validate(userConfig);
+    if (!valid && ((_a = validate.errors) === null || _a === void 0 ? void 0 : _a.length)) {
+        await onSchemaError(validate === null || validate === void 0 ? void 0 : validate.errors[0]);
+        const errors = (0, better_ajv_errors_1.default)(validateSchema, userConfig, (_b = validate.errors) === null || _b === void 0 ? void 0 : _b.map(e => ({
+            ...e,
+            dataPath: e.instancePath,
+        })), {
+            indent: 2,
+        });
+        utils_1.signale.log(errors);
+        throw new Error(`Validate configuration error`);
+    }
+    // validate config from plugins.
+    for (const config of configs) {
+        if (!validate(config)) {
+            utils_1.signale.error(validate.errors);
+            throw new Error(`Validate configuration error.`);
+        }
+    }
+    const resolved = (0, mergeConfig_1.mergeConfig)([defaults_1.defaults, ...configs, userConfig]);
+    resolved._raw = loaded.config;
+    if ((0, utils_1.isDev)() && argv[0] === 'dev') {
+        if (restartWithExistingPort > 0) {
+            // dev server is restarted, should use existing port number
+            resolved.server.port = restartWithExistingPort;
+        }
+        else {
+            // get port for new dev server
+            resolved.server.port = await (0, utils_1.getPort)(resolved.server.port);
+        }
+    }
+    debug('resolved %o', resolved);
+    return resolved;
+};
+exports.resolveConfig = resolveConfig;

@@ -1,0 +1,16 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.useResolvedConfigContext = exports.useConfigContext = exports.useAppContext = exports.ResolvedConfigContext = exports.ConfigContext = exports.AppContext = exports.pluginAPI = void 0;
+const context_1 = require("./context");
+Object.defineProperty(exports, "AppContext", { enumerable: true, get: function () { return context_1.AppContext; } });
+Object.defineProperty(exports, "ConfigContext", { enumerable: true, get: function () { return context_1.ConfigContext; } });
+Object.defineProperty(exports, "useAppContext", { enumerable: true, get: function () { return context_1.useAppContext; } });
+Object.defineProperty(exports, "useConfigContext", { enumerable: true, get: function () { return context_1.useConfigContext; } });
+Object.defineProperty(exports, "ResolvedConfigContext", { enumerable: true, get: function () { return context_1.ResolvedConfigContext; } });
+Object.defineProperty(exports, "useResolvedConfigContext", { enumerable: true, get: function () { return context_1.useResolvedConfigContext; } });
+exports.pluginAPI = {
+    setAppContext: context_1.setAppContext,
+    useAppContext: context_1.useAppContext,
+    useConfigContext: context_1.useConfigContext,
+    useResolvedConfigContext: context_1.useResolvedConfigContext,
+};

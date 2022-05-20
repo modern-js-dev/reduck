@@ -1,0 +1,7 @@
+import type { NormalizedConfig } from '@modern-js/core';
+import { IPackageModeValue } from '../types';
+export declare const getFinalAlias: any;
+export declare const resolveBabelConfig: (appDirectory: string, modernConfig: NormalizedConfig, option: Pick<IPackageModeValue, 'syntax' | 'type'> & {
+  sourceAbsDir: string;
+  tsconfigPath: string;
+}) => import("@modern-js/core").TransformOptions;

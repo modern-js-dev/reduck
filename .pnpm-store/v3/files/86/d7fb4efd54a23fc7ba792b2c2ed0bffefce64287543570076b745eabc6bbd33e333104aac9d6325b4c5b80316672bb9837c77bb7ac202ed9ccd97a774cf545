@@ -1,0 +1,30 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.mergeConfig = void 0;
+const lodash_1 = require("@modern-js/utils/lodash");
+const utils_1 = require("@modern-js/utils");
+/**
+ * merge configuration from  modern.config.js and plugins.
+ *
+ * @param configs - Configuration from modern.config.ts or plugin's config hook.
+ * @returns - normalized user config.
+ */
+const mergeConfig = (configs) => (0, lodash_1.mergeWith)({}, ...configs, (target, source, key) => {
+    // Do not use the following merge logic for source.designSystem and tools.tailwind(css)
+    if (key === 'designSystem' || key === 'tailwind' || key === 'tailwindcss') {
+        return (0, lodash_1.mergeWith)({}, target !== null && target !== void 0 ? target : {}, source !== null && source !== void 0 ? source : {});
+    }
+    if (Array.isArray(target)) {
+        if (Array.isArray(source)) {
+            return [...target, ...source];
+        }
+        else {
+            return typeof source !== 'undefined' ? [...target, source] : target;
+        }
+    }
+    else if ((0, utils_1.isFunction)(source)) {
+        return typeof target !== 'undefined' ? [target, source] : [source];
+    }
+    return undefined;
+});
+exports.mergeConfig = mergeConfig;

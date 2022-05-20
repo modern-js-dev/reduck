@@ -1,0 +1,24 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.request = request;
+
+var _supertest = _interopRequireDefault(require("supertest"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/* eslint-disable eslint-comments/disable-enable-pair */
+function request(...args) {
+  const [fn, ...extraArgs] = args;
+
+  if (!fn) {
+    return (0, _supertest.default)(global.app);
+  }
+
+  fn.returnHttp = true;
+  const res = fn(...extraArgs);
+  fn.returnHttp = false;
+  return res;
+}

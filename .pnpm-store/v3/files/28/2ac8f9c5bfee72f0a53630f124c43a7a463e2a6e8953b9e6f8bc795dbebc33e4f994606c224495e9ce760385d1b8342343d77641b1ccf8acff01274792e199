@@ -1,0 +1,16 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.installCli = void 0;
+
+var _commands = require("../commands");
+
+const installCli = (program, api) => {
+  program.command('install [project...]').usage('[options]').description('install deps for some projects').action(async (installProjectNames, option) => {
+    await (0, _commands.install)(installProjectNames, option, api);
+  });
+};
+
+exports.installCli = installCli;

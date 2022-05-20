@@ -1,0 +1,4 @@
+export declare function memoize<T>(fn: (...args: any[]) => T): {
+    (this: any, ...args: any[]): T;
+    cache: Map<string, T>;
+};

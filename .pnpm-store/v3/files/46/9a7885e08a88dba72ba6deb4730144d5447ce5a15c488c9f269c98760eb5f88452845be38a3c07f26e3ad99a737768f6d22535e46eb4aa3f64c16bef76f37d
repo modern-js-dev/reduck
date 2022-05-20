@@ -1,0 +1,10 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.webpackMerge = exports.WebpackChain = void 0;
+var webpack_chain_1 = require("../compiled/webpack-chain");
+Object.defineProperty(exports, "WebpackChain", { enumerable: true, get: function () { return __importDefault(webpack_chain_1).default; } });
+var webpack_merge_1 = require("../compiled/webpack-merge");
+Object.defineProperty(exports, "webpackMerge", { enumerable: true, get: function () { return webpack_merge_1.merge; } });

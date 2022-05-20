@@ -1,0 +1,27 @@
+import { Plugin, BuildOptions } from 'esbuild';
+export declare const EXTERNAL_REGEXP: RegExp;
+export interface Options {
+  /**
+   * The `require` function that is used to load the output file
+   * Default to the global `require` function
+   * This function can be asynchronous, i.e. returns a Promise
+   */
+  require?: (outfile: string) => any;
+  /**
+   * esbuild options
+   */
+
+  esbuildOptions?: BuildOptions;
+  /**
+   * esbuild plugin
+   */
+
+  esbuildPlugins?: Plugin[];
+  /**
+   * Get the path to the output file
+   * By default we simply replace the extension with `.bundled.cjs`
+   */
+
+  getOutputFile?: (filepath: string) => string;
+}
+export declare function bundle(filepath: string, options?: Options): Promise<string>;

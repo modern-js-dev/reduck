@@ -1,0 +1,182 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.createAsyncManager = void 0;
+
+var _farrowPipeline = require("../farrow-pipeline");
+
+var _sync = require("./sync");
+
+var _runner = require("./runner");
+
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+const ASYNC_PLUGIN_SYMBOL = 'ASYNC_PLUGIN_SYMBOL';
+
+const createAsyncManager = (hooks, api) => {
+  let index = 0;
+
+  let currentHooks = _objectSpread({}, hooks);
+
+  const registerHook = extraHooks => {
+    currentHooks = _objectSpread(_objectSpread({}, extraHooks), currentHooks);
+  };
+
+  const isPlugin = input => (0, _sync.isObject)(input) && (0, _sync.hasOwnProperty)(input, ASYNC_PLUGIN_SYMBOL) && input[ASYNC_PLUGIN_SYMBOL] === ASYNC_PLUGIN_SYMBOL;
+
+  const pluginAPI = _objectSpread(_objectSpread({}, api), {}, {
+    useHookRunners: _runner.useRunner
+  });
+
+  const clone = overrideAPI => {
+    let plugins = [];
+
+    const addPlugin = plugin => {
+      if (!includeAsyncPlugin(plugins, plugin)) {
+        plugins.push(_objectSpread({}, plugin));
+      }
+    };
+
+    const usePlugin = (...input) => {
+      for (const plugin of input) {
+        // already created by createPlugin
+        if (isPlugin(plugin)) {
+          addPlugin(plugin);
+        } // using function to return plugin options
+        else if (typeof plugin === 'function') {
+          const options = plugin();
+          addPlugin(createPlugin(options.setup, options));
+        } // plain plugin object
+        else if ((0, _sync.isObject)(plugin)) {
+          addPlugin(createPlugin(plugin.setup, plugin));
+        } // unknown plugin
+        else {
+          console.warn(`Unknown plugin: ${JSON.stringify(plugin)}`);
+        }
+      }
+
+      return manager;
+    };
+
+    const createPlugin = ( // eslint-disable-next-line @typescript-eslint/no-empty-function
+    setup = () => {}, options = {}) => {
+      var _options$usePlugins;
+
+      if ((_options$usePlugins = options.usePlugins) !== null && _options$usePlugins !== void 0 && _options$usePlugins.length) {
+        options.usePlugins.forEach(plugin => {
+          usePlugin(createPlugin(plugin.setup, plugin));
+        });
+      }
+
+      if (options.registerHook) {
+        registerHook(options.registerHook);
+      }
+
+      return _objectSpread(_objectSpread(_objectSpread({}, _sync.DEFAULT_OPTIONS), {}, {
+        name: `No.${index++} plugin`
+      }, options), {}, {
+        ASYNC_PLUGIN_SYMBOL,
+        setup
+      });
+    };
+
+    const clear = () => {
+      plugins = [];
+    };
+
+    const currentContainer = (0, _farrowPipeline.createContainer)();
+
+    const init = async options => {
+      const container = (options === null || options === void 0 ? void 0 : options.container) || currentContainer;
+      const sortedPlugins = sortAsyncPlugins(plugins);
+
+      const mergedPluginAPI = _objectSpread(_objectSpread({}, pluginAPI), overrideAPI);
+
+      checkAsyncPlugins(sortedPlugins);
+      const hooksList = await Promise.all(sortedPlugins.map(plugin => (0, _farrowPipeline.runWithContainer)(() => plugin.setup(mergedPluginAPI), container)));
+      return (0, _sync.generateRunner)(hooksList, container, currentHooks);
+    };
+
+    const run = (cb, options) => {
+      const container = (options === null || options === void 0 ? void 0 : options.container) || currentContainer;
+      return (0, _farrowPipeline.runWithContainer)(cb, container);
+    };
+
+    const manager = {
+      createPlugin,
+      isPlugin,
+      usePlugin,
+      init,
+      run,
+      clear,
+      clone,
+      registerHook,
+      useRunner: _runner.useRunner
+    };
+    return manager;
+  };
+
+  return clone();
+};
+
+exports.createAsyncManager = createAsyncManager;
+
+const includeAsyncPlugin = (plugins, input) => {
+  for (const plugin of plugins) {
+    if (plugin.name === input.name) {
+      return true;
+    }
+  }
+
+  return false;
+};
+
+const sortAsyncPlugins = input => {
+  let plugins = input.slice();
+
+  for (let i = 0; i < plugins.length; i++) {
+    const plugin = plugins[i];
+
+    for (const pre of plugin.pre) {
+      for (let j = i + 1; j < plugins.length; j++) {
+        if (plugins[j].name === pre) {
+          plugins = [...plugins.slice(0, i), plugins[j], ...plugins.slice(i, j), ...plugins.slice(j + 1, plugins.length)];
+        }
+      }
+    }
+
+    for (const post of plugin.post) {
+      for (let j = 0; j < i; j++) {
+        if (plugins[j].name === post) {
+          plugins = [...plugins.slice(0, j), ...plugins.slice(j + 1, i + 1), plugins[j], ...plugins.slice(i + 1, plugins.length)];
+        }
+      }
+    }
+  }
+
+  return plugins;
+};
+
+const checkAsyncPlugins = plugins => {
+  for (const origin of plugins) {
+    for (const rival of origin.rivals) {
+      for (const plugin of plugins) {
+        if (rival === plugin.name) {
+          throw new Error(`${origin.name} has rival ${plugin.name}`);
+        }
+      }
+    }
+
+    for (const required of origin.required) {
+      if (!plugins.some(plugin => plugin.name === required)) {
+        throw new Error(`The plugin: ${required} is required when plugin: ${origin.name} is exist.`);
+      }
+    }
+  }
+};

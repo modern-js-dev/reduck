@@ -1,0 +1,28 @@
+import { runInstallTask } from "../features/install";
+import { getMonorepoBaseData } from "../parse-config/monorepo";
+import { getProjects } from "../projects/get-projects";
+import { initDAG } from "../dag";
+export const install = async (projectNames = [], option, api) => {
+  const {
+    appDirectory
+  } = api.useAppContext();
+  const {
+    auto
+  } = option;
+  const projects = await getProjects({
+    packagesMatchs: {
+      enableAutoFinder: true
+    }
+  }, appDirectory);
+  const operator = initDAG(projects);
+  operator.checkCircle();
+  const {
+    rootPath,
+    packageManager
+  } = getMonorepoBaseData(appDirectory);
+  await runInstallTask(projectNames, operator, {
+    packageManager,
+    rootPath,
+    auto
+  });
+};

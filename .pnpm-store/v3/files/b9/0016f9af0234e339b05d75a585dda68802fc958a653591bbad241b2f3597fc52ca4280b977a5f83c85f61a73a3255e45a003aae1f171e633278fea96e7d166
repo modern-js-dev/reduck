@@ -1,0 +1,2 @@
+import { AcceptedPlugin } from 'postcss';
+export declare const likeCssLoaderPostCssPlugins: (filePath: string, plugins: any[]) => AcceptedPlugin[];

@@ -1,0 +1,57 @@
+import _objectSpread from "@babel/runtime/helpers/esm/objectSpread2";
+import _classCallCheck from "@babel/runtime/helpers/esm/classCallCheck";
+import _createClass from "@babel/runtime/helpers/esm/createClass";
+import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
+import { createApp as _createApp } from '@modern-js/runtime-core';
+import { MODERNJS_CONFIG_KEY } from "../constant";
+import resolvePlugins from "./resolvePlugins";
+
+var ModernRuntime = /*#__PURE__*/function () {
+  function ModernRuntime(options) {
+    _classCallCheck(this, ModernRuntime);
+
+    _defineProperty(this, "options", void 0);
+
+    this.options = options;
+  }
+
+  _createClass(ModernRuntime, [{
+    key: "init",
+    value: function init(options) {
+      this.options = options;
+    }
+  }, {
+    key: "createApp",
+    value: function createApp(props) {
+      var _this$options;
+
+      var _ref = props || {},
+          entry = _ref.entry,
+          children = _ref.children;
+
+      var runtimeFeatures = (_this$options = this.options) === null || _this$options === void 0 ? void 0 : _this$options.runtime;
+
+      if (entry) {
+        var _this$options$runtime;
+
+        runtimeFeatures = _objectSpread(_objectSpread({}, runtimeFeatures || {}), (_this$options$runtime = this.options.runtimeByEntries) === null || _this$options$runtime === void 0 ? void 0 : _this$options$runtime[entry]);
+      }
+
+      var Component = function Component() {
+        if (!children) {
+          return null;
+        }
+
+        return children;
+      };
+
+      return _createApp({
+        plugins: resolvePlugins(runtimeFeatures || {})
+      })(Component);
+    }
+  }]);
+
+  return ModernRuntime;
+}();
+
+export default new ModernRuntime(global[MODERNJS_CONFIG_KEY] || {});

@@ -1,0 +1,46 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.FsResource = exports.FS_RESOURCE = void 0;
+
+var _path = _interopRequireDefault(require("path"));
+
+var _utils = require("@modern-js/utils");
+
+var _constants = require("./constants");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+const FS_RESOURCE = '_codesmith_core_fs_resource';
+exports.FS_RESOURCE = FS_RESOURCE;
+
+class FsResource {
+  constructor(filePath, resourceKey) {
+    this._type = FS_RESOURCE;
+    this.filePath = void 0;
+    this.resourceKey = void 0;
+    this.filePath = filePath;
+    this.resourceKey = resourceKey;
+  }
+
+  async value() {
+    const resourceFileExt = _path.default.extname(this.filePath);
+
+    if (_constants.IMAGE_EXT_LIST.includes(resourceFileExt)) {
+      const buffer = await _utils.fs.readFile(_path.default.resolve(this.filePath));
+      return {
+        content: buffer
+      };
+    } else {
+      const text = await _utils.fs.readFile(_path.default.resolve(this.filePath), 'utf8');
+      return {
+        content: text
+      };
+    }
+  }
+
+}
+
+exports.FsResource = FsResource;

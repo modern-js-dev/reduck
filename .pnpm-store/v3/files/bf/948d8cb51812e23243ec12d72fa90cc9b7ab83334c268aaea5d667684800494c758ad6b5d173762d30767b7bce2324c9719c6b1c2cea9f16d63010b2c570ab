@@ -1,0 +1,72 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+Object.defineProperty(exports, "defineConfig", {
+  enumerable: true,
+  get: function () {
+    return _core.defineConfig;
+  }
+});
+
+var _utils = require("@modern-js/utils");
+
+var _pluginChangeset = _interopRequireDefault(require("@modern-js/plugin-changeset"));
+
+var _pluginAnalyze = _interopRequireDefault(require("@modern-js/plugin-analyze"));
+
+var _hooks = require("./hooks");
+
+var _core = require("@modern-js/core");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+const cli = _utils.Import.lazy('./cli', require);
+
+const local = _utils.Import.lazy('./locale', require);
+
+const schema = _utils.Import.lazy('./schema', require);
+
+const lang = _utils.Import.lazy('./utils/language', require);
+
+var _default = () => ({
+  name: '@modern-js/module-tools',
+  post: ['@modern-js/plugin-analyze', '@modern-js/plugin-changeset'],
+  registerHook: _hooks.hooks,
+  usePlugins: [(0, _pluginChangeset.default)(), (0, _pluginAnalyze.default)()],
+  setup: api => {
+    const locale = lang.getLocaleLanguage();
+    local.i18n.changeLanguage({
+      locale
+    });
+    return {
+      validateSchema() {
+        return schema.addSchema();
+      },
+
+      config() {
+        return {
+          output: {
+            enableSourceMap: false,
+            jsPath: 'js'
+          }
+        };
+      },
+
+      commands({
+        program
+      }) {
+        cli.devCli(program, api);
+        cli.buildCli(program, api);
+        cli.newCli(program, locale); // 便于其他插件辨别
+
+        program.$$libraryName = 'module-tools';
+      }
+
+    };
+  }
+});
+
+exports.default = _default;

@@ -1,0 +1,176 @@
+"use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __exportStar = (this && this.__exportStar) || function(m, exports) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.initAppContext = exports.initAppDir = exports.cli = exports.mergeOptions = exports.useResolvedConfigContext = exports.useConfigContext = exports.useAppContext = exports.ResolvedConfigContext = exports.ConfigContext = exports.AppContext = exports.registerHook = exports.createPlugin = exports.usePlugins = exports.mountHook = exports.manager = void 0;
+const path_1 = __importDefault(require("path"));
+const utils_1 = require("@modern-js/utils");
+const node_1 = require("@modern-js/plugin/node");
+const commander_1 = require("./utils/commander");
+const config_1 = require("./config");
+const loadPlugins_1 = require("./loadPlugins");
+const context_1 = require("./context");
+Object.defineProperty(exports, "initAppContext", { enumerable: true, get: function () { return context_1.initAppContext; } });
+const initWatcher_1 = require("./initWatcher");
+const loadEnv_1 = require("./loadEnv");
+const manager_1 = require("./manager");
+__exportStar(require("./config"), exports);
+__exportStar(require("@modern-js/plugin"), exports);
+__exportStar(require("@modern-js/plugin/node"), exports);
+// TODO: remove export after refactor all plugins
+var manager_2 = require("./manager");
+Object.defineProperty(exports, "manager", { enumerable: true, get: function () { return manager_2.manager; } });
+Object.defineProperty(exports, "mountHook", { enumerable: true, get: function () { return manager_2.mountHook; } });
+Object.defineProperty(exports, "usePlugins", { enumerable: true, get: function () { return manager_2.usePlugins; } });
+Object.defineProperty(exports, "createPlugin", { enumerable: true, get: function () { return manager_2.createPlugin; } });
+Object.defineProperty(exports, "registerHook", { enumerable: true, get: function () { return manager_2.registerHook; } });
+// TODO: remove export after refactor all plugins
+var pluginAPI_1 = require("./pluginAPI");
+Object.defineProperty(exports, "AppContext", { enumerable: true, get: function () { return pluginAPI_1.AppContext; } });
+Object.defineProperty(exports, "ConfigContext", { enumerable: true, get: function () { return pluginAPI_1.ConfigContext; } });
+Object.defineProperty(exports, "ResolvedConfigContext", { enumerable: true, get: function () { return pluginAPI_1.ResolvedConfigContext; } });
+Object.defineProperty(exports, "useAppContext", { enumerable: true, get: function () { return pluginAPI_1.useAppContext; } });
+Object.defineProperty(exports, "useConfigContext", { enumerable: true, get: function () { return pluginAPI_1.useConfigContext; } });
+Object.defineProperty(exports, "useResolvedConfigContext", { enumerable: true, get: function () { return pluginAPI_1.useResolvedConfigContext; } });
+utils_1.program
+    .name('modern')
+    .usage('<command> [options]')
+    .version(process.env.MODERN_JS_VERSION || '0.1.0');
+const initAppDir = async (cwd) => {
+    if (!cwd) {
+        // eslint-disable-next-line no-param-reassign
+        cwd = process.cwd();
+    }
+    const pkg = await (0, utils_1.pkgUp)({ cwd });
+    if (!pkg) {
+        throw new Error(`no package.json found in current work dir: ${cwd}`);
+    }
+    return path_1.default.dirname(pkg);
+};
+exports.initAppDir = initAppDir;
+const mergeOptions = (options) => {
+    const defaultOptions = {
+        serverConfigFile: utils_1.DEFAULT_SERVER_CONFIG,
+    };
+    return {
+        ...defaultOptions,
+        ...options,
+    };
+};
+exports.mergeOptions = mergeOptions;
+const createCli = () => {
+    let hooksRunner;
+    let isRestart = false;
+    let restartWithExistingPort = 0;
+    let restartOptions;
+    const init = async (argv = [], options) => {
+        var _a, _b;
+        (0, node_1.enable)();
+        manager_1.manager.clear();
+        const mergedOptions = (0, exports.mergeOptions)(options);
+        restartOptions = mergedOptions;
+        const appDirectory = await initAppDir();
+        (0, commander_1.initCommandsMap)();
+        const metaName = (_b = (_a = mergedOptions === null || mergedOptions === void 0 ? void 0 : mergedOptions.options) === null || _a === void 0 ? void 0 : _a.metaName) !== null && _b !== void 0 ? _b : 'MODERN';
+        (0, loadEnv_1.loadEnv)(appDirectory, process.env[`${metaName.toUpperCase()}_ENV`]);
+        const loaded = await (0, config_1.loadUserConfig)(appDirectory, mergedOptions === null || mergedOptions === void 0 ? void 0 : mergedOptions.configFile, mergedOptions === null || mergedOptions === void 0 ? void 0 : mergedOptions.packageJsonConfig);
+        const plugins = (0, loadPlugins_1.loadPlugins)(appDirectory, loaded.config, {
+            internalPlugins: mergedOptions === null || mergedOptions === void 0 ? void 0 : mergedOptions.plugins,
+            transformPlugin: mergedOptions === null || mergedOptions === void 0 ? void 0 : mergedOptions.transformPlugin,
+        });
+        plugins.forEach(plugin => plugin.cli && manager_1.manager.usePlugin(plugin.cli));
+        const appContext = (0, context_1.initAppContext)({
+            appDirectory,
+            plugins,
+            configFile: loaded.filePath,
+            options: mergedOptions === null || mergedOptions === void 0 ? void 0 : mergedOptions.options,
+            serverConfigFile: mergedOptions === null || mergedOptions === void 0 ? void 0 : mergedOptions.serverConfigFile,
+        });
+        // 将 server.config 加入到 loaded.dependencies，以便对文件监听做热更新
+        (0, config_1.addServerConfigToDeps)(loaded.dependencies, appDirectory, mergedOptions.serverConfigFile);
+        manager_1.manager.run(() => {
+            context_1.ConfigContext.set(loaded.config);
+            context_1.AppContext.set(appContext);
+        });
+        hooksRunner = await manager_1.manager.init();
+        ['SIGINT', 'SIGTERM', 'unhandledRejection', 'uncaughtException'].forEach(event => {
+            process.on(event, async (err) => {
+                await hooksRunner.beforeExit();
+                if (err instanceof Error) {
+                    utils_1.logger.error(err.stack);
+                }
+                process.nextTick(() => {
+                    // eslint-disable-next-line no-process-exit
+                    process.exit(1);
+                });
+            });
+        });
+        const extraConfigs = await hooksRunner.config();
+        const extraSchemas = await hooksRunner.validateSchema();
+        const config = await (0, config_1.resolveConfig)(loaded, extraConfigs, extraSchemas, restartWithExistingPort, argv, options === null || options === void 0 ? void 0 : options.onSchemaError);
+        const { resolved } = await hooksRunner.resolvedConfig({
+            resolved: config,
+        });
+        // update context value
+        manager_1.manager.run(() => {
+            context_1.ConfigContext.set(loaded.config);
+            context_1.ResolvedConfigContext.set(resolved);
+            context_1.AppContext.set({
+                ...appContext,
+                port: resolved.server.port,
+                distDirectory: (0, utils_1.ensureAbsolutePath)(appDirectory, resolved.output.path),
+            });
+        });
+        await hooksRunner.prepare();
+        return {
+            loadedConfig: loaded,
+            // appContext may be updated in `prepare` hook, should return latest value
+            appContext: (0, context_1.useAppContext)(),
+            resolved,
+        };
+    };
+    async function run(argv, options) {
+        const { loadedConfig, appContext, resolved } = await init(argv, options);
+        await hooksRunner.commands({ program: utils_1.program });
+        (0, initWatcher_1.initWatcher)(loadedConfig, appContext.appDirectory, resolved.source.configDir, hooksRunner, argv);
+        manager_1.manager.run(() => utils_1.program.parse(process.argv));
+    }
+    async function restart() {
+        var _a, _b;
+        isRestart = true;
+        restartWithExistingPort = isRestart ? (_b = (_a = context_1.AppContext.use().value) === null || _a === void 0 ? void 0 : _a.port) !== null && _b !== void 0 ? _b : 0 : 0;
+        utils_1.logger.info('Restart...\n');
+        let hasGetError = false;
+        const runner = manager_1.manager.useRunner();
+        await runner.beforeRestart();
+        try {
+            await init(process.argv.slice(2), restartOptions);
+        }
+        catch (err) {
+            console.error(err);
+            hasGetError = true;
+        }
+        finally {
+            if (!hasGetError) {
+                manager_1.manager.run(() => utils_1.program.parse(process.argv));
+            }
+        }
+    }
+    return {
+        init,
+        run,
+        restart,
+    };
+};
+exports.cli = createCli();

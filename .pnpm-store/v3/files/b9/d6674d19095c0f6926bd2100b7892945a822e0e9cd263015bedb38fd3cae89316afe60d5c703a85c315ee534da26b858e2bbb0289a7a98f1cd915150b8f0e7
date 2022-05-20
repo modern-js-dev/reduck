@@ -1,0 +1,25 @@
+import type { BabelOptions } from '@modern-js/babel-compiler';
+import type { ITsconfig } from '../types';
+export declare enum Compiler {
+  babel = 0,
+  esbuild = 1,
+  swc = 2,
+}
+interface IBuildSourceCodeConfig {
+  babelConfig: BabelOptions;
+  srcRootDir: string;
+  willCompilerDirOrFile: string;
+  distDir: string;
+  compiler: Compiler;
+  projectData: {
+    appDirectory: string;
+  };
+  sourceMaps?: boolean;
+  tsconfigPath: string;
+}
+export declare const getWillCompilerCode: (srcDirOrFile: string, option: {
+  tsconfig: ITsconfig | null;
+  isTsProject: boolean;
+}) => string[];
+export declare const buildSourceCode: (config: IBuildSourceCodeConfig) => Promise<import("@modern-js/babel-compiler").ICompilerResult>;
+export {};

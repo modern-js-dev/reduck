@@ -1,0 +1,6 @@
+import type { PluginAPI } from '@modern-js/core';
+export interface IBuildWatchCommandOption {
+  onlySelf?: boolean;
+  init?: boolean;
+}
+export declare const buildWatch: (targetProjectName: string, option: IBuildWatchCommandOption, api: PluginAPI) => Promise<void>;

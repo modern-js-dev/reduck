@@ -1,0 +1,18 @@
+/**
+ * modified from https://github.com/farrow-js/farrow/tree/master/packages/farrow-pipeline
+ * license at https://github.com/farrow-js/farrow/blob/master/LICENSE
+ */
+export const createCounter = callback => {
+  const dispatch = (index, input) => {
+    const next = (nextInput = input) => dispatch(index + 1, nextInput);
+
+    return callback(index, input, next);
+  };
+
+  const start = input => dispatch(0, input);
+
+  return {
+    start,
+    dispatch
+  };
+};

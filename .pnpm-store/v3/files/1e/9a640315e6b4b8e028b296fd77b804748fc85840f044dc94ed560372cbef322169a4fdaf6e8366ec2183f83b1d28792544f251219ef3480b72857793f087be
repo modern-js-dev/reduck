@@ -1,0 +1,24 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.usePlugins = exports.mountHook = exports.registerHook = exports.createPlugin = exports.manager = void 0;
+const plugin_1 = require("@modern-js/plugin");
+const utils_1 = require("@modern-js/utils");
+const pluginAPI_1 = require("./pluginAPI");
+const baseHooks = {
+    config: (0, plugin_1.createParallelWorkflow)(),
+    resolvedConfig: (0, plugin_1.createAsyncWaterfall)(),
+    validateSchema: (0, plugin_1.createParallelWorkflow)(),
+    prepare: (0, plugin_1.createAsyncWorkflow)(),
+    commands: (0, plugin_1.createAsyncWorkflow)(),
+    watchFiles: (0, plugin_1.createParallelWorkflow)(),
+    fileChange: (0, plugin_1.createAsyncWorkflow)(),
+    beforeExit: (0, plugin_1.createAsyncWorkflow)(),
+    beforeRestart: (0, plugin_1.createAsyncWorkflow)(),
+};
+exports.manager = (0, plugin_1.createAsyncManager)(baseHooks, pluginAPI_1.pluginAPI);
+exports.createPlugin = exports.manager.createPlugin, exports.registerHook = exports.manager.registerHook, exports.mountHook = exports.manager.useRunner;
+const usePlugins = (plugins) => plugins.forEach(pluginPath => {
+    const module = (0, utils_1.compatRequire)(require.resolve(pluginPath));
+    exports.manager.usePlugin(module);
+});
+exports.usePlugins = usePlugins;

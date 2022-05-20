@@ -1,0 +1,4 @@
+export { default as devtools } from '@modern-js-reduck/plugin-devtools';
+export declare const effects: () => (context: import("@modern-js-reduck/store/dist/types/types/plugin").PluginContext) => import("@modern-js-reduck/store/dist/types/types/plugin").PluginLifeCycle;
+export declare const immer: () => (context: import("@modern-js-reduck/store/dist/types/types/plugin").PluginContext) => import("@modern-js-reduck/store/dist/types/types/plugin").PluginLifeCycle;
+export declare const autoActions: () => (context: import("@modern-js-reduck/store/dist/types/types/plugin").PluginContext) => import("@modern-js-reduck/store/dist/types/types/plugin").PluginLifeCycle;

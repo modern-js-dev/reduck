@@ -1,0 +1,77 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.loadPlugins = void 0;
+
+var _utils = require("@modern-js/utils");
+
+var _plugin = require("./plugin");
+
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+const tryResolve = (name, appDirectory) => {
+  let filePath = '';
+
+  try {
+    filePath = require.resolve(name, {
+      paths: [appDirectory]
+    });
+    delete require.cache[filePath];
+  } catch (err) {
+    if (err.code === 'MODULE_NOT_FOUND') {
+      throw new Error(`Can not find plugin ${name}.`);
+    }
+
+    throw err;
+  }
+
+  return filePath;
+};
+
+const loadPlugins = (plugins, appDirectory) => {
+  const resolvePlugin = p => {
+    const isPluginInstance = typeof p !== 'string' && !Array.isArray(p);
+
+    if (isPluginInstance) {
+      return {
+        module: (0, _plugin.createPlugin)(p.setup, p)
+      };
+    }
+
+    const [pkg, options] = typeof p === 'string' ? [p, undefined] : p;
+    const pluginPath = tryResolve(pkg, appDirectory);
+    let module = (0, _utils.compatRequire)(pluginPath);
+    const useNewSyntax = typeof module === 'function';
+
+    if (useNewSyntax) {
+      const plugin = module(options);
+      module = (0, _plugin.createPlugin)(plugin.setup, plugin);
+    }
+
+    return {
+      pkg,
+      path: pluginPath,
+      module
+    };
+  };
+
+  return plugins.map(plugin => {
+    const {
+      pkg,
+      path,
+      module
+    } = resolvePlugin(plugin);
+    return _objectSpread(_objectSpread({}, module), {}, {
+      pluginPath: path,
+      pkg
+    });
+  });
+};
+
+exports.loadPlugins = loadPlugins;

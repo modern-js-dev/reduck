@@ -1,0 +1,55 @@
+export const initializerSymbol = Symbol('model initializer');
+
+const model = name => ({
+  define(modelDesc) {
+    let modelInitializer;
+
+    if (typeof modelDesc === 'function') {
+      modelInitializer = modelDesc;
+    } else {
+      modelInitializer = () => modelDesc;
+    }
+
+    const modelCache = new Map();
+
+    const createResponse = initialLizer => {
+      /**
+       * Use to change model namespace when mount model
+       * @example
+       * use(someModel('hello'))
+       */
+      const response = namespace => {
+        const cachedModel = modelCache.get(namespace);
+
+        if (cachedModel) {
+          return cachedModel;
+        }
+
+        const clonedModelInitializer = (...args) => {
+          const result = initialLizer(...args);
+          return result;
+        };
+
+        const modelInstance = createResponse(clonedModelInitializer);
+        modelCache.set(namespace, modelInstance);
+        modelInstance._name = namespace || name;
+        return modelInstance;
+      };
+
+      response._name = name;
+      Object.defineProperty(response, initializerSymbol, {
+        configurable: false,
+        enumerable: false,
+        value: initialLizer
+      });
+      return response;
+    };
+
+    return createResponse(modelInitializer);
+  }
+
+});
+
+export const getModelInitializer = _model => _model[initializerSymbol];
+export const isModel = _model => Boolean(getModelInitializer(_model));
+export default model;

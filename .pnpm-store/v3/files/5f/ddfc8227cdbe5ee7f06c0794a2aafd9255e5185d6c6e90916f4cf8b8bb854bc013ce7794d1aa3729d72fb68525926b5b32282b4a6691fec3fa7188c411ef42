@@ -1,0 +1,2 @@
+import type { NormalizedConfig } from '@modern-js/core';
+export default function resolvePlugins(features: NormalizedConfig['runtime']): any[];

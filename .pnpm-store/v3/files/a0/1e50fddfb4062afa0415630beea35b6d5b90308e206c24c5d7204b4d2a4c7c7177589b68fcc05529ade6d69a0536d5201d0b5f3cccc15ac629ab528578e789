@@ -1,0 +1,22 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.repeatKeyWarning = exports.deepGet = void 0;
+const schema_1 = require("../config/schema");
+const deepGet = (obj, key) => {
+    for (const p of key.split('.')) {
+        // eslint-disable-next-line no-param-reassign
+        obj = obj ? obj[p] : undefined;
+    }
+    return obj;
+};
+exports.deepGet = deepGet;
+const repeatKeyWarning = (schema, jsConfig, pkgConfig) => {
+    const keys = (0, schema_1.traverseSchema)(schema);
+    for (const key of keys) {
+        if ((0, exports.deepGet)(jsConfig, key) !== undefined &&
+            (0, exports.deepGet)(pkgConfig, key) !== undefined) {
+            throw new Error(`The same configuration ${key} exists in modern.config.js and package.json.\n Please remove it from package.json.`);
+        }
+    }
+};
+exports.repeatKeyWarning = repeatKeyWarning;

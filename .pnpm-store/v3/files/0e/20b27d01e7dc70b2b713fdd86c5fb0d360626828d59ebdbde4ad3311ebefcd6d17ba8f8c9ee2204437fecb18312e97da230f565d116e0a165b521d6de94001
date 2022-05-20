@@ -1,0 +1,11 @@
+import type { PluginAPI } from '@modern-js/core';
+export interface IBuildCommandOption {
+  self?: boolean;
+  dept?: boolean;
+  deps?: boolean;
+  onlySelf: boolean;
+  all: boolean;
+  contentHash?: boolean;
+  gitHash?: boolean;
+}
+export declare const build: (targetProjectName: string, option: IBuildCommandOption, api: PluginAPI) => Promise<void>;

@@ -1,0 +1,110 @@
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+import { createStore, model } from '..';
+const count1Model = model('count1').define(() => ({
+  state: {
+    value: 1
+  },
+  actions: {
+    add(state) {
+      return _objectSpread(_objectSpread({}, state), {}, {
+        value: state.value + 1
+      });
+    }
+
+  }
+}));
+const count2Model = model('count2').define((_, {
+  use
+}) => {
+  use(count1Model);
+  return {
+    state: {
+      value: 1
+    },
+    actions: {
+      addCount1Value(state) {
+        const [{
+          value: count1Value
+        }] = use(count1Model);
+        return _objectSpread(_objectSpread({}, state), {}, {
+          value: state.value + count1Value
+        });
+      }
+
+    }
+  };
+});
+describe('test useModel', () => {
+  test("use model in model's action should work", () => {
+    const store = createStore();
+    const [, actions] = store.use(count2Model);
+    const [, count1Actions] = store.use(count1Model);
+    expect(store.getState()).toEqual({
+      count1: {
+        value: 1
+      },
+      count2: {
+        value: 1
+      }
+    });
+    actions.addCount1Value();
+    expect(store.getState()).toEqual({
+      count1: {
+        value: 1
+      },
+      count2: {
+        value: 2
+      }
+    });
+    count1Actions.add();
+    expect(store.getState()).toEqual({
+      count1: {
+        value: 2
+      },
+      count2: {
+        value: 2
+      }
+    });
+    actions.addCount1Value();
+    expect(store.getState()).toEqual({
+      count1: {
+        value: 2
+      },
+      count2: {
+        value: 4
+      }
+    });
+  });
+  test('use models with same name should get a warning', () => {
+    const spy = jest.spyOn(console, 'info');
+    const store = createStore();
+    const countModel = model('count1').define({
+      state: 1
+    });
+    store.use(count1Model, countModel);
+    expect(spy).toHaveBeenLastCalledWith('model named count1 has already mounted, so skip');
+    spy.mockClear();
+  });
+  test('use self in model will get error', () => {
+    const test = model('name').define((_, {
+      use
+    }) => {
+      use(test);
+      return {
+        state: 1
+      };
+    });
+    expect(() => createStore().use(test)).toThrow(Error);
+  });
+  test('use mltiple model with primitive state get error', () => {
+    const test = model('name').define({
+      state: 1
+    });
+    expect(() => createStore().use(test, count1Model)).toThrow(Error);
+  });
+});

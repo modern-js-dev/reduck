@@ -1,0 +1,18 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.pre = pre;
+
+var _utils = require("../utils");
+
+async function pre(type, tag = 'next') {
+  const params = [_utils.CHANGESET_PATH, 'pre', type];
+
+  if (type === 'enter') {
+    params.push(tag);
+  }
+
+  await (0, _utils.execaWithStreamLog)(process.execPath, params);
+}

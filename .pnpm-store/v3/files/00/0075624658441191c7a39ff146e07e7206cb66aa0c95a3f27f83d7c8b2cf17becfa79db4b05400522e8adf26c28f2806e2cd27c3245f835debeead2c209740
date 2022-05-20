@@ -1,0 +1,18 @@
+export declare const getFinalConfig: (currentPath?: string) => Promise<{
+  monorepo: {
+    rootPath: string;
+    packageManager: import("./monorepo").PackageManagerType;
+  };
+  config: {
+    packagesMatchs?: string[] | {
+      enableAutoFinder?: boolean | undefined;
+      workspaceFile?: string | undefined;
+    } | undefined;
+    projectsConfig?: {
+      name: string;
+      path: string;
+    }[] | undefined;
+    packagesIgnoreMatchs?: string[] | undefined;
+  };
+}>;
+export type { PackageManagerType } from './monorepo';

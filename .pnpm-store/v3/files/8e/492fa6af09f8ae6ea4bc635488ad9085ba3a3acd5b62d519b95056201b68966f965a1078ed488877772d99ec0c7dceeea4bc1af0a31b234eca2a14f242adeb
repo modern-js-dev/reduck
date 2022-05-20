@@ -1,0 +1,24 @@
+import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
+
+var _BooleanConfigName;
+
+import { i18n, localeKeys } from "../locale";
+export var BooleanConfig;
+
+(function (BooleanConfig) {
+  BooleanConfig["NO"] = "no";
+  BooleanConfig["YES"] = "yes";
+})(BooleanConfig || (BooleanConfig = {}));
+
+export var BooleanConfigName = (_BooleanConfigName = {}, _defineProperty(_BooleanConfigName, BooleanConfig.NO, function () {
+  return i18n.t(localeKeys["boolean"].no);
+}), _defineProperty(_BooleanConfigName, BooleanConfig.YES, function () {
+  return i18n.t(localeKeys["boolean"].yes);
+}), _BooleanConfigName);
+export var BooleanSchemas = [{
+  key: BooleanConfig.NO,
+  label: BooleanConfigName[BooleanConfig.NO]
+}, {
+  key: BooleanConfig.YES,
+  label: BooleanConfigName[BooleanConfig.YES]
+}];

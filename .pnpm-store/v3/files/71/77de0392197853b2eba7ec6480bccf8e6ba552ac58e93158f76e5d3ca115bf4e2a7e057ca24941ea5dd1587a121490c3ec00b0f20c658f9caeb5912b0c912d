@@ -1,0 +1,4 @@
+import { program, Command } from '@modern-js/utils';
+export declare function initCommandsMap(): void;
+export type { Command };
+export { program };

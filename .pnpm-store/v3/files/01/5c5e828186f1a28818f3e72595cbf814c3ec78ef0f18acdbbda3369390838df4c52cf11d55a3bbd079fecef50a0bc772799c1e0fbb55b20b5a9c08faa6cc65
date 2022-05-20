@@ -1,0 +1,46 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.change = change;
+
+var _utils = require("@modern-js/utils");
+
+var _utils2 = require("../utils");
+
+var _locale = require("../locale");
+
+async function change(options) {
+  const appDir = process.cwd();
+
+  if ((0, _utils.isMonorepo)(appDir)) {
+    const packages = (0, _utils.getMonorepoPackages)(appDir);
+
+    if (packages.length === 0) {
+      const packageManager = await (0, _utils.getPackageManager)(appDir);
+
+      _utils.logger.warn(_locale.i18n.t(_locale.localeKeys.command.change.no_packages, {
+        packageManager: packageManager === 'yarn' ? 'yarn' : `${packageManager} run`
+      }));
+
+      return;
+    }
+  }
+
+  const {
+    empty,
+    open
+  } = options;
+  const params = [_utils2.CHANGESET_PATH, 'add'];
+
+  if (empty) {
+    params.push('--empty');
+  }
+
+  if (open) {
+    params.push('--open');
+  }
+
+  await (0, _utils2.execaWithStreamLog)(process.execPath, params);
+}

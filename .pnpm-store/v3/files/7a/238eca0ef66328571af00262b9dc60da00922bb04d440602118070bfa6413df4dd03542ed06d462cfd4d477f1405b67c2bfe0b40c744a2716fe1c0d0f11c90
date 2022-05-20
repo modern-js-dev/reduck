@@ -1,0 +1,7 @@
+import { IProjectNode } from '../../projects/get-projects';
+export interface IClearConfig {
+  rootPath: string;
+  removeDirs?: string[];
+}
+export declare const defaultRemoveDirs: string[];
+export declare const runClearTask: (projectNames: string[], projects: IProjectNode[], config: IClearConfig) => void;

@@ -1,0 +1,12 @@
+import { ModernServerOptions } from './type';
+import { Server } from './server';
+export { Server };
+export type { ServerConfig } from '@modern-js/server-core';
+export { ModernServer } from './server/modern-server';
+export { createProxyHandler } from './libs/proxy';
+export * from './type';
+export * from './constants';
+
+declare const _default: (options: ModernServerOptions) => Promise<Server>;
+
+export default _default;

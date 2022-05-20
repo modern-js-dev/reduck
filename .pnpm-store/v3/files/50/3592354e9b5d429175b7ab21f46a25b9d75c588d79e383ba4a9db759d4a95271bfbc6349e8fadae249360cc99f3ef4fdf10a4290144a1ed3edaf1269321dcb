@@ -1,0 +1,93 @@
+import { createContext, createAsyncManager, createAsyncPipeline, createAsyncWaterfall, createParallelWorkflow, createWaterfall } from '@modern-js/plugin';
+import { enable } from '@modern-js/plugin/node';
+enable(); // collect all middleware register in server plugins
+
+const gather = createParallelWorkflow();
+// config
+const config = createWaterfall();
+const prepare = createWaterfall();
+const create = createAsyncPipeline();
+const prepareWebServer = createAsyncPipeline();
+const prepareApiServer = createAsyncPipeline();
+const beforeDevServer = createParallelWorkflow();
+const setupCompiler = createParallelWorkflow();
+const afterDevServer = createParallelWorkflow(); // TODO FIXME
+
+const beforeRouteSet = createAsyncPipeline();
+const afterRouteSet = createAsyncPipeline();
+const beforeProdServer = createParallelWorkflow();
+const afterProdServer = createParallelWorkflow();
+const listen = createParallelWorkflow();
+const beforeServerReset = createParallelWorkflow();
+const afterServerReset = createParallelWorkflow();
+const extendSSRContext = createAsyncWaterfall();
+const extendContext = createAsyncPipeline();
+const handleError = createParallelWorkflow();
+const beforeMatch = createAsyncPipeline();
+const afterMatch = createAsyncPipeline(); // TODO FIXME
+
+const prefetch = createParallelWorkflow(); // TODO FIXME
+
+const renderToString = createAsyncPipeline();
+const beforeRender = createAsyncPipeline();
+const afterRender = createAsyncPipeline();
+const beforeSend = createAsyncPipeline();
+const afterSend = createParallelWorkflow();
+const reset = createParallelWorkflow();
+export const AppContext = createContext({});
+export const ConfigContext = createContext({});
+/**
+ * Get original content of user config.
+ */
+
+export const useConfigContext = () => ConfigContext.use().value;
+/**
+ * Get app context, including directories, plugins and some static infos.
+ */
+
+export const useAppContext = () => AppContext.use().value;
+const pluginAPI = {
+  useAppContext,
+  useConfigContext
+};
+const serverHooks = {
+  // server hook
+  gather,
+  config,
+  prepare,
+  create,
+  prepareWebServer,
+  prepareApiServer,
+  beforeDevServer,
+  setupCompiler,
+  afterDevServer,
+  beforeRouteSet,
+  afterRouteSet,
+  beforeProdServer,
+  afterProdServer,
+  listen,
+  beforeServerReset,
+  afterServerReset,
+  // request hook
+  extendSSRContext,
+  extendContext,
+  handleError,
+  beforeMatch,
+  afterMatch,
+  prefetch,
+  renderToString,
+  beforeRender,
+  afterRender,
+  beforeSend,
+  afterSend,
+  reset
+};
+/** All hooks of server plugin. */
+
+export const createServerManager = () => createAsyncManager(serverHooks, pluginAPI);
+export const serverManager = createServerManager();
+/** Plugin options of a server plugin. */
+
+export const {
+  createPlugin
+} = serverManager;

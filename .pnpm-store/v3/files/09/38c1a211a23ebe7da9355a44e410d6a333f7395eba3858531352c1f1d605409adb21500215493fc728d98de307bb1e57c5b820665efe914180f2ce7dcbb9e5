@@ -1,0 +1,10 @@
+import type { INodePackageJson } from '@rushstack/node-core-library';
+export declare class Package {
+  json: INodePackageJson;
+  configPath: string;
+  rootPath: string;
+  constructor(packageJson: INodePackageJson, packageConfigPath: string, rootPath: string);
+  get name(): string;
+  get path(): string;
+  get(key: keyof INodePackageJson): string | boolean | Record<string, string> | import("@rushstack/node-core-library").IPackageJsonDependencyTable | import("@rushstack/node-core-library").IPackageJsonRepository | import("@rushstack/node-core-library").IPackageJsonScriptTable | undefined;
+}

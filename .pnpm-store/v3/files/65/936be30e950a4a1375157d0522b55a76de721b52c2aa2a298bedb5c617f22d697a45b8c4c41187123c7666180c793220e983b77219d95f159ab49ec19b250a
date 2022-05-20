@@ -1,0 +1,13 @@
+import { BaseWebpackConfig } from './base';
+declare class NodeWebpackConfig extends BaseWebpackConfig {
+    name(): void;
+    devtool(): void;
+    output(): void;
+    optimization(): void;
+    loaders(): import("../../compiled/webpack-chain/types").Rule<import("../../compiled/webpack-chain/types").Module>;
+    private useDefinePlugin;
+    plugins(): void;
+    resolve(): void;
+    config(): any;
+}
+export { NodeWebpackConfig };

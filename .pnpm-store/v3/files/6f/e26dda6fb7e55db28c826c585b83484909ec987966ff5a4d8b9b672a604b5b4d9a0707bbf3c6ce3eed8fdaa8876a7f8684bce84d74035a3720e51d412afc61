@@ -1,0 +1,5 @@
+import type { PluginAPI } from '@modern-js/core';
+export interface IDevOption {
+  tsconfig: string;
+}
+export declare const dev: (api: PluginAPI, option: IDevOption, subCmd?: string) => Promise<void>;

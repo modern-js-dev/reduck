@@ -1,0 +1,2 @@
+declare const babelTransformer: any;
+export default babelTransformer;

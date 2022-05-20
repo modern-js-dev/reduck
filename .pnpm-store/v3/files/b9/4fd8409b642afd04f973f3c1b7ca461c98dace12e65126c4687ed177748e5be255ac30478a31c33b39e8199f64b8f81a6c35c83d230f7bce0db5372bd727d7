@@ -1,0 +1,52 @@
+{
+  "name": "@redux-devtools/extension",
+  "version": "3.2.2",
+  "description": "Wrappers for Redux DevTools Extension.",
+  "homepage": "https://github.com/reduxjs/redux-devtools/tree/master/packages/redux-devtools-extension",
+  "license": "MIT",
+  "author": "Mihail Diordiev <zalmoxisus@gmail.com> (https://github.com/zalmoxisus)",
+  "files": [
+    "lib",
+    "src"
+  ],
+  "main": "lib/cjs/index.js",
+  "module": "lib/esm/index.js",
+  "types": "lib/types/index.d.ts",
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/reduxjs/redux-devtools"
+  },
+  "scripts": {
+    "build": "yarn build:cjs && yarn build:esm && yarn build:types",
+    "build:cjs": "babel src --extensions \".ts\" --out-dir lib/cjs",
+    "build:esm": "babel src --config-file ./babel.config.esm.json --extensions \".ts\" --out-dir lib/esm",
+    "build:types": "tsc --emitDeclarationOnly",
+    "clean": "rimraf lib",
+    "lint": "eslint . --ext .ts",
+    "type-check": "tsc --noEmit",
+    "prepack": "yarn run clean && yarn run build",
+    "prepublish": "yarn run type-check && yarn run lint"
+  },
+  "dependencies": {
+    "@babel/runtime": "^7.17.0"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.17.0",
+    "@babel/core": "^7.17.0",
+    "@babel/eslint-parser": "^7.17.0",
+    "@babel/plugin-transform-runtime": "^7.17.0",
+    "@babel/preset-env": "^7.16.11",
+    "@babel/preset-typescript": "^7.16.7",
+    "@typescript-eslint/eslint-plugin": "^5.10.2",
+    "@typescript-eslint/parser": "^5.10.2",
+    "eslint": "^8.8.0",
+    "eslint-config-prettier": "^8.3.0",
+    "redux": "^4.1.2",
+    "rimraf": "^3.0.2",
+    "typescript": "~4.5.5"
+  },
+  "peerDependencies": {
+    "redux": "^3.1.0 || ^4.0.0"
+  }
+}

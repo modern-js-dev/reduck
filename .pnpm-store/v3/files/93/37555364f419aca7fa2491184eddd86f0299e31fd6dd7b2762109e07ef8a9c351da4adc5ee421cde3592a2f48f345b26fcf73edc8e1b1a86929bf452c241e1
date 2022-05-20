@@ -1,0 +1,12 @@
+export declare const debug: any;
+interface TSConfig {
+  extends?: string;
+  compilerOptions?: Record<string, any>;
+}
+/**
+ * Read `compilerOptions` in the current pwd's tsconfig.json file
+ */
+
+export declare const readCompilerOptions: (pwd?: string, filename?: string) => TSConfig['compilerOptions'];
+export declare const getModuleNameMapper: (alias: any) => any;
+export {};

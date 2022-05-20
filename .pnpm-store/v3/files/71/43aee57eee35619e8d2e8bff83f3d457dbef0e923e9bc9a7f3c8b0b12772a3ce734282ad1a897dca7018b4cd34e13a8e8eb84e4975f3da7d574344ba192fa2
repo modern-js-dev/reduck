@@ -1,0 +1,85 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.execaWithStreamLog = execaWithStreamLog;
+exports.npmInstall = npmInstall;
+exports.pnpmInstall = pnpmInstall;
+exports.yarnInstall = yarnInstall;
+
+var _utils = require("@modern-js/utils");
+
+var _env = require("./env");
+
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+function execaWithStreamLog(command, args, options) {
+  const promise = (0, _utils.execa)(command, args, _objectSpread(_objectSpread({}, options), {}, {
+    stdin: 'inherit',
+    stdout: 'inherit',
+    stderr: 'inherit'
+  }));
+  return promise;
+}
+
+async function npmInstall(cwd, registryUrl) {
+  const canUse = await (0, _env.canUseNpm)();
+
+  if (canUse) {
+    const params = ['install'];
+
+    if (registryUrl) {
+      params.push(`--registry=${registryUrl}`);
+    }
+
+    return execaWithStreamLog('npm', params, {
+      cwd,
+      env: process.env
+    });
+  }
+
+  throw new Error('please install npm first');
+}
+
+async function yarnInstall(cwd, registryUrl) {
+  const canUse = await (0, _env.canUseYarn)();
+
+  if (canUse) {
+    const params = ['install'];
+
+    if (registryUrl) {
+      params.push(`--registry=${registryUrl}`);
+    }
+
+    return execaWithStreamLog('yarn', params, {
+      cwd,
+      env: process.env
+    });
+  }
+
+  throw new Error('please install yarn first');
+}
+
+async function pnpmInstall(cwd, registryUrl) {
+  const canUse = await (0, _env.canUsePnpm)();
+
+  if (canUse) {
+    const params = ['install'];
+
+    if (registryUrl) {
+      params.push(`--registry=${registryUrl}`);
+    }
+
+    return execaWithStreamLog('pnpm', params, {
+      cwd,
+      env: process.env
+    });
+  }
+
+  throw new Error('please install pnpm first');
+}

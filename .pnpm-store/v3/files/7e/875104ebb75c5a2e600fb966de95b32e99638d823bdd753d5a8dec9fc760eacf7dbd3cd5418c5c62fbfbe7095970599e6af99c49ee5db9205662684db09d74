@@ -1,0 +1,146 @@
+import _objectSpread from "@babel/runtime/helpers/esm/objectSpread2";
+import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
+import _asyncToGenerator from "@babel/runtime/helpers/esm/asyncToGenerator";
+import _regeneratorRuntime from "@babel/runtime/regenerator";
+import path from 'path';
+import { getModuleNameMapper, DEFAULT_RESOLVER_PATH } from '@modern-js/testing';
+import { isApiOnly } from '@modern-js/utils';
+import { bff_info_key } from "./constant";
+import { isBFFProject } from "./utils";
+export var setJestConfigForBFF = /*#__PURE__*/function () {
+  var _ref2 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee(_ref) {
+    var _userConfig$source;
+
+    var pwd, userConfig, plugins, routes, utils, bffConfig, jestConfig, alias, aliasMapper, transform, moduleNameMapper, apiOnly, mergedModuleNameMapper, resolver, configFields, commonConfig;
+    return _regeneratorRuntime.wrap(function _callee$(_context) {
+      while (1) {
+        switch (_context.prev = _context.next) {
+          case 0:
+            pwd = _ref.pwd, userConfig = _ref.userConfig, plugins = _ref.plugins, routes = _ref.routes, utils = _ref.utils;
+            bffConfig = {
+              rootDir: path.join(pwd, './api'),
+              setupFilesAfterEnv: [require.resolve("./setup")],
+              testEnvironment: require.resolve("./env"),
+              testMatch: ["**/api/**/*.test.[jt]s"],
+              globals: _defineProperty({}, bff_info_key, {
+                appDir: pwd,
+                modernUserConfig: userConfig,
+                plugins: plugins,
+                routes: routes
+              })
+            };
+            jestConfig = utils.jestConfig;
+            alias = (userConfig === null || userConfig === void 0 ? void 0 : (_userConfig$source = userConfig.source) === null || _userConfig$source === void 0 ? void 0 : _userConfig$source.alias) || {};
+            aliasMapper = getModuleNameMapper(alias);
+            transform = jestConfig.transform, moduleNameMapper = jestConfig.moduleNameMapper;
+            _context.next = 8;
+            return isApiOnly(pwd);
+
+          case 8:
+            apiOnly = _context.sent;
+            mergedModuleNameMapper = _objectSpread(_objectSpread({}, moduleNameMapper), aliasMapper);
+            resolver = jestConfig.resolver || DEFAULT_RESOLVER_PATH; // 这三个配置不能设置在 projects 中，需要设置在外层(https://github.com/facebook/jest/issues/9696)
+
+            configFields = ['coverage', 'collectCoverage', 'testTimeout'];
+            commonConfig = configFields.reduce(function (obj, field) {
+              if (jestConfig.hasOwnProperty(field)) {
+                obj[field] = jestConfig[field];
+              }
+
+              return obj;
+            }, {});
+
+            if (!apiOnly) {
+              utils.setJestConfig({
+                projects: [_objectSpread({}, jestConfig), _objectSpread({
+                  transform: transform,
+                  moduleNameMapper: mergedModuleNameMapper,
+                  resolver: resolver
+                }, bffConfig)]
+              }, {
+                force: true
+              });
+            } else {
+              utils.setJestConfig({
+                projects: [_objectSpread({
+                  transform: transform,
+                  moduleNameMapper: mergedModuleNameMapper,
+                  resolver: resolver
+                }, bffConfig)]
+              }, {
+                force: true
+              });
+            }
+
+            utils.setJestConfig(commonConfig);
+
+          case 15:
+          case "end":
+            return _context.stop();
+        }
+      }
+    }, _callee);
+  }));
+
+  return function setJestConfigForBFF(_x) {
+    return _ref2.apply(this, arguments);
+  };
+}();
+export default (function () {
+  return {
+    name: '@modern-js/testing-plugin-bff',
+    setup: function setup(api) {
+      return {
+        jestConfig: function () {
+          var _jestConfig = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee2(utils, next) {
+            var appContext, pwd, userConfig, plugins;
+            return _regeneratorRuntime.wrap(function _callee2$(_context2) {
+              while (1) {
+                switch (_context2.prev = _context2.next) {
+                  case 0:
+                    appContext = api.useAppContext();
+                    pwd = appContext.appDirectory;
+
+                    if (isBFFProject(pwd)) {
+                      _context2.next = 4;
+                      break;
+                    }
+
+                    return _context2.abrupt("return", next(utils));
+
+                  case 4:
+                    userConfig = api.useResolvedConfigContext();
+                    plugins = appContext.plugins.map(function (p) {
+                      return p.server;
+                    }).filter(Boolean);
+                    _context2.next = 8;
+                    return setJestConfigForBFF({
+                      pwd: pwd,
+                      userConfig: userConfig,
+                      plugins: plugins,
+                      routes: appContext.serverRoutes,
+                      utils: utils
+                    });
+
+                  case 8:
+                    return _context2.abrupt("return", next(utils));
+
+                  case 9:
+                  case "end":
+                    return _context2.stop();
+                }
+              }
+            }, _callee2);
+          }));
+
+          function jestConfig(_x2, _x3) {
+            return _jestConfig.apply(this, arguments);
+          }
+
+          return jestConfig;
+        }()
+      };
+    }
+  };
+});
+export { request as testBff } from "./utils";

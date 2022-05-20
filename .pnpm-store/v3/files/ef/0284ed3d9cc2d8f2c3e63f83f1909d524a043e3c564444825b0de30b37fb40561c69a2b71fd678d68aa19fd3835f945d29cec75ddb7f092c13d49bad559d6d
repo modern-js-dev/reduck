@@ -1,0 +1,68 @@
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+import { get } from '@modern-js/utils/lodash';
+import { getObjKeyMap } from "./utils";
+
+class I18n {
+  constructor() {
+    _defineProperty(this, "language", 'en');
+
+    _defineProperty(this, "languageMap", {});
+  }
+
+  format(msg, vars) {
+    return msg.replace(/\{([^}]+)\}/gm, (_match, capture) => Object.prototype.hasOwnProperty.call(vars, capture) ? vars[capture] : capture);
+  }
+
+  getMessage(lang, key, vars, fallbackText) {
+    // 判断语言当前语料库是否存在，不存在使用 en 作为默认语言
+    const languages = Object.keys(this.languageMap);
+    const resultLang = languages.find(l => l === lang);
+
+    if (!resultLang && languages.length === 0) {
+      return fallbackText || key;
+    }
+
+    const model = this.languageMap[resultLang || 'en' || languages[0]];
+
+    if (!model) {
+      return fallbackText || key;
+    }
+
+    const message = get(model, key);
+    const value = message || fallbackText || key;
+
+    if (typeof value === 'string') {
+      return this.format(value, vars || {});
+    }
+
+    throw new Error('key is not a string');
+  }
+
+  init(language, languageMap) {
+    this.language = language || 'en';
+
+    if (languageMap) {
+      this.languageMap = languageMap;
+    }
+
+    return getObjKeyMap(this.languageMap[this.language]);
+  }
+
+  changeLanguage(config) {
+    this.language = config.locale || 'en';
+  }
+
+  t(key, vars, fallbackText) {
+    return this.getMessage(this.language, key, vars, fallbackText);
+  }
+
+  lang(lang) {
+    return {
+      t: (key, vars, fallbackText) => this.getMessage(lang, key, vars, fallbackText)
+    };
+  }
+
+}
+
+export { I18n };

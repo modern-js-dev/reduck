@@ -1,0 +1,63 @@
+{
+  "name": "is-valid-domain",
+  "version": "0.1.6",
+  "description": "Validate domain name",
+  "main": "index.js",
+  "types": "types/index.d.ts",
+  "scripts": {
+    "test": "tape test/*.js",
+    "lint": "standard --fix index.js",
+    "build:example": "browserify example/main.js -o example/dist/bundle.js",
+    "generate": "node data/generate.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/miguelmota/is-valid-domain"
+  },
+  "keywords": [
+    "valid",
+    "validate",
+    "validator",
+    "check",
+    "checker",
+    "domain",
+    "subdomain",
+    "wildcard",
+    "host",
+    "hostname"
+  ],
+  "author": {
+    "name": "Miguel Mota",
+    "email": "hello@miguelmota.com",
+    "url": "https://miguelmota.com/"
+  },
+  "license": {
+    "type": "MIT",
+    "url": "https://github.com/miguelmota/is-valid-domain/blob/master/LICENSE"
+  },
+  "bugs": {
+    "url": "https://github.com/miguelmota/is-valid-domain/issues"
+  },
+  "homepage": "https://github.com/miguelmota/is-valid-domain",
+  "devDependencies": {
+    "browserify": "^16.2.3",
+    "standard": "^16.0.4",
+    "tape": "^4.9.2"
+  },
+  "testling": {
+    "files": "test/*.js",
+    "browsers": [
+      "ie/6..latest",
+      "chrome/22..latest",
+      "firefox/16..latest",
+      "safari/latest",
+      "opera/11.0..latest",
+      "iphone/6",
+      "ipad/6",
+      "android-browser/latest"
+    ]
+  },
+  "dependencies": {
+    "punycode": "^2.1.1"
+  }
+}

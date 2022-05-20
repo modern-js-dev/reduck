@@ -1,0 +1,61 @@
+import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
+import _objectSpread from "@babel/runtime/helpers/esm/objectSpread2";
+import _toConsumableArray from "@babel/runtime/helpers/esm/toConsumableArray";
+import { useContainer, createPipeline } from "../farrow-pipeline";
+var WATERFALL_SYMBOL = Symbol["for"]('MODERN_WATERFALL');
+export var getBrook = function getBrook(input) {
+  if (typeof input === 'function') {
+    return input;
+  } else if (input && typeof input.middleware === 'function') {
+    return input.middleware;
+  }
+
+  throw new Error("".concat(input, " is not a Brook or { brook: Brook }"));
+};
+export var createWaterfall = function createWaterfall() {
+  var pipeline = createPipeline();
+
+  var use = function use() {
+    for (var _len = arguments.length, brooks = new Array(_len), _key = 0; _key < _len; _key++) {
+      brooks[_key] = arguments[_key];
+    }
+
+    pipeline.use.apply(pipeline, _toConsumableArray(brooks.map(getBrook).map(mapBrookToMiddleware)));
+    return waterfall;
+  };
+
+  var run = function run(input, options) {
+    return pipeline.run(input, _objectSpread(_objectSpread({}, options), {}, {
+      onLast: function onLast(input) {
+        return input;
+      }
+    }));
+  };
+
+  var middleware = function middleware(input) {
+    var container = useContainer();
+    return pipeline.run(input, {
+      container: container,
+      onLast: function onLast(input) {
+        return input;
+      }
+    });
+  };
+
+  var waterfall = _objectSpread(_objectSpread({}, pipeline), {}, _defineProperty({
+    use: use,
+    run: run,
+    middleware: middleware
+  }, WATERFALL_SYMBOL, true));
+
+  return waterfall;
+};
+export var isWaterfall = function isWaterfall(input) {
+  return Boolean(input === null || input === void 0 ? void 0 : input[WATERFALL_SYMBOL]);
+};
+
+var mapBrookToMiddleware = function mapBrookToMiddleware(brook) {
+  return function (input, next) {
+    return next(brook(input));
+  };
+};

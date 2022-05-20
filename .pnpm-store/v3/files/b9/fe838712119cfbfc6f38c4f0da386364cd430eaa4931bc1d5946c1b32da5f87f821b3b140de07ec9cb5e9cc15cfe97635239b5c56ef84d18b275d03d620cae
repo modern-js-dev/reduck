@@ -1,0 +1,98 @@
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+import { Signale } from '@modern-js/utils';
+import { formatLog } from "./utils";
+
+const createLogger = (name, config) => {
+  const options = {
+    scope: config.label ? config.label + name : name,
+    types: {
+      info: {
+        badge: '',
+        color: 'blue',
+        label: ''
+      }
+    }
+  };
+  return new Signale(options);
+};
+
+const createListenHandler = (name, config) => {
+  // const sb = new StringBuilder();
+  const logger = createLogger(name, config); // eslint-disable-next-line node/prefer-global/buffer
+
+  const stdout = chunk => {
+    // console.info(chunk.toString().split(/\r\n|\n\r|\r|\n/g).length);
+    logger.info(formatLog(chunk.toString()));
+  }; // eslint-disable-next-line node/prefer-global/buffer
+
+
+  const stderr = chunk => {
+    logger.error(chunk.toString()); // logger.log('#####################');
+  };
+
+  return {
+    stdout,
+    stderr
+  };
+};
+
+export class MultitasksLogger {
+  constructor() {
+    _defineProperty(this, "_taskNameList", void 0);
+
+    _defineProperty(this, "_taskStdoutListenerMap", void 0);
+
+    _defineProperty(this, "_taskStderrListenerMap", void 0);
+
+    _defineProperty(this, "_taskLogConfigMap", void 0);
+
+    this._taskNameList = [];
+    this._taskStdoutListenerMap = new Map();
+    this._taskStderrListenerMap = new Map();
+    this._taskLogConfigMap = new Map();
+  }
+
+  addLogProvider(name, config) {
+    if (this._taskNameList.includes(name)) {
+      var _this$_taskStdoutList, _this$_taskStderrList;
+
+      (_this$_taskStdoutList = this._taskStdoutListenerMap.get(name)) === null || _this$_taskStdoutList === void 0 ? void 0 : _this$_taskStdoutList.removeAllListeners();
+      (_this$_taskStderrList = this._taskStderrListenerMap.get(name)) === null || _this$_taskStderrList === void 0 ? void 0 : _this$_taskStderrList.removeAllListeners();
+
+      this._taskStdoutListenerMap.delete(name);
+
+      this._taskStderrListenerMap.delete(name);
+    }
+
+    this._taskNameList.push(name);
+
+    this._taskLogConfigMap.set(name, config);
+
+    this._taskStdoutListenerMap.set(name, config.stdout);
+
+    this._taskStderrListenerMap.set(name, config.stderr);
+
+    this.startListen(name);
+  }
+
+  startListen(taskName) {
+    const listenHandler = createListenHandler(taskName, this._taskLogConfigMap.get(taskName).logConfig);
+
+    this._taskStdoutListenerMap.get(taskName).on('data', listenHandler.stdout);
+
+    this._taskStdoutListenerMap.get(taskName).on('error', listenHandler.stderr);
+
+    this._taskStderrListenerMap.get(taskName).on('data', listenHandler.stderr);
+  }
+
+  startListenAll() {
+    for (const taskName of this._taskNameList) {
+      this.startListen(taskName);
+    }
+  }
+
+  finishListen() {// 是否需要
+  }
+
+}

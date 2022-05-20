@@ -1,0 +1,101 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.sassResolve = void 0;
+
+var _path = _interopRequireDefault(require("path"));
+
+var _utils = require("@modern-js/utils");
+
+var _sass = _interopRequireDefault(require("sass"));
+
+var _lodash = require("@modern-js/utils/lodash");
+
+var _postcss = require("./postcss");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+const sassToCss = (sassCode, params, {
+  outFile
+}) => {
+  const {
+    file,
+    options
+  } = params;
+
+  const ext = _path.default.extname(file);
+
+  const enableIndentedSyntax = ext === '.sass';
+  const config = {
+    file,
+    data: sassCode,
+    indentedSyntax: enableIndentedSyntax,
+    outFile
+  };
+  const sassConfig = (0, _lodash.merge)(config, options.sass);
+
+  try {
+    const sassResult = _sass.default.renderSync(sassConfig);
+
+    return {
+      code: 0,
+      content: sassResult.css.toString(),
+      filename: outFile,
+      error: null,
+      sourceMap: (0, _lodash.toString)(sassResult.map)
+    };
+  } catch (error) {
+    return {
+      code: 1,
+      content: '',
+      filename: outFile,
+      error: error.message
+    };
+  }
+};
+
+const generateContent = async (sassCode, params, option) => {
+  const sassCompilerResult = sassToCss(sassCode, params, option);
+
+  if (sassCompilerResult.code === 1) {
+    return sassCompilerResult;
+  }
+
+  return (0, _postcss.postcssResolve)(sassCompilerResult.content, params, {
+    sourcemapContent: sassCompilerResult.sourceMap || ''
+  });
+};
+
+const sassResolve = async params => {
+  const {
+    file,
+    options,
+    stylesDir,
+    outDir
+  } = params;
+
+  const originSassCode = _utils.fs.readFileSync(file, 'utf-8');
+
+  const relativePath = _path.default.relative(stylesDir, file);
+
+  const outFile = _path.default.join(outDir, relativePath);
+
+  if (!options.sass) {
+    return {
+      code: 0,
+      filename: outFile,
+      content: originSassCode,
+      error: null,
+      sourceMap: '',
+      sourceMapFile: ''
+    };
+  }
+
+  return generateContent(originSassCode, params, {
+    outFile
+  });
+};
+
+exports.sassResolve = sassResolve;

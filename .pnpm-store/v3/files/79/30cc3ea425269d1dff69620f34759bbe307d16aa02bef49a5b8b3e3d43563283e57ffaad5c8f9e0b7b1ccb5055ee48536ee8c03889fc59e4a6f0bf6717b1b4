@@ -1,0 +1,229 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+var _exportNames = {
+  getPackageVersion: true,
+  getPackageManagerText: true,
+  isTsProject: true,
+  getPackageObj: true,
+  getAllPackages: true,
+  validatePackageName: true,
+  validatePackagePath: true,
+  getModuleProjectPath: true,
+  getMWAProjectPath: true,
+  fs: true,
+  readTsConfigByFile: true,
+  getPackageManager: true,
+  canUseNpm: true,
+  canUsePnpm: true,
+  canUseYarn: true,
+  i18n: true
+};
+Object.defineProperty(exports, "canUseNpm", {
+  enumerable: true,
+  get: function () {
+    return _utils.canUseNpm;
+  }
+});
+Object.defineProperty(exports, "canUsePnpm", {
+  enumerable: true,
+  get: function () {
+    return _utils.canUsePnpm;
+  }
+});
+Object.defineProperty(exports, "canUseYarn", {
+  enumerable: true,
+  get: function () {
+    return _utils.canUseYarn;
+  }
+});
+Object.defineProperty(exports, "fs", {
+  enumerable: true,
+  get: function () {
+    return _utils.fs;
+  }
+});
+exports.getAllPackages = getAllPackages;
+exports.getMWAProjectPath = getMWAProjectPath;
+exports.getModuleProjectPath = getModuleProjectPath;
+Object.defineProperty(exports, "getPackageManager", {
+  enumerable: true,
+  get: function () {
+    return _utils.getPackageManager;
+  }
+});
+exports.getPackageManagerText = getPackageManagerText;
+exports.getPackageObj = getPackageObj;
+exports.getPackageVersion = getPackageVersion;
+Object.defineProperty(exports, "i18n", {
+  enumerable: true,
+  get: function () {
+    return _locale.i18n;
+  }
+});
+exports.isTsProject = isTsProject;
+Object.defineProperty(exports, "readTsConfigByFile", {
+  enumerable: true,
+  get: function () {
+    return _utils.readTsConfigByFile;
+  }
+});
+exports.validatePackageName = validatePackageName;
+exports.validatePackagePath = validatePackagePath;
+
+var _path = _interopRequireDefault(require("path"));
+
+var _utils = require("@modern-js/utils");
+
+var _stripAnsi = require("./utils/strip-ansi");
+
+var _locale = require("./locale");
+
+var _utils2 = require("./utils");
+
+Object.keys(_utils2).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;
+  if (key in exports && exports[key] === _utils2[key]) return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function () {
+      return _utils2[key];
+    }
+  });
+});
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+async function getPackageVersion(packageName, registry) {
+  const spinner = (0, _utils.ora)('Loading...').start();
+  spinner.color = 'yellow';
+
+  if (await (0, _utils.canUsePnpm)()) {
+    const args = ['info', packageName, 'version'];
+
+    if (registry) {
+      args.push(`--registry=${registry}`);
+    }
+
+    const result = await (0, _utils.execa)('pnpm', args);
+    spinner.stop();
+    return (0, _stripAnsi.stripAnsi)(result.stdout);
+  }
+
+  if (await (0, _utils.canUseYarn)()) {
+    const args = ['info', packageName, 'version', '--silent'];
+
+    if (registry) {
+      args.push(`--registry=${registry}`);
+    }
+
+    const result = await (0, _utils.execa)('yarn', args);
+    spinner.stop();
+    return (0, _stripAnsi.stripAnsi)(result.stdout);
+  }
+
+  if (await (0, _utils.canUseNpm)()) {
+    const args = ['view', packageName, 'version'];
+
+    if (registry) {
+      args.push(`--registry=${registry}`);
+    }
+
+    const result = await (0, _utils.execa)('npm', args);
+    spinner.stop();
+    return (0, _stripAnsi.stripAnsi)(result.stdout);
+  }
+
+  spinner.stop();
+  throw new Error('not found npm, please install npm before');
+}
+
+function getPackageManagerText(packageManager) {
+  return packageManager === 'yarn' ? 'yarn' : `${packageManager} run`;
+}
+
+function isTsProject(appDir) {
+  return _utils.fs.existsSync(_path.default.join(appDir, 'tsconfig.json'));
+}
+
+async function getPackageObj(context) {
+  const pkgStr = (await context.materials.default.get(`package.json`).value()).content;
+  return JSON.parse(pkgStr);
+}
+
+function getAllPackages(appDir) {
+  const packages = (0, _utils.getMonorepoPackages)(appDir);
+  return packages.map(pkg => pkg.name);
+}
+
+function validatePackageName(value, packages, options) {
+  const {
+    isMonorepoSubProject
+  } = options;
+
+  if (isMonorepoSubProject && packages.includes(value)) {
+    return {
+      success: false,
+      error: _locale.i18n.t(_locale.localeKeys.packageName.exit, {
+        value
+      })
+    };
+  }
+
+  return {
+    success: true
+  };
+}
+
+function validatePackagePath(value, projectDir, options) {
+  const {
+    isMwa,
+    isPublic,
+    isTest
+  } = options || {};
+  let dir = 'apps';
+
+  if (isMwa && isTest) {
+    dir = 'examples';
+  } else {
+    dir = isPublic ? 'packages' : 'features';
+  }
+
+  const packageDir = _path.default.resolve(projectDir || '', dir, value);
+
+  if (_utils.fs.existsSync(packageDir)) {
+    return {
+      success: false,
+      error: _locale.i18n.t(_locale.localeKeys.packagePath.exit, {
+        value
+      })
+    };
+  }
+
+  return {
+    success: true
+  };
+}
+
+function getModuleProjectPath(packagePath, isMonorepoSubProject, isPublic, isLocalPackages) {
+  if (isLocalPackages && packagePath) {
+    return `${packagePath}/`;
+  }
+
+  if (isMonorepoSubProject && packagePath) {
+    return `${isPublic ? 'packages' : 'features'}/${packagePath}/`;
+  }
+
+  return '';
+}
+
+function getMWAProjectPath(packagePath, isMonorepoSubProject, isTest = false) {
+  if (isMonorepoSubProject && packagePath) {
+    return `${isTest ? 'examples' : 'apps'}/${packagePath}/`;
+  }
+
+  return '';
+}

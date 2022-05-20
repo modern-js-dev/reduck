@@ -1,0 +1,3 @@
+import { LoadedConfig } from './config';
+import { HooksRunner } from './manager';
+export declare const initWatcher: (loaded: LoadedConfig, appDirectory: string, configDir: string | undefined, hooksRunner: HooksRunner, argv: string[]) => Promise<import("@modern-js/utils").FSWatcher | undefined>;

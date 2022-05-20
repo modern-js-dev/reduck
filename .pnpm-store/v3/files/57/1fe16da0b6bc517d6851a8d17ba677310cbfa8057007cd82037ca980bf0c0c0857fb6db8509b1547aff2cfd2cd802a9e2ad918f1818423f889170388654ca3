@@ -1,0 +1,2 @@
+import { IProjectNode } from './get-projects';
+export declare const clearProjectsMemoryFile: (projects: IProjectNode[]) => void;

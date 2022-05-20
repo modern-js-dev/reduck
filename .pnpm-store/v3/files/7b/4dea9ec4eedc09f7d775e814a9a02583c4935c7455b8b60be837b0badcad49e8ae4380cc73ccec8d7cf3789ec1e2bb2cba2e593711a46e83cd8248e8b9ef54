@@ -1,0 +1,18 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.metrics = void 0;
+const metrics = {
+  gauges() {// no impl
+  },
+
+  emitCounter() {// no impl
+  },
+
+  emitTimer() {// no impl
+  }
+
+};
+exports.metrics = metrics;

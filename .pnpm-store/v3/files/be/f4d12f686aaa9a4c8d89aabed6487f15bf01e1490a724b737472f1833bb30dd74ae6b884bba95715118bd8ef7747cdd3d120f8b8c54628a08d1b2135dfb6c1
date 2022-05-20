@@ -1,0 +1,36 @@
+// 用于 react-helmet 正则替换
+var RE_HTML_ATTR = /<html[^>]*>/;
+var RE_BODY_ATTR = /<body[^>]*>/;
+var RE_LAST_IN_HEAD = /<\/head>/;
+var RE_TITLE = /<title[^>]*>([\s\S\n\r]*?)<\/title>/g; // 通过 react-helmet 修改模板
+
+export default function helmet(content, helmetData) {
+  var result = content;
+  var bodyAttributes = helmetData.bodyAttributes.toString();
+
+  if (bodyAttributes) {
+    result = result.replace(RE_BODY_ATTR, "<body ".concat(bodyAttributes, ">"));
+  }
+
+  var htmlAttributes = helmetData.htmlAttributes.toString();
+
+  if (htmlAttributes) {
+    result = result.replace(RE_HTML_ATTR, "<html ".concat(htmlAttributes, ">"));
+  }
+
+  var base = helmetData.base.toString();
+  var link = helmetData.link.toString();
+  var meta = helmetData.meta.toString();
+  var noscript = helmetData.noscript.toString();
+  var script = helmetData.script.toString();
+  var style = helmetData.style.toString();
+  var title = helmetData.title.toString(); // 如果模板中存在 title，且 helmetData title 有内容则做替换
+
+  var existTitle = RE_TITLE.test(content);
+
+  if (title.trim() && existTitle) {
+    result = result.replace(RE_TITLE, title);
+  }
+
+  return result.replace(RE_LAST_IN_HEAD, "\n    ".concat(base, "\n    ").concat(link, "\n    ").concat(meta, "\n    ").concat(noscript, "\n    ").concat(script, "\n    ").concat(style, "\n    ").concat(existTitle ? '' : title, "\n    </head>\n  "));
+}

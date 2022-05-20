@@ -1,0 +1,107 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.loadConfig = exports.getPackageConfig = exports.getDependencies = exports.PACKAGE_JSON_CONFIG_NAME = exports.CONFIG_FILE_NAME = void 0;
+
+var _fs = _interopRequireDefault(require("fs"));
+
+var _path = _interopRequireDefault(require("path"));
+
+var _utils = require("@modern-js/utils");
+
+var _nodeBundleRequire = require("@modern-js/node-bundle-require");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+const debug = (0, _utils.createDebugger)('load-config');
+const CONFIG_FILE_NAME = 'modern.config';
+exports.CONFIG_FILE_NAME = CONFIG_FILE_NAME;
+const PACKAGE_JSON_CONFIG_NAME = 'modernConfig';
+/**
+ * Get user config from package.json.
+ * @param appDirectory - App root directory.
+ * @returns modernConfig or undefined
+ */
+
+exports.PACKAGE_JSON_CONFIG_NAME = PACKAGE_JSON_CONFIG_NAME;
+
+const getPackageConfig = (appDirectory, packageJsonConfig) => {
+  const json = JSON.parse(_fs.default.readFileSync(_path.default.resolve(appDirectory, './package.json'), 'utf8'));
+  return json[packageJsonConfig !== null && packageJsonConfig !== void 0 ? packageJsonConfig : PACKAGE_JSON_CONFIG_NAME];
+};
+/**
+ * Get the file dependencies by module.children, ignore file path in node_modules and this monorepo packages default.
+ * @param filePath - Absolute file path.
+ * @returns File dependencies array.
+ */
+
+
+exports.getPackageConfig = getPackageConfig;
+
+const getDependencies = filePath => {
+  const mod = require.cache[filePath];
+
+  if (!mod) {
+    debug(`${filePath} has not been required yet`);
+    return [];
+  }
+
+  const deps = [];
+
+  if (!/\/node_modules\/|\/modern-js\/packages\//.test(mod.id)) {
+    deps.push(mod.id);
+
+    for (const child of mod.children) {
+      deps.push(...getDependencies(child.id));
+    }
+  }
+
+  return deps;
+};
+
+exports.getDependencies = getDependencies;
+
+const bundleRequireWithCatch = async configFile => {
+  try {
+    const mod = await (0, _nodeBundleRequire.bundleRequire)(configFile);
+    return mod;
+  } catch (e) {
+    if (e instanceof Error) {
+      e.message = `Get Error while loading config file: ${configFile}, please check it and retry.\n${e.message || ''}`;
+    }
+
+    throw e;
+  }
+};
+/**
+ * Parse and load user config file, support extensions like .ts, mjs, js, ejs.
+ * @param appDirectory - App root directory, from which start search user config file.
+ * @param filePath - Specific absolute config file path.
+ * @returns Object contain config file path, user config object and dependency files used by config file.
+ */
+
+
+const loadConfig = async (appDirectory, filePath, packageJsonConfig) => {
+  const configFile = filePath ? filePath : (0, _utils.findExists)(_utils.CONFIG_FILE_EXTENSIONS.map(extension => _path.default.resolve(appDirectory, `${CONFIG_FILE_NAME}${extension}`)));
+  const pkgConfig = getPackageConfig(appDirectory, packageJsonConfig);
+  let config;
+  const dependencies = pkgConfig ? [_path.default.resolve(appDirectory, './package.json')] : [];
+
+  if (configFile) {
+    delete require.cache[configFile];
+    const mod = await bundleRequireWithCatch(configFile);
+    config = mod.default || mod; // TODO: get deps.
+    // dependencies = dependencies.concat(getDependencies(configFile));
+  }
+
+  return {
+    path: configFile,
+    config,
+    pkgConfig,
+    dependencies
+  };
+};
+
+exports.loadConfig = loadConfig;

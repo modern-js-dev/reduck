@@ -1,0 +1,98 @@
+import _classCallCheck from "@babel/runtime/helpers/esm/classCallCheck";
+import _createClass from "@babel/runtime/helpers/esm/createClass";
+import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
+import { get } from '@modern-js/utils/lodash';
+import { getObjKeyMap } from "./utils";
+
+var I18n = /*#__PURE__*/function () {
+  function I18n() {
+    _classCallCheck(this, I18n);
+
+    _defineProperty(this, "language", 'en');
+
+    _defineProperty(this, "languageMap", {});
+  }
+
+  _createClass(I18n, [{
+    key: "format",
+    value: function format(msg, vars) {
+      return msg.replace(/\{([^}]+)\}/gm, function (_match, capture) {
+        return Object.prototype.hasOwnProperty.call(vars, capture) ? vars[capture] : capture;
+      });
+    }
+  }, {
+    key: "getMessage",
+    value: function getMessage(lang, key, vars, fallbackText) {
+      // 判断语言当前语料库是否存在，不存在使用 en 作为默认语言
+      var languages = Object.keys(this.languageMap);
+      var resultLang = languages.find(function (l) {
+        return l === lang;
+      });
+
+      if (!resultLang && languages.length === 0) {
+        return fallbackText || key;
+      }
+
+      var model = this.languageMap[resultLang || 'en' || languages[0]];
+
+      if (!model) {
+        return fallbackText || key;
+      }
+
+      var message = get(model, key);
+      var value = message || fallbackText || key;
+
+      if (typeof value === 'string') {
+        return this.format(value, vars || {});
+      }
+
+      throw new Error('key is not a string');
+    }
+  }, {
+    key: "init",
+    value: function init(language, languageMap) {
+      this.language = language || 'en';
+
+      if (languageMap) {
+        this.languageMap = languageMap;
+      }
+
+      return getObjKeyMap(this.languageMap[this.language]);
+    }
+  }, {
+    key: "changeLanguage",
+    value: function changeLanguage(config) {
+      this.language = config.locale || 'en';
+    }
+  }, {
+    key: "t",
+    value: function t(key, vars, fallbackText) {
+      return this.getMessage(this.language, key, vars, fallbackText);
+    }
+  }, {
+    key: "lang",
+    value: function (_lang) {
+      function lang(_x) {
+        return _lang.apply(this, arguments);
+      }
+
+      lang.toString = function () {
+        return _lang.toString();
+      };
+
+      return lang;
+    }(function (lang) {
+      var _this = this;
+
+      return {
+        t: function t(key, vars, fallbackText) {
+          return _this.getMessage(lang, key, vars, fallbackText);
+        }
+      };
+    })
+  }]);
+
+  return I18n;
+}();
+
+export { I18n };
